@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Solver — Caso CelPro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a26;
+            --surface3: #222233;
+            --border: #2a2a3d;
+            --text: #e8e8f0;
+            --text2: #a0a0b8;
+            --text3: #6a6a82;
+            --accent: #6366f1;
+            --accent2: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --green: #22c55e;
+            --green-dim: #16a34a;
+            --green-glow: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --orange-glow: rgba(245, 158, 11, 0.1);
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.1);
+            --cyan: #06b6d4;
+            --pink: #ec4899;
+            --yellow: #eab308;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 40%, var(--accent-glow) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 60%, rgba(6,182,212,0.08) 0%, transparent 40%),
+                        radial-gradient(circle at 50% 80%, var(--green-glow) 0%, transparent 30%);
+            animation: bgPulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgPulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+
+        .hero > * { position: relative; z-index: 1; }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.2rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--accent2);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff, var(--accent2), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p { font-size: 1.1rem; color: var(--text2); max-width: 650px; margin-bottom: 2.5rem; }
+
+        .hero-flow {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .flow-step {
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .flow-step.red-bg { background: var(--red-glow); border: 1px solid var(--red); color: var(--red); }
+        .flow-step.orange-bg { background: var(--orange-glow); border: 1px solid var(--orange); color: var(--orange); }
+        .flow-step.green-bg { background: var(--green-glow); border: 1px solid var(--green); color: var(--green); }
+
+        .flow-arrow { color: var(--text3); font-size: 1.2rem; }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text3);
+            font-size: 0.75rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+
+        .content { max-width: 1100px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+        /* Parts */
+        .part-divider {
+            text-align: center;
+            padding: 4rem 2rem;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .part-divider::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .part-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text3);
+            margin-bottom: 0.5rem;
+        }
+
+        .part-title {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .part-title.red { color: var(--red); }
+        .part-title.orange { color: var(--orange); }
+        .part-title.green { color: var(--green); }
+
+        /* Steps */
+        .step-section { margin-bottom: 4rem; scroll-margin-top: 2rem; }
+
+        .step-header { display: flex; align-items: center; gap: 1.2rem; margin-bottom: 1.5rem; }
+
+        .step-number {
+            width: 52px; height: 52px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.3rem; flex-shrink: 0;
+        }
+
+        .sn-purple { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+        .sn-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .sn-orange { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; }
+        .sn-cyan { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .sn-pink { background: linear-gradient(135deg, #ec4899, #db2777); }
+        .sn-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .sn-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .sn-yellow { background: linear-gradient(135deg, #eab308, #ca8a04); color: #000; }
+
+        .step-title { font-size: 1.6rem; font-weight: 700; }
+        .step-sub { color: var(--text2); font-size: 0.85rem; }
+
+        .step-body p { margin-bottom: 1rem; color: var(--text2); }
+        .step-body p strong { color: var(--text); }
+
+        /* Cards */
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 1.4rem; margin-bottom: 1.2rem;
+        }
+        .card.highlight { border-color: var(--accent); background: linear-gradient(135deg, var(--surface), var(--accent-glow)); }
+        .card.success { border-color: var(--green-dim); background: linear-gradient(135deg, var(--surface), var(--green-glow)); }
+        .card.warning { border-color: var(--orange); background: linear-gradient(135deg, var(--surface), var(--orange-glow)); }
+        .card.danger { border-color: var(--red); background: linear-gradient(135deg, var(--surface), var(--red-glow)); }
+
+        .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        /* Excel tables */
+        .excel-wrap { overflow-x: auto; margin: 1.2rem 0; border-radius: 10px; border: 1px solid var(--border); }
+
+        .xt {
+            width: 100%; border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+        }
+        .xt th {
+            background: var(--surface3); padding: 0.5rem 0.6rem; text-align: center;
+            font-weight: 600; color: var(--text2); border: 1px solid var(--border); white-space: nowrap;
+        }
+        .xt th.ch { background: linear-gradient(180deg, #2a2a44, #222238); color: var(--accent2); font-size: 0.65rem; letter-spacing: 0.5px; }
+        .xt td { padding: 0.45rem 0.6rem; text-align: center; border: 1px solid var(--border); background: var(--surface); white-space: nowrap; }
+        .xt td.rh { background: var(--surface2); font-weight: 600; text-align: left; }
+        .xt td.fm { color: var(--cyan); font-size: 0.68rem; }
+        .xt td.rs { color: var(--green); font-weight: 700; }
+        .xt td.ct { color: var(--orange); font-weight: 600; }
+        .xt td.vr { background: linear-gradient(135deg, var(--accent-glow), transparent); color: var(--accent2); font-weight: 600; }
+        .xt tr.tr td { background: var(--surface3); font-weight: 700; border-top: 2px solid var(--accent); }
+
+        /* Formula blocks */
+        .fb {
+            background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+            border-radius: 8px; padding: 0.9rem 1.1rem; margin: 1rem 0;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--cyan); overflow-x: auto;
+        }
+        .fb .cm { color: var(--text3); font-style: italic; }
+
+        /* Tags */
+        .tag { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 100px; font-size: 0.7rem; font-weight: 600; }
+        .tag.green { background: rgba(34,197,94,0.15); color: var(--green); }
+        .tag.red { background: rgba(239,68,68,0.15); color: var(--red); }
+        .tag.orange { background: rgba(245,158,11,0.15); color: var(--orange); }
+
+        /* Insight grid */
+        .ig { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.2rem 0; }
+        .ic {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem;
+        }
+        .ic .lb { font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+        .ic .mt { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800; margin: 0.3rem 0; }
+        .ic .ds { color: var(--text2); font-size: 0.82rem; }
+
+        /* Solver dialog */
+        .solver {
+            background: #1e1e2e; border: 2px solid var(--accent); border-radius: 12px;
+            margin: 1.2rem 0; overflow: hidden; box-shadow: 0 20px 60px rgba(99,102,241,0.12);
+        }
+        .solver-hd {
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            padding: 0.7rem 1.1rem; font-weight: 700; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .solver-hd .dots { display: flex; gap: 5px; }
+        .solver-hd .dot { width: 11px; height: 11px; border-radius: 50%; }
+        .solver-hd .r { background: #ef4444; } .solver-hd .y { background: #eab308; } .solver-hd .g { background: #22c55e; }
+        .solver-bd { padding: 1.2rem; }
+        .sf { margin-bottom: 0.8rem; }
+        .sf label { display: block; font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem; }
+        .sf .inp {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.5rem 0.9rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--cyan); width: 100%;
+        }
+        .sc {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.7rem; max-height: 200px; overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; line-height: 1.8;
+        }
+        .sc div { padding: 0.15rem 0.4rem; border-radius: 4px; }
+        .sc div:nth-child(even) { background: var(--surface2); }
+        .sbtn {
+            display: inline-block; padding: 0.5rem 1.3rem;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border: none; border-radius: 8px; color: white; font-weight: 700; font-size: 0.82rem; margin-top: 0.4rem;
+        }
+
+        /* Infeasible banner */
+        .infeasible-banner {
+            background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.02));
+            border: 2px solid var(--red);
+            border-radius: 14px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .infeasible-banner .big {
+            font-size: 2.5rem; font-weight: 900; color: var(--red);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Feasible banner */
+        .feasible-banner {
+            background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.02));
+            border: 2px solid var(--green);
+            border-radius: 14px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .feasible-banner .big {
+            font-size: 2.5rem; font-weight: 900; color: var(--green);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Bar chart */
+        .bar-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.6rem; }
+        .bar-label { width: 110px; text-align: right; font-size: 0.78rem; color: var(--text2); flex-shrink: 0; }
+        .bar-track { flex: 1; height: 28px; background: var(--surface2); border-radius: 8px; overflow: hidden; }
+        .bar-fill {
+            height: 100%; border-radius: 8px; display: flex; align-items: center; padding-left: 0.7rem;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 700;
+        }
+        .bar-fill.purple { background: linear-gradient(90deg, var(--accent), #8b5cf6); }
+        .bar-fill.green { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .bar-fill.orange { background: linear-gradient(90deg, #f59e0b, #d97706); color: #000; }
+        .bar-fill.red { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+        .bar-val { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text2); flex-shrink: 0; width: 50px; }
+
+        /* Sensitivity rows */
+        .sr { display: flex; align-items: center; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+        .sr:last-child { border-bottom: none; }
+        .sr-name { flex: 1; font-weight: 500; font-size: 0.85rem; }
+        .sr-val { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 600; }
+
+        /* Instruction list */
+        .il { list-style: none; counter-reset: inst; }
+        .il li { counter-increment: inst; padding: 0.6rem 0 0.6rem 2.5rem; position: relative; border-left: 2px solid var(--border); margin-left: 0.8rem; }
+        .il li::before {
+            content: counter(inst); position: absolute; left: -11px; top: 0.5rem;
+            width: 22px; height: 22px; background: var(--accent); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+        }
+        .il li:last-child { border-left-color: transparent; }
+
+        .checklist { list-style: none; }
+        .checklist li { padding: 0.3rem 0 0.3rem 1.6rem; position: relative; color: var(--text2); }
+        .checklist li::before { content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+
+        /* Negotiation table */
+        .nego-row {
+            display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; align-items: center;
+            padding: 0.8rem; border-bottom: 1px solid var(--border); font-size: 0.85rem;
+        }
+        .nego-row:first-child { font-weight: 700; color: var(--text); }
+        .nego-old { color: var(--red); font-family: 'JetBrains Mono', monospace; font-weight: 600; text-decoration: line-through; }
+        .nego-new { color: var(--green); font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .nego-why { color: var(--text3); font-size: 0.78rem; }
+
+        .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 2rem 0; }
+
+        .fade-in { opacity: 0; transform: translateY(25px); transition: opacity 0.5s ease, transform 0.5s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            .content { padding: 0 1rem 4rem; }
+            .ig { grid-template-columns: 1fr; }
+            .step-title { font-size: 1.3rem; }
+            .nego-row { grid-template-columns: 1fr; gap: 0.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+    <div class="hero-badge">Administración de Operaciones 2 — Semana 6, Clase 2</div>
+    <h1>Caso CelPro:<br>De Modelo a Solver</h1>
+    <p>Implementamos el modelo en Excel Solver. Pero la realidad nos va a dar una sorpresa: <strong>no siempre hay solución</strong>. Aprenderemos qué hacer cuando Solver dice "No".</p>
+    <div class="hero-flow">
+        <div class="flow-step red-bg">Solver → Infactible</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step orange-bg">Diagnosticar por qué</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step green-bg">Ajustar → Solución óptima</div>
+    </div>
+    <div class="scroll-hint">Scroll para empezar ↓</div>
+</section>
+
+<div class="content">
+
+<!-- ═══════════════════════════════════════════ -->
+<!--            PARTE 1 — MONTAJE              -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="part-divider">
+    <div class="part-label">Parte 1</div>
+    <div class="part-title" style="color:var(--accent2)">Montar el Modelo en Excel</div>
+</div>
+
+<!-- PASO 1: Recap -->
+<section class="step-section fade-in" id="paso1">
+    <div class="step-header">
+        <div class="step-number sn-purple">1</div>
+        <div>
+            <div class="step-title">Recordemos el Modelo</div>
+            <div class="step-sub">5 campañas, 24 variables, 31 restricciones</div>
+        </div>
+    </div>
+    <div class="step-body">
+        <div class="ig">
+            <div class="ic">
+                <div class="lb">Campañas</div>
+                <div class="mt" style="color:var(--cyan)">5</div>
+                <div class="ds">Ventas, Soporte, Retención, Cobranzas, <strong>Gestión Documental</strong></div>
+            </div>
+            <div class="ic">
+                <div class="lb">Variables</div>
+                <div class="mt" style="color:var(--accent2)">24</div>
+                <div class="ds">De 30 posibles (5×3×2), se eliminan 6 nocturnas de V, R y G</div>
+            </div>
+            <div class="ic">
+                <div class="lb">Restricciones</div>
+                <div class="mt" style="color:var(--orange)">31</div>
+                <div class="ds">Contractuales, calidad, mercado, sede, presupuesto</div>
+            </div>
+        </div>
+
+        <div class="card warning">
+            <div class="card-title">⚠️ Variables que NO existen (no hay turno nocturno)</div>
+            <p style="color:var(--text)"><strong>Ventas, Retención y Gestión Documental</strong> no operan de noche → se eliminan x_VN, y_VN, x_RN, y_RN, x_GN, y_GN. Quedan <strong>24 variables activas</strong>.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🧮 Costos del primer mes (nómina + capacitación)</div>
+            <div class="fb">
+Junior diurno:  $1.400.000 + $800.000 (capac.) = <strong>$2.200.000</strong><br>
+Junior nocturno: $1.890.000 + $800.000 (capac.) = <strong>$2.690.000</strong><br>
+Senior diurno:  $2.200.000 (sin capacitación)<br>
+Senior nocturno: $2.970.000 (sin capacitación)<br><br>
+<span class="cm">// Coincidencia: Junior día + capacitación = Senior día. ¡Ojo con eso!</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PASO 2: Variables en Excel -->
+<section class="step-section fade-in" id="paso2">
+    <div class="step-header">
+        <div class="step-number sn-green">2</div>
+        <div>
+            <div class="step-title">Ingresar las 24 Variables y Costos</div>
+            <div class="step-sub">Cada celda = cuántas personas contratar de ese tipo</div>
+        </div>
+    </div>
+    <div class="step-body">
+        <p>Crea una fila con las 24 variables iniciando en <strong>0</strong>. Debajo, la fila de costos unitarios:</p>
+
+        <div class="excel-wrap">
+            <table class="xt">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th colspan="12" class="ch">JUNIORS (x) — 12 variables</th>
+                        <th colspan="12" class="ch">SENIORS (y) — 12 variables</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>x_VM</th><th>x_VT</th>
+                        <th>x_SM</th><th>x_ST</th><th>x_SN</th>
+                        <th>x_RM</th><th>x_RT</th>
+                        <th>x_CM</th><th>x_CT</th><th>x_CN</th>
+                        <th>x_GM</th><th>x_GT</th>
+                        <th>y_VM</th><th>y_VT</th>
+                        <th>y_SM</th><th>y_ST</th><th>y_SN</th>
+                        <th>y_RM</th><th>y_RT</th>
+                        <th>y_CM</th><th>y_CT</th><th>y_CN</th>
+                        <th>y_GM</th><th>y_GT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rh">Campaña</td>
+                        <td>V</td><td>V</td><td>S</td><td>S</td><td>S</td><td>R</td><td>R</td><td>C</td><td>C</td><td>C</td><td>G</td><td>G</td>
+                        <td>V</td><td>V</td><td>S</td><td>S</td><td>S</td><td>R</td><td>R</td><td>C</td><td>C</td><td>C</td><td>G</td><td>G</td>
+                    </tr>
+                    <tr>
+                        <td class="rh">Turno</td>
+                        <td>M</td><td>T</td><td>M</td><td>T</td><td>N</td><td>M</td><td>T</td><td>M</td><td>T</td><td>N</td><td>M</td><td>T</td>
+                        <td>M</td><td>T</td><td>M</td><td>T</td><td>N</td><td>M</td><td>T</td><td>M</td><td>T</td><td>N</td><td>M</td><td>T</td>
+                    </tr>
+                    <tr>
+                        <td class="rh">Valor</td>
+                        <td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td>
+                        <td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td><td class="vr">0</td>
+                    </tr>
+                    <tr>
+                        <td class="rh">Costo ($M)</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.69</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.69</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.97</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.97</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size:0.82rem">Los costos en <span style="color:var(--red); font-weight:600">rojo</span> son nocturnos (Soporte y Cobranzas noche). Los juniors diurnos incluyen capacitación ($1.4M + $0.8M = $2.2M).</p>
+    </div>
+</section>
+
+<!-- PASO 3: FO -->
+<section class="step-section fade-in" id="paso3">
+    <div class="step-header">
+        <div class="step-number sn-cyan">3</div>
+        <div>
+            <div class="step-title">Función Objetivo</div>
+            <div class="step-sub">SUMAPRODUCTO — una sola fórmula lo calcula todo</div>
+        </div>
+    </div>
+    <div class="step-body">
+        <div class="fb">
+=SUMAPRODUCTO(B9:Y9, B8:Y8)<br><br>
+<span class="cm">// B9:Y9 = fila de costos (24 valores)</span><br>
+<span class="cm">// B8:Y8 = fila de variables (24 celdas cambiantes)</span><br>
+<span class="cm">// Resultado = costo total primer mes (nómina + capacitación)</span>
+        </div>
+    </div>
+</section>
+
+<!-- PASO 4: Restricciones -->
+<section class="step-section fade-in" id="paso4">
+    <div class="step-header">
+        <div class="step-number sn-red">4</div>
+        <div>
+            <div class="step-title">Montar las 31 Restricciones</div>
+            <div class="step-sub">Cada una necesita: fórmula LHS, signo, valor RHS</div>
+        </div>
+    </div>
+    <div class="step-body">
+
+        <h3 style="margin: 1.2rem 0 0.8rem; color: var(--accent2); font-size:1rem">4.1 — Mínimos por campaña (R1–R5)</h3>
+        <div class="excel-wrap">
+            <table class="xt">
+                <thead><tr><th>ID</th><th>Restricción</th><th>Fórmula LHS</th><th></th><th>RHS</th></tr></thead>
+                <tbody>
+                    <tr><td class="rh">R1</td><td>Ventas total</td><td class="fm">=x_VM+x_VT+y_VM+y_VT</td><td>≥</td><td class="rs">30</td></tr>
+                    <tr><td class="rh">R2</td><td>Soporte total</td><td class="fm">=x_SM+x_ST+x_SN+y_SM+y_ST+y_SN</td><td>≥</td><td class="rs">28</td></tr>
+                    <tr><td class="rh">R3</td><td>Retención total</td><td class="fm">=x_RM+x_RT+y_RM+y_RT</td><td>≥</td><td class="rs">20</td></tr>
+                    <tr><td class="rh">R4</td><td>Cobranzas total</td><td class="fm">=x_CM+x_CT+x_CN+y_CM+y_CT+y_CN</td><td>≥</td><td class="rs">22</td></tr>
+                    <tr><td class="rh">R5</td><td>Gestión Doc. total</td><td class="fm">=x_GM+x_GT+y_GM+y_GT</td><td>≥</td><td class="rs">15</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin: 1.2rem 0 0.8rem; color: var(--accent2); font-size:1rem">4.2 — Mínimos por turno específico (R6–R13)</h3>
+        <div class="excel-wrap">
+            <table class="xt">
+                <thead><tr><th>ID</th><th>Restricción</th><th>Fórmula LHS</th><th></th><th>RHS</th></tr></thead>
+                <tbody>
+                    <tr><td class="rh">R6</td><td>Ventas tarde</td><td class="fm">=x_VT+y_VT</td><td>≥</td><td class="rs">14</td></tr>
+                    <tr><td class="rh">R7</td><td>Soporte mañana</td><td class="fm">=x_SM+y_SM</td><td>≥</td><td class="rs">8</td></tr>
+                    <tr><td class="rh">R8</td><td>Soporte tarde</td><td class="fm">=x_ST+y_ST</td><td>≥</td><td class="rs">8</td></tr>
+                    <tr><td class="rh">R9</td><td>Soporte noche</td><td class="fm">=x_SN+y_SN</td><td>≥</td><td class="rs">8</td></tr>
+                    <tr><td class="rh">R10</td><td>Retención mañana</td><td class="fm">=x_RM+y_RM</td><td>≥</td><td class="rs">9</td></tr>
+                    <tr><td class="rh">R11</td><td>Cobranzas mañana</td><td class="fm">=x_CM+y_CM</td><td>≥</td><td class="rs">10</td></tr>
+                    <tr><td class="rh">R12</td><td>Cobranzas tarde</td><td class="fm">=x_CT+y_CT</td><td>≥</td><td class="rs">7</td></tr>
+                    <tr><td class="rh">R13a</td><td>G. Doc. mañana</td><td class="fm">=x_GM+y_GM</td><td>≥</td><td class="rs">6</td></tr>
+                    <tr><td class="rh">R13b</td><td>G. Doc. tarde</td><td class="fm">=x_GT+y_GT</td><td>≥</td><td class="rs">6</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin: 1.2rem 0 0.8rem; color: var(--accent2); font-size:1rem">4.3 — Calidad: % seniors (R14–R18)</h3>
+        <div class="card">
+            <div class="card-title">🧠 Linealización del porcentaje</div>
+            <div class="fb" style="margin:0.5rem 0">
+30%: seniors ≥ 0.30(total) → 7×seniors - 3×juniors ≥ 0<br>
+50%: seniors ≥ 0.50(total) → seniors - juniors ≥ 0 <span class="cm">(más simple)</span>
+            </div>
+        </div>
+        <div class="excel-wrap">
+            <table class="xt">
+                <thead><tr><th>ID</th><th>Restricción</th><th>Fórmula LHS</th><th></th><th>RHS</th></tr></thead>
+                <tbody>
+                    <tr><td class="rh">R14</td><td>Ventas 30%</td><td class="fm">=7*(y_VM+y_VT) - 3*(x_VM+x_VT)</td><td>≥</td><td class="rs">0</td></tr>
+                    <tr><td class="rh">R15</td><td>Soporte 30%</td><td class="fm">=7*(y_SM+y_ST+y_SN) - 3*(x_SM+x_ST+x_SN)</td><td>≥</td><td class="rs">0</td></tr>
+                    <tr><td class="rh">R16</td><td>Retención 30%</td><td class="fm">=7*(y_RM+y_RT) - 3*(x_RM+x_RT)</td><td>≥</td><td class="rs">0</td></tr>
+                    <tr><td class="rh">R17</td><td>Cobranzas 30%</td><td class="fm">=7*(y_CM+y_CT+y_CN) - 3*(x_CM+x_CT+x_CN)</td><td>≥</td><td class="rs">0</td></tr>
+                    <tr><td class="rh">R18</td><td>G. Doc. <strong>50%</strong></td><td class="fm">=(y_GM+y_GT) - (x_GM+x_GT)</td><td>≥</td><td class="rs">0</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin: 1.2rem 0 0.8rem; color: var(--accent2); font-size:1rem">4.4 — Inter-campaña, mercado, sede, noche, seniors/turno, presupuesto</h3>
+        <div class="excel-wrap">
+            <table class="xt">
+                <thead><tr><th>ID</th><th>Restricción</th><th>Fórmula LHS</th><th></th><th>RHS</th></tr></thead>
+                <tbody>
+                    <tr><td class="rh">R19</td><td>Ventas ≥ Ret. + 5 seniors</td><td class="fm">=(y_VM+y_VT)-(y_RM+y_RT)</td><td>≥</td><td class="rs">5</td></tr>
+                    <tr><td class="rh">R20</td><td>Máx. juniors mercado</td><td class="fm">=SUMA(todos los x)</td><td>≤</td><td class="rs">65</td></tr>
+                    <tr><td class="rh">R21</td><td>Máx. seniors mercado</td><td class="fm">=SUMA(todos los y)</td><td>≤</td><td class="rs">40</td></tr>
+                    <tr><td class="rh">R22</td><td>Capacidad mañana</td><td class="fm">=suma variables turno M</td><td>≤</td><td class="rs">45</td></tr>
+                    <tr><td class="rh">R23</td><td>Capacidad tarde</td><td class="fm">=suma variables turno T</td><td>≤</td><td class="rs">45</td></tr>
+                    <tr><td class="rh">R24</td><td>Capacidad noche</td><td class="fm">=x_SN+y_SN+x_CN+y_CN</td><td>≤</td><td class="rs">45</td></tr>
+                    <tr><td class="rh">R25</td><td>Tope noche</td><td class="fm">=x_SN+y_SN+x_CN+y_CN</td><td>≤</td><td class="rs">25</td></tr>
+                    <tr><td class="rh">R26</td><td>Seniors mañana ≥ 3</td><td class="fm">=y_VM+y_SM+y_RM+y_CM+y_GM</td><td>≥</td><td class="rs">3</td></tr>
+                    <tr><td class="rh">R27</td><td>Seniors tarde ≥ 3</td><td class="fm">=y_VT+y_ST+y_RT+y_CT+y_GT</td><td>≥</td><td class="rs">3</td></tr>
+                    <tr><td class="rh">R28</td><td>Seniors noche ≥ 3</td><td class="fm">=y_SN+y_CN</td><td>≥</td><td class="rs">3</td></tr>
+                    <tr><td class="rh">R29</td><td>Presupuesto 1er mes</td><td class="fm">=celda función objetivo</td><td>≤</td><td class="rs">200.000.000</td></tr>
+                    <tr><td class="rh">R30</td><td>No negatividad</td><td class="fm">variables ≥ 0</td><td>≥</td><td class="rs">0</td></tr>
+                    <tr><td class="rh">R31</td><td>Integralidad</td><td class="fm">variables = entero</td><td></td><td class="rs">ent</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- PASO 5: Configurar Solver -->
+<section class="step-section fade-in" id="paso5">
+    <div class="step-header">
+        <div class="step-number sn-blue">5</div>
+        <div>
+            <div class="step-title">Configurar Solver y... Resolver</div>
+            <div class="step-sub">Datos → Solver → configurar y darle clic a Resolver</div>
+        </div>
+    </div>
+    <div class="step-body">
+        <div class="solver">
+            <div class="solver-hd">
+                <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+                Parámetros de Solver
+            </div>
+            <div class="solver-bd">
+                <div class="sf"><label>Establecer objetivo</label><div class="inp">$B$16 <span style="color:var(--text3)">(SUMAPRODUCTO = costo total)</span></div></div>
+                <div class="sf"><label>Para</label><div class="inp" style="color:var(--green)">◉ Mín</div></div>
+                <div class="sf"><label>Cambiando las celdas de variables</label><div class="inp">$B$8:$Y$8 <span style="color:var(--text3)">(24 variables)</span></div></div>
+                <div class="sf"><label>Método de resolución</label><div class="inp" style="color:var(--yellow)">Simplex LP</div></div>
+                <div class="sf"><label>Restricciones (agregar una por una)</label>
+                    <div class="sc">
+                        <div>LHS_R1 >= 30 <span style="color:var(--text3)">← Ventas</span></div>
+                        <div>LHS_R2 >= 28 <span style="color:var(--text3)">← Soporte</span></div>
+                        <div>LHS_R3 >= 20 <span style="color:var(--text3)">← Retención</span></div>
+                        <div>LHS_R4 >= 22 <span style="color:var(--text3)">← Cobranzas</span></div>
+                        <div>LHS_R5 >= 15 <span style="color:var(--text3)">← G. Doc.</span></div>
+                        <div>LHS_R6..R13 >= ... <span style="color:var(--text3)">← turnos específicos</span></div>
+                        <div>LHS_R14..R18 >= 0 <span style="color:var(--text3)">← calidad seniors</span></div>
+                        <div>LHS_R19 >= 5 <span style="color:var(--text3)">← inter-campaña</span></div>
+                        <div>LHS_R20 <= 65 <span style="color:var(--text3)">← juniors mercado</span></div>
+                        <div>LHS_R21 <= 40 <span style="color:var(--text3)">← seniors mercado</span></div>
+                        <div>LHS_R22..R24 <= 45 <span style="color:var(--text3)">← capacidad sede</span></div>
+                        <div>LHS_R25 <= 25 <span style="color:var(--text3)">← tope noche</span></div>
+                        <div>LHS_R26..R28 >= 3 <span style="color:var(--text3)">← seniors/turno</span></div>
+                        <div>LHS_R29 <= 200000000 <span style="color:var(--text3)">← presupuesto</span></div>
+                        <div style="color:var(--green)">$B$8:$Y$8 = entero</div>
+                        <div style="color:var(--green)">$B$8:$Y$8 >= 0</div>
+                    </div>
+                </div>
+                <div class="sbtn">Resolver</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--       PARTE 2 — SOLVER DICE NO            -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="part-divider">
+    <div class="part-label">Parte 2</div>
+    <div class="part-title red">Solver Dice: "No Hay Solución"</div>
+</div>
+
+<section class="step-section fade-in" id="paso6">
+    <div class="step-header">
+        <div class="step-number sn-red">6</div>
+        <div>
+            <div class="step-title">Resultado: INFACTIBLE</div>
+            <div class="step-sub">Solver no puede satisfacer todas las restricciones al mismo tiempo</div>
+        </div>
+    </div>
+    <div class="step-body">
+        <div class="infeasible-banner">
+            <div style="font-size:0.85rem; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem">Resultado de Solver</div>
+            <div class="big">INFACTIBLE</div>
+            <div style="color:var(--text2); margin-top:0.5rem">"Solver no pudo encontrar una solución factible."</div>
+        </div>
+
+        <div class="card danger">
+            <div class="card-title">🚨 ¿Qué significa esto?</div>
+            <p style="color:var(--text)">Significa que <strong>no existe ninguna combinación</strong> de contratación que cumpla TODAS las restricciones simultáneamente. Alguna(s) restricción(es) se contradicen entre sí. Esto NO es un error de Excel — es un problema del modelo.</p>
+        </div>
+
+        <p><strong>En la vida real, esto pasa TODO el tiempo.</strong> El gerente pide cosas que no son compatibles entre sí. El trabajo del analista es encontrar por qué y proponer qué ajustar.</p>
+    </div>
+</section>
+
+<!-- PASO 7: Diagnóstico -->
+<section class="step-section fade-in" id="paso7">
+    <div class="step-header">
+        <div class="step-number sn-orange">7</div>
+        <div>
+            <div class="step-title">Diagnosticar: ¿Por Qué es Infactible?</div>
+            <div class="step-sub">Hay TRES problemas que se bloquean mutuamente</div>
+        </div>
+    </div>
+    <div class="step-body">
+
+        <div class="card danger" style="margin-bottom:1.5rem">
+            <div class="card-title" style="color:var(--red)">Problema 1: No hay suficiente gente en el mercado</div>
+            <div class="ig" style="margin:0.8rem 0 0">
+                <div class="ic" style="border-color:var(--red)">
+                    <div class="lb">Personas mínimas requeridas</div>
+                    <div class="mt" style="color:var(--red)">115</div>
+                    <div class="ds">30 + 28 + 20 + 22 + 15</div>
+                </div>
+                <div class="ic" style="border-color:var(--red)">
+                    <div class="lb">Máximo disponible en Pereira</div>
+                    <div class="mt" style="color:var(--red)">105</div>
+                    <div class="ds">65 juniors + 40 seniors</div>
+                </div>
+            </div>
+            <p style="color:var(--text); margin-top:1rem"><strong>Faltan 10 personas.</strong> Aunque usemos TODOS los juniors y TODOS los seniors del mercado, no alcanzamos a cubrir las 5 campañas.</p>
+        </div>
+
+        <div class="card danger" style="margin-bottom:1.5rem">
+            <div class="card-title" style="color:var(--red)">Problema 2: Las 45 estaciones no alcanzan</div>
+            <p style="color:var(--text)">Con 115 personas y máximo 25 de noche, necesitamos <strong>90 en el día</strong> (45+45). Pero las restricciones de mínimos por turno obligan a poner más gente en mañana y tarde de lo que cabe:</p>
+            <div class="fb" style="margin-top:0.8rem">
+Noche máxima real = Soporte_N (máx 12) + Cobranzas_N (máx 5) = <strong>17</strong><br>
+<span class="cm">// Porque Soporte día ≥ 16 (8+8) → noche ≤ 12</span><br>
+<span class="cm">// Porque Cobranzas día ≥ 17 (10+7) → noche ≤ 5</span><br><br>
+Personas en día = 115 - 17 = <strong>98</strong>  →  Necesitaría 49+49 = 98 estaciones<br>
+Pero solo hay <strong>45 por turno</strong>. No caben.
+            </div>
+        </div>
+
+        <div class="card danger">
+            <div class="card-title" style="color:var(--red)">Problema 3: El presupuesto no da</div>
+            <p style="color:var(--text)">El costo mínimo posible (todos al precio más barato de $2.2M) sería:</p>
+            <div class="fb" style="margin-top:0.5rem">
+115 personas × $2.200.000 = <strong>$253.000.000</strong>  >  presupuesto de $200.000.000<br>
+<span class="cm">// Y eso SIN contar los recargos nocturnos que lo suben más</span>
+            </div>
+            <p style="color:var(--text); margin-top:0.8rem"><strong>Faltan ~$53 millones</strong> para cubrir el costo de 115 personas, incluso en el escenario más barato.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--       PARTE 3 — AJUSTES Y SOLUCIÓN        -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="part-divider">
+    <div class="part-label">Parte 3</div>
+    <div class="part-title orange">Negociar Ajustes con los Stakeholders</div>
+</div>
+
+<section class="step-section fade-in" id="paso8">
+    <div class="step-header">
+        <div class="step-number sn-orange">8</div>
+        <div>
+            <div class="step-title">¿Qué Haría un Profesional?</div>
+            <div class="step-sub">Volver donde Andrés con datos, no con excusas</div>
+        </div>
+    </div>
+    <div class="step-body">
+        <div class="card highlight">
+            <div class="card-title">💼 El informe para Andrés Morales</div>
+            <p style="color:var(--text); line-height:2">"Andrés, la operación como está planteada <strong>no es viable</strong>. No es que el modelo esté mal — es que las restricciones son incompatibles. Necesitamos negociar tres cosas con CelPro, con las reclutadoras y con Doña Margarita:"</p>
+        </div>
+
+        <div class="card" style="padding:0; overflow:hidden">
+            <div style="padding:1rem 1.2rem; background:var(--surface2); border-bottom:1px solid var(--border)">
+                <strong>Ajustes propuestos</strong>
+            </div>
+            <div style="padding:0.5rem 1.2rem">
+                <div class="nego-row" style="font-weight:700; color:var(--text3); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px">
+                    <span>Parámetro</span><span>Antes</span><span>Después</span><span>Justificación</span>
+                </div>
+                <div class="nego-row">
+                    <span>Juniors disponibles</span>
+                    <span class="nego-old">65</span>
+                    <span class="nego-new">80</span>
+                    <span class="nego-why">Ampliar búsqueda a Armenia y Manizales</span>
+                </div>
+                <div class="nego-row">
+                    <span>Seniors disponibles</span>
+                    <span class="nego-old">40</span>
+                    <span class="nego-new">50</span>
+                    <span class="nego-why">Bonos de enganche más agresivos + LinkedIn</span>
+                </div>
+                <div class="nego-row">
+                    <span>Estaciones de trabajo</span>
+                    <span class="nego-old">45</span>
+                    <span class="nego-new">55</span>
+                    <span class="nego-why">Aprobar el arriendo del 3er piso ($18M/mes)</span>
+                </div>
+                <div class="nego-row">
+                    <span>Presupuesto 1er mes</span>
+                    <span class="nego-old">$200M</span>
+                    <span class="nego-new">$275M</span>
+                    <span class="nego-why">Incluir costo real de 115+ personas + arriendo</span>
+                </div>
+            </div>
+        </div>
+
+        <p style="margin-top:1rem"><strong>Con estos ajustes, volvemos a correr Solver.</strong> Solo cambiamos los valores RHS de 4 restricciones — el resto del modelo queda intacto.</p>
+    </div>
+</section>
+
+<!-- PASO 9: Re-correr Solver -->
+<section class="step-section fade-in" id="paso9">
+    <div class="step-header">
+        <div class="step-number sn-green">9</div>
+        <div>
+            <div class="step-title">Ajustar las Restricciones y Re-resolver</div>
+            <div class="step-sub">4 cambios en la hoja, volver a Solver</div>
+        </div>
+    </div>
+    <div class="step-body">
+        <div class="card success">
+            <div class="card-title">Cambios en Solver</div>
+            <div class="fb">
+R20: Juniors ≤ <del style="color:var(--red)">65</del> → ≤ <strong style="color:var(--green)">80</strong><br>
+R21: Seniors ≤ <del style="color:var(--red)">40</del> → ≤ <strong style="color:var(--green)">50</strong><br>
+R22-R24: Capacidad ≤ <del style="color:var(--red)">45</del> → ≤ <strong style="color:var(--green)">55</strong><br>
+R29: Presupuesto ≤ <del style="color:var(--red)">200.000.000</del> → ≤ <strong style="color:var(--green)">275.000.000</strong>
+            </div>
+        </div>
+        <p>Clic en <strong>Resolver</strong> de nuevo...</p>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--       PARTE 4 — RESULTADOS                -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="part-divider">
+    <div class="part-label">Parte 4</div>
+    <div class="part-title green">Solución Óptima</div>
+</div>
+
+<section class="step-section fade-in" id="paso10">
+    <div class="step-header">
+        <div class="step-number sn-green">10</div>
+        <div>
+            <div class="step-title">Solver Encontró la Solución</div>
+            <div class="step-sub">Ahora sí: se satisfacen todas las restricciones</div>
+        </div>
+    </div>
+    <div class="step-body">
+
+        <div class="feasible-banner">
+            <div style="font-size:0.85rem; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem">Costo Óptimo — Primer Mes</div>
+            <div class="big">$257,760,000</div>
+            <div style="color:var(--text2); margin-top:0.5rem">115 asesores — 74 juniors + 41 seniors</div>
+        </div>
+
+        <h3 style="margin: 1.5rem 0 0.8rem; color: var(--accent2); font-size:1rem">Asignación óptima completa</h3>
+        <div class="excel-wrap">
+            <table class="xt">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th colspan="2" style="background:#6366f1; color:#fff">VENTAS</th>
+                        <th colspan="3" style="background:#06b6d4; color:#fff">SOPORTE</th>
+                        <th colspan="2" style="background:#22c55e; color:#fff">RETENCIÓN</th>
+                        <th colspan="3" style="background:#f59e0b; color:#000">COBRANZAS</th>
+                        <th colspan="2" style="background:#ec4899; color:#fff">G. DOC.</th>
+                        <th>Total</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>M</th><th>T</th>
+                        <th>M</th><th>T</th><th>N</th>
+                        <th>M</th><th>T</th>
+                        <th>M</th><th>T</th><th>N</th>
+                        <th>M</th><th>T</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rh">Juniors (x)</td>
+                        <td class="vr">12</td><td class="vr">7</td>
+                        <td class="vr">7</td><td class="vr">7</td><td class="vr">5</td>
+                        <td class="vr">7</td><td class="vr">7</td>
+                        <td class="vr">7</td><td class="vr">8</td><td class="vr">0</td>
+                        <td class="vr">3</td><td class="vr">4</td>
+                        <td class="rs">74</td>
+                    </tr>
+                    <tr>
+                        <td class="rh">Seniors (y)</td>
+                        <td class="vr">4</td><td class="vr">7</td>
+                        <td class="vr">3</td><td class="vr">3</td><td class="vr">3</td>
+                        <td class="vr">3</td><td class="vr">3</td>
+                        <td class="vr">3</td><td class="vr">4</td><td class="vr">0</td>
+                        <td class="vr">4</td><td class="vr">4</td>
+                        <td class="rs">41</td>
+                    </tr>
+                    <tr class="tr">
+                        <td class="rh">Total turno</td>
+                        <td>16</td><td>14</td>
+                        <td>10</td><td>10</td><td>8</td>
+                        <td>10</td><td>10</td>
+                        <td>10</td><td>12</td><td>0</td>
+                        <td>7</td><td>8</td>
+                        <td style="color:var(--green); font-weight:900">115</td>
+                    </tr>
+                    <tr>
+                        <td class="rh">Total campaña</td>
+                        <td colspan="2" style="font-weight:700; color:var(--accent2)">30</td>
+                        <td colspan="3" style="font-weight:700; color:var(--cyan)">28</td>
+                        <td colspan="2" style="font-weight:700; color:var(--green)">20</td>
+                        <td colspan="3" style="font-weight:700; color:var(--orange)">22</td>
+                        <td colspan="2" style="font-weight:700; color:var(--pink)">15</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="rh">% Seniors</td>
+                        <td colspan="2" style="color:var(--green)">36.7%</td>
+                        <td colspan="3" style="color:var(--green)">32.1%</td>
+                        <td colspan="2" style="color:var(--green)">30.0%</td>
+                        <td colspan="3" style="color:var(--green)">31.8%</td>
+                        <td colspan="2" style="color:var(--green)">53.3%</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin: 1.5rem 0 0.8rem; color: var(--accent2); font-size:1rem">Distribución por turno</h3>
+        <div style="margin:1rem 0">
+            <div class="bar-row">
+                <div class="bar-label">Mañana</div>
+                <div class="bar-track"><div class="bar-fill green" style="width:96%">53 personas</div></div>
+                <div class="bar-val" style="color:var(--green)">/ 55</div>
+            </div>
+            <div class="bar-row">
+                <div class="bar-label">Tarde</div>
+                <div class="bar-track"><div class="bar-fill purple" style="width:98%">54 personas</div></div>
+                <div class="bar-val" style="color:var(--green)">/ 55</div>
+            </div>
+            <div class="bar-row">
+                <div class="bar-label">Noche</div>
+                <div class="bar-track"><div class="bar-fill orange" style="width:32%">8 personas</div></div>
+                <div class="bar-val" style="color:var(--green)">/ 25</div>
+            </div>
+        </div>
+
+        <h3 style="margin: 1.5rem 0 0.8rem; color: var(--accent2); font-size:1rem">Desglose de costos</h3>
+        <div class="excel-wrap">
+            <table class="xt" style="font-size:0.8rem">
+                <thead><tr><th>Categoría</th><th>Cantidad</th><th>Costo Unit.</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                    <tr><td class="rh">Juniors diurnos (salario + capac.)</td><td>69</td><td class="ct">$2.200.000</td><td class="ct">$151.800.000</td></tr>
+                    <tr><td class="rh">Juniors nocturnos (salario + capac.)</td><td>5</td><td class="ct" style="color:var(--red)">$2.690.000</td><td class="ct">$13.450.000</td></tr>
+                    <tr><td class="rh">Seniors diurnos</td><td>38</td><td class="ct">$2.200.000</td><td class="ct">$83.600.000</td></tr>
+                    <tr><td class="rh">Seniors nocturnos</td><td>3</td><td class="ct" style="color:var(--red)">$2.970.000</td><td class="ct">$8.910.000</td></tr>
+                    <tr class="tr">
+                        <td class="rh">TOTAL</td>
+                        <td style="color:var(--green); font-weight:900">115</td>
+                        <td></td>
+                        <td style="color:var(--green); font-weight:900; font-size:1rem">$257.760.000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- PASO 11: Interpretación -->
+<section class="step-section fade-in" id="paso11">
+    <div class="step-header">
+        <div class="step-number sn-purple">11</div>
+        <div>
+            <div class="step-title">Interpretación de Resultados</div>
+            <div class="step-sub">¿Qué le decimos al gerente con estos números?</div>
+        </div>
+    </div>
+    <div class="step-body">
+
+        <div class="ig">
+            <div class="ic">
+                <div class="lb">Colchón presupuestal</div>
+                <div class="mt" style="color:var(--green)">$17.2M</div>
+                <div class="ds">$275M - $257.76M. Margen para imprevistos.</div>
+            </div>
+            <div class="ic">
+                <div class="lb">Juniors usados</div>
+                <div class="mt" style="color:var(--cyan)">74 / 80</div>
+                <div class="ds">6 juniors de margen en el mercado.</div>
+            </div>
+            <div class="ic">
+                <div class="lb">Seniors usados</div>
+                <div class="mt" style="color:var(--orange)">41 / 50</div>
+                <div class="ds">9 seniors de margen en el mercado.</div>
+            </div>
+            <div class="ic">
+                <div class="lb">Noche</div>
+                <div class="mt" style="color:var(--green)">8 / 25</div>
+                <div class="ds">Solo Soporte opera de noche. Muy holgado.</div>
+            </div>
+        </div>
+
+        <h3 style="margin: 1.5rem 0 0.8rem; color: var(--accent2); font-size:1rem">Restricciones activas vs holgadas</h3>
+        <div class="card">
+            <p style="color:var(--text); margin-bottom:0.8rem"><span class="tag red">ACTIVA</span> = justo en el límite (si cambia, el costo cambia). <span class="tag green">HOLGADA</span> = tiene margen sobrante.</p>
+
+            <div class="sr"><span class="sr-name">R1–R5: Mínimos por campaña</span><span class="tag red">ACTIVAS</span><span class="sr-val" style="color:var(--red)">todas = mínimo</span></div>
+            <div class="sr"><span class="sr-name">R6: Ventas tarde ≥ 14</span><span class="tag red">ACTIVA</span><span class="sr-val" style="color:var(--red)">14 = 14</span></div>
+            <div class="sr"><span class="sr-name">R9: Soporte noche ≥ 8</span><span class="tag red">ACTIVA</span><span class="sr-val" style="color:var(--red)">8 = 8</span></div>
+            <div class="sr"><span class="sr-name">R16: 30% seniors Retención</span><span class="tag red">ACTIVA</span><span class="sr-val" style="color:var(--red)">exacto 30%</span></div>
+            <div class="sr"><span class="sr-name">R19: Ventas ≥ Ret + 5 seniors</span><span class="tag red">ACTIVA</span><span class="sr-val" style="color:var(--red)">11 - 6 = 5</span></div>
+            <div class="sr"><span class="sr-name">R28: Seniors noche ≥ 3</span><span class="tag red">ACTIVA</span><span class="sr-val" style="color:var(--red)">3 = 3</span></div>
+            <div class="sr"><span class="sr-name">R20: Juniors ≤ 80</span><span class="tag green">HOLGADA</span><span class="sr-val" style="color:var(--green)">74 (-6)</span></div>
+            <div class="sr"><span class="sr-name">R21: Seniors ≤ 50</span><span class="tag green">HOLGADA</span><span class="sr-val" style="color:var(--green)">41 (-9)</span></div>
+            <div class="sr"><span class="sr-name">R25: Tope noche ≤ 25</span><span class="tag green">HOLGADA</span><span class="sr-val" style="color:var(--green)">8 (-17)</span></div>
+            <div class="sr"><span class="sr-name">R29: Presupuesto ≤ $275M</span><span class="tag green">HOLGADA</span><span class="sr-val" style="color:var(--green)">-$17.2M</span></div>
+        </div>
+
+        <h3 style="margin: 1.5rem 0 0.8rem; color: var(--accent2); font-size:1rem">Conclusiones para Andrés Morales</h3>
+        <div class="card success">
+            <div class="card-title">📋 El informe final</div>
+            <div style="color:var(--text); line-height:2">
+                <p><strong>1. La operación ES viable</strong> con los ajustes negociados. Costo del primer mes: $257.76M (dentro de los $275M aprobados).</p>
+                <p style="margin-top:0.6rem"><strong>2. Se necesitan exactamente 115 asesores</strong>: 74 juniors + 41 seniors. Cada campaña está en su mínimo — no sobra nadie.</p>
+                <p style="margin-top:0.6rem"><strong>3. Solo 8 personas trabajan de noche</strong> (Soporte). Solver decidió no poner a nadie de Cobranzas en la noche porque el recargo nocturno encarece la operación. Si Andrés necesita Cobranzas nocturno, habrá que forzarlo como restricción adicional.</p>
+                <p style="margin-top:0.6rem"><strong>4. Retención está al límite de calidad</strong> (exacto 30% seniors). Si un senior renuncia, queda por debajo de la cláusula contractual. Recomendación: tener 1 senior de backup.</p>
+                <p style="margin-top:0.6rem"><strong>5. Gestión Documental cumple el 53.3%</strong> de seniors (exigían 50%). Es la campaña más intensiva en seniors proporcionalmente.</p>
+                <p style="margin-top:0.6rem"><strong>6. A partir del mes 2</strong>, el costo baja porque ya no hay capacitación. El costo mensual recurrente sería ~$202M (solo nómina).</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">💰 Reflexión: ¿Qué aprendimos del proceso?</div>
+            <div style="color:var(--text2); line-height:2">
+                <p><strong>El valor no está solo en la solución, sino en el diagnóstico.</strong> Cuando Solver dijo "infactible", eso ya fue información valiosa: le demostró a Andrés con matemáticas que su plan original no cerraba.</p>
+                <p style="margin-top:0.5rem"><strong>Sin PL, habrían descubierto el problema 4 semanas después</strong>, con gente contratada, capacitada y sin presupuesto para pagarles. El modelo nos ahorró un desastre.</p>
+                <p style="margin-top:0.5rem"><strong>En la vida real, un modelo que da infactible es más útil que uno que da un número bonito</strong>, porque te obliga a cuestionar los supuestos antes de gastar plata.</p>
+            </div>
+        </div>
+
+        <div class="card highlight" style="text-align:center; padding:2rem; margin-top:2rem">
+            <div style="font-size:1.4rem; font-weight:800; margin-bottom:0.5rem">El flujo profesional de la PL</div>
+            <div style="color:var(--text2); font-size:0.95rem; max-width:600px; margin:0 auto">
+                Formular → Resolver → <span style="color:var(--red)">¿Infactible?</span> → Diagnosticar → Negociar → Ajustar → Resolver de nuevo → <span style="color:var(--green)">Solución óptima</span> → Interpretar → Decidir
+            </div>
+            <div style="margin-top:1.2rem; color:var(--text3); font-size:0.82rem; font-style:italic">"La diferencia entre un buen administrador y uno excelente es que el excelente convierte el caos en ecuaciones."</div>
+        </div>
+    </div>
+</section>
+
+</div>
+
+<script>
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
