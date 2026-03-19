@@ -615,6 +615,323 @@ Senior nocturno: $2.970.000 (sin capacitación)<br><br>
     </div>
 </section>
 
+<!-- MATRIZ COMPLETA DE COEFICIENTES -->
+<section class="step-section fade-in" id="matriz">
+    <div class="step-header">
+        <div class="step-number sn-yellow">4.5</div>
+        <div>
+            <div class="step-title">Matriz Completa de Coeficientes</div>
+            <div class="step-sub">Cada fila es una restricción, cada columna una variable. 0 = no aplica.</div>
+        </div>
+    </div>
+    <div class="step-body">
+        <div class="card highlight">
+            <div class="card-title">📐 Así se lee la matriz</div>
+            <p style="color:var(--text)">Cada celda indica el <strong>coeficiente</strong> que multiplica a esa variable en esa restricción. Por ejemplo, en R14 (30% seniors Ventas), x_VM tiene coeficiente <strong>-3</strong> y y_VM tiene <strong>7</strong>, porque la restricción es <code>7y - 3x ≥ 0</code>.</p>
+        </div>
+
+        <p>Desliza horizontalmente para ver todas las 24 variables →</p>
+
+        <div class="excel-wrap" style="font-size: 0.65rem">
+            <table class="xt" style="font-size: 0.62rem; min-width: 1800px">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="min-width:60px; position:sticky; left:0; z-index:3; background:var(--surface3)">ID</th>
+                        <th rowspan="2" style="min-width:140px; position:sticky; left:60px; z-index:3; background:var(--surface3)">Restricción</th>
+                        <th colspan="12" class="ch">JUNIORS (x)</th>
+                        <th colspan="12" class="ch">SENIORS (y)</th>
+                        <th rowspan="2" style="min-width:30px">⋚</th>
+                        <th rowspan="2" style="min-width:70px">RHS</th>
+                    </tr>
+                    <tr>
+                        <th>x<sub>VM</sub></th><th>x<sub>VT</sub></th>
+                        <th>x<sub>SM</sub></th><th>x<sub>ST</sub></th><th>x<sub>SN</sub></th>
+                        <th>x<sub>RM</sub></th><th>x<sub>RT</sub></th>
+                        <th>x<sub>CM</sub></th><th>x<sub>CT</sub></th><th>x<sub>CN</sub></th>
+                        <th>x<sub>GM</sub></th><th>x<sub>GT</sub></th>
+                        <th>y<sub>VM</sub></th><th>y<sub>VT</sub></th>
+                        <th>y<sub>SM</sub></th><th>y<sub>ST</sub></th><th>y<sub>SN</sub></th>
+                        <th>y<sub>RM</sub></th><th>y<sub>RT</sub></th>
+                        <th>y<sub>CM</sub></th><th>y<sub>CT</sub></th><th>y<sub>CN</sub></th>
+                        <th>y<sub>GM</sub></th><th>y<sub>GT</sub></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- FO -->
+                    <tr style="background: linear-gradient(90deg, rgba(99,102,241,0.08), transparent)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">FO</td>
+                        <td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Min Z (costo $M)</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.69</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.69</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.97</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.97</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td style="color:var(--green); font-weight:700">Min</td>
+                        <td></td>
+                    </tr>
+                    <!-- R1: Ventas total ≥ 30 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R1</td>
+                        <td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Ventas total</td>
+                        <td style="color:var(--accent2); font-weight:700">1</td><td style="color:var(--accent2); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--accent2); font-weight:700">1</td><td style="color:var(--accent2); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">30</td>
+                    </tr>
+                    <!-- R2: Soporte total ≥ 28 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R2</td>
+                        <td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Soporte total</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--cyan); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--cyan); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">28</td>
+                    </tr>
+                    <!-- R3: Retención total ≥ 20 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R3</td>
+                        <td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Retención total</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--green); font-weight:700">1</td><td style="color:var(--green); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--green); font-weight:700">1</td><td style="color:var(--green); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">20</td>
+                    </tr>
+                    <!-- R4: Cobranzas total ≥ 22 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R4</td>
+                        <td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Cobranzas total</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">22</td>
+                    </tr>
+                    <!-- R5: G.Doc total ≥ 15 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R5</td>
+                        <td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">G. Doc. total</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--pink); font-weight:700">1</td><td style="color:var(--pink); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--pink); font-weight:700">1</td><td style="color:var(--pink); font-weight:700">1</td>
+                        <td>≥</td><td class="rs">15</td>
+                    </tr>
+                    <!-- R6: Ventas tarde ≥ 14 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R6</td>
+                        <td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Ventas tarde</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--accent2); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--accent2); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">14</td>
+                    </tr>
+                    <!-- R7-R9: Soporte M/T/N ≥ 8 -->
+                    <tr><td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R7</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Soporte mañana</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td>≥</td><td class="rs">8</td></tr>
+                    <tr><td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R8</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Soporte tarde</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td>≥</td><td class="rs">8</td></tr>
+                    <tr><td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R9</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Soporte noche</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td>≥</td><td class="rs">8</td></tr>
+                    <!-- R10: Retención mañana ≥ 9 -->
+                    <tr><td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R10</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Retención mañana</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--green); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--green); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td>≥</td><td class="rs">9</td></tr>
+                    <!-- R11: Cobranzas mañana ≥ 10 -->
+                    <tr><td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R11</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Cobranzas mañana</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td>≥</td><td class="rs">10</td></tr>
+                    <!-- R12: Cobranzas tarde ≥ 7 -->
+                    <tr><td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R12</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Cobranzas tarde</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td>≥</td><td class="rs">7</td></tr>
+                    <!-- R13a: G.Doc mañana ≥ 6 -->
+                    <tr><td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R13a</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">G. Doc. mañana</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--pink); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--pink); font-weight:700">1</td><td style="color:var(--text3)">0</td><td>≥</td><td class="rs">6</td></tr>
+                    <!-- R13b: G.Doc tarde ≥ 6 -->
+                    <tr><td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R13b</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">G. Doc. tarde</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--pink); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--pink); font-weight:700">1</td><td>≥</td><td class="rs">6</td></tr>
+                    <!-- R14: Ventas 30% → -3x + 7y ≥ 0 -->
+                    <tr style="background: rgba(239,68,68,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R14</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">30% srs Ventas</td>
+                        <td style="color:var(--red); font-weight:700">-3</td><td style="color:var(--red); font-weight:700">-3</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--green); font-weight:700">7</td><td style="color:var(--green); font-weight:700">7</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">0</td>
+                    </tr>
+                    <!-- R15: Soporte 30% -->
+                    <tr style="background: rgba(239,68,68,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R15</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">30% srs Soporte</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--red); font-weight:700">-3</td><td style="color:var(--red); font-weight:700">-3</td><td style="color:var(--red); font-weight:700">-3</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--green); font-weight:700">7</td><td style="color:var(--green); font-weight:700">7</td><td style="color:var(--green); font-weight:700">7</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">0</td>
+                    </tr>
+                    <!-- R16: Retención 30% -->
+                    <tr style="background: rgba(239,68,68,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R16</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">30% srs Retención</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--red); font-weight:700">-3</td><td style="color:var(--red); font-weight:700">-3</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--green); font-weight:700">7</td><td style="color:var(--green); font-weight:700">7</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">0</td>
+                    </tr>
+                    <!-- R17: Cobranzas 30% -->
+                    <tr style="background: rgba(239,68,68,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R17</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">30% srs Cobranzas</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--red); font-weight:700">-3</td><td style="color:var(--red); font-weight:700">-3</td><td style="color:var(--red); font-weight:700">-3</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--green); font-weight:700">7</td><td style="color:var(--green); font-weight:700">7</td><td style="color:var(--green); font-weight:700">7</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">0</td>
+                    </tr>
+                    <!-- R18: G.Doc 50% → -1x + 1y ≥ 0 -->
+                    <tr style="background: rgba(239,68,68,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R18</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)"><strong>50%</strong> srs G.Doc</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--red); font-weight:700">-1</td><td style="color:var(--red); font-weight:700">-1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--green); font-weight:700">1</td><td style="color:var(--green); font-weight:700">1</td>
+                        <td>≥</td><td class="rs">0</td>
+                    </tr>
+                    <!-- R19: Ventas ≥ Ret + 5 seniors → y_VM+y_VT - y_RM - y_RT ≥ 5 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R19</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">V ≥ R + 5 srs</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--green); font-weight:700">1</td><td style="color:var(--green); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--red); font-weight:700">-1</td><td style="color:var(--red); font-weight:700">-1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">5</td>
+                    </tr>
+                    <!-- R20: Juniors ≤ 65 -->
+                    <tr style="background: rgba(245,158,11,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R20</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Máx juniors</td>
+                        <td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≤</td><td class="rs">65</td>
+                    </tr>
+                    <!-- R21: Seniors ≤ 40 -->
+                    <tr style="background: rgba(245,158,11,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R21</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Máx seniors</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td><td style="color:var(--orange); font-weight:700">1</td>
+                        <td>≤</td><td class="rs">40</td>
+                    </tr>
+                    <!-- R22: Capacidad mañana ≤ 45 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R22</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Cap. mañana</td>
+                        <td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td>
+                        <td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td>
+                        <td>≤</td><td class="rs">45</td>
+                    </tr>
+                    <!-- R23: Capacidad tarde ≤ 45 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R23</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Cap. tarde</td>
+                        <td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td>
+                        <td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td>
+                        <td>≤</td><td class="rs">45</td>
+                    </tr>
+                    <!-- R24: Capacidad noche ≤ 45 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R24</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Cap. noche</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≤</td><td class="rs">45</td>
+                    </tr>
+                    <!-- R25: Tope noche ≤ 25 -->
+                    <tr>
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R25</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Tope noche</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≤</td><td class="rs">25</td>
+                    </tr>
+                    <!-- R26: Seniors mañana ≥ 3 -->
+                    <tr style="background: rgba(6,182,212,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R26</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Srs mañana</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">3</td>
+                    </tr>
+                    <!-- R27: Seniors tarde ≥ 3 -->
+                    <tr style="background: rgba(6,182,212,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R27</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Srs tarde</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td>
+                        <td>≥</td><td class="rs">3</td>
+                    </tr>
+                    <!-- R28: Seniors noche ≥ 3 -->
+                    <tr style="background: rgba(6,182,212,0.04)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R28</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Srs noche</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td><td style="color:var(--cyan); font-weight:700">1</td><td style="color:var(--text3)">0</td><td style="color:var(--text3)">0</td>
+                        <td>≥</td><td class="rs">3</td>
+                    </tr>
+                    <!-- R29: Presupuesto ≤ 200M -->
+                    <tr style="background: linear-gradient(90deg, rgba(234,179,8,0.06), transparent)">
+                        <td class="rh" style="position:sticky; left:0; z-index:2; background:var(--surface2)">R29</td><td class="rh" style="position:sticky; left:60px; z-index:2; background:var(--surface2)">Presupuesto ($M)</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.69</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.69</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.97</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td><td class="ct" style="color:var(--red)">2.97</td>
+                        <td class="ct">2.2</td><td class="ct">2.2</td>
+                        <td>≤</td><td class="rs">200</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card" style="margin-top:1rem">
+            <div class="card-title">💡 ¿Cómo leer esta matriz en Excel?</div>
+            <p style="color:var(--text)">Cada fila de restricción tiene un <strong>LHS</strong> (lado izquierdo) que es la suma de cada coeficiente multiplicado por su variable. Ejemplo para R14:<br>
+            <code style="color:var(--cyan)">LHS = (-3)×x_VM + (-3)×x_VT + 0 + 0 + ... + 7×y_VM + 7×y_VT + 0 + ...</code><br>
+            En Excel: <code style="color:var(--cyan)">=SUMAPRODUCTO(fila_coeficientes_R14, fila_variables)</code></p>
+        </div>
+
+        <div class="card warning">
+            <div class="card-title">⚠️ Observaciones clave de la matriz</div>
+            <ul style="color:var(--text); line-height:2; list-style:none; padding:0">
+                <li>• Los coeficientes <span style="color:var(--red); font-weight:700">-3</span> y <span style="color:var(--green); font-weight:700">7</span> vienen de linealizar el 30% → <code>7y - 3x ≥ 0</code></li>
+                <li>• G. Doc. usa <span style="color:var(--red); font-weight:700">-1</span> y <span style="color:var(--green); font-weight:700">1</span> porque el 50% se simplifica a <code>y - x ≥ 0</code></li>
+                <li>• La FO y R29 tienen los mismos coeficientes — la FO minimiza lo que R29 acota por arriba</li>
+                <li>• Los <span style="color:var(--text3)">0</span> grises son variables que no participan en esa restricción</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
 <!-- PASO 5: Configurar Solver -->
 <section class="step-section fade-in" id="paso5">
     <div class="step-header">
