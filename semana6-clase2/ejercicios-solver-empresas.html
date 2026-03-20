@@ -485,14 +485,14 @@
                             <td>12</td>
                             <td>15</td>
                             <td>25</td>
-                            <td class="rs">480 min (8 hrs)</td>
+                            <td class="rs">600 min (10 hrs)</td>
                         </tr>
                         <tr>
                             <td class="rh">Mano de obra (min/u)</td>
                             <td>8</td>
                             <td>20</td>
                             <td>30</td>
-                            <td class="rs">600 min (10 hrs)</td>
+                            <td class="rs">660 min (11 hrs)</td>
                         </tr>
                         <tr>
                             <td class="rh">Harina (kg/unidad)</td>
@@ -543,8 +543,8 @@ Max Z = 3500x₁ + 5000x₂ + 8000x₃<br><br>
         <div class="card">
             <div class="card-title">📐 Restricciones</div>
             <div class="fb">
-R1: 12x₁ + 15x₂ + 25x₃ ≤ 480    <span class="cm">// Horno (min)</span><br>
-R2:  8x₁ + 20x₂ + 30x₃ ≤ 600    <span class="cm">// Mano de obra (min)</span><br>
+R1: 12x₁ + 15x₂ + 25x₃ ≤ 600    <span class="cm">// Horno (min)</span><br>
+R2:  8x₁ + 20x₂ + 30x₃ ≤ 660    <span class="cm">// Mano de obra (min)</span><br>
 R3: 0.3x₁ + 0.2x₂ + 0.4x₃ ≤ 12  <span class="cm">// Harina (kg)</span><br>
 R4: x₁ ≤ 25                       <span class="cm">// Demanda máx. pan</span><br>
 R5: x₂ ≤ 20                       <span class="cm">// Demanda máx. croissant</span><br>
@@ -610,14 +610,14 @@ R7: x₁, x₂, x₃ ≥ 0, enteros     <span class="cm">// No negatividad + ent
                         <td>12</td>
                         <td>15</td>
                         <td>25</td>
-                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">480</span></td>
+                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">600</span></td>
                     </tr>
                     <tr>
                         <td class="rh">R2 Mano de obra (min)</td>
                         <td>8</td>
                         <td>20</td>
                         <td>30</td>
-                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">600</span></td>
+                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">660</span></td>
                     </tr>
                     <tr>
                         <td class="rh">R3 Harina (kg)</td>
@@ -692,8 +692,8 @@ LHS de R2:  =SUMAPRODUCTO(B8:D8, $B$2:$D$2) <span class="cm">// coefs M.O. × va
                 <div class="sf">
                     <label>Sujeto a las restricciones</label>
                     <div class="sc">
-                        <div>$E$7 ≤ $F$7&nbsp;&nbsp; <span style="color:var(--text3)">// Horno: LHS ≤ 480</span></div>
-                        <div>$E$8 ≤ $F$8&nbsp;&nbsp; <span style="color:var(--text3)">// M.O.: LHS ≤ 600</span></div>
+                        <div>$E$7 ≤ $F$7&nbsp;&nbsp; <span style="color:var(--text3)">// Horno: LHS ≤ 600</span></div>
+                        <div>$E$8 ≤ $F$8&nbsp;&nbsp; <span style="color:var(--text3)">// M.O.: LHS ≤ 660</span></div>
                         <div>$E$9 ≤ $F$9&nbsp;&nbsp; <span style="color:var(--text3)">// Harina: LHS ≤ 12</span></div>
                         <div>$E$10 ≤ $F$10 <span style="color:var(--text3)">// Dem. pan: LHS ≤ 25</span></div>
                         <div>$E$11 ≤ $F$11 <span style="color:var(--text3)">// Dem. croi: LHS ≤ 20</span></div>
@@ -724,7 +724,7 @@ LHS de R2:  =SUMAPRODUCTO(B8:D8, $B$2:$D$2) <span class="cm">// coefs M.O. × va
     <div class="step-body">
         <div class="feasible-banner">
             <div style="font-size:1.5rem; margin-bottom:0.3rem">✅</div>
-            <div class="big">Z* = $198.500 COP/día</div>
+            <div class="big">Z* = $188.500 COP/día</div>
             <div class="sub-big">Ganancia diaria máxima óptima</div>
         </div>
 
@@ -738,7 +738,7 @@ LHS de R2:  =SUMAPRODUCTO(B8:D8, $B$2:$D$2) <span class="cm">// coefs M.O. × va
                         <td class="rh">Valor óptimo</td>
                         <td class="rs" style="font-size:1.1rem">15</td>
                         <td class="rs" style="font-size:1.1rem">8</td>
-                        <td class="rs" style="font-size:1.1rem">11</td>
+                        <td class="rs" style="font-size:1.1rem">12</td>
                     </tr>
                 </tbody>
             </table>
@@ -747,34 +747,34 @@ LHS de R2:  =SUMAPRODUCTO(B8:D8, $B$2:$D$2) <span class="cm">// coefs M.O. × va
         <h3 style="margin: 1.5rem 0 1rem; color: var(--accent2); font-size:1rem">Uso de recursos</h3>
         <div class="bar-row">
             <div class="bar-label">Horno</div>
-            <div class="bar-track"><div class="bar-fill orange" style="width: 97.9%">475/480</div></div>
-            <div class="bar-val">97.9%</div>
+            <div class="bar-track"><div class="bar-fill orange" style="width: 100%">600/600</div></div>
+            <div class="bar-val">100%</div>
         </div>
         <div class="bar-row">
             <div class="bar-label">Mano de obra</div>
-            <div class="bar-track"><div class="bar-fill purple" style="width: 76.7%">460/600</div></div>
-            <div class="bar-val">76.7%</div>
+            <div class="bar-track"><div class="bar-fill purple" style="width: 97%">640/660</div></div>
+            <div class="bar-val">97.0%</div>
         </div>
         <div class="bar-row">
             <div class="bar-label">Harina</div>
-            <div class="bar-track"><div class="bar-fill cyan" style="width: 87.5%">10.5/12</div></div>
-            <div class="bar-val">87.5%</div>
+            <div class="bar-track"><div class="bar-fill cyan" style="width: 90.8%">10.9/12</div></div>
+            <div class="bar-val">90.8%</div>
         </div>
 
         <div class="ig" style="margin-top:1.5rem">
             <div class="ic">
                 <div class="lb">Holgura horno</div>
-                <div class="mt" style="color:var(--orange)">5 min</div>
-                <div class="ds">Casi al límite — recurso cuello de botella</div>
+                <div class="mt" style="color:var(--orange)">0 min</div>
+                <div class="ds">Al límite — recurso cuello de botella</div>
             </div>
             <div class="ic">
                 <div class="lb">Holgura M.O.</div>
-                <div class="mt" style="color:var(--accent2)">140 min</div>
-                <div class="ds">2.3 horas libres — recurso holgado</div>
+                <div class="mt" style="color:var(--accent2)">20 min</div>
+                <div class="ds">Casi al límite — poco margen</div>
             </div>
             <div class="ic">
                 <div class="lb">Holgura harina</div>
-                <div class="mt" style="color:var(--cyan)">1.5 kg</div>
+                <div class="mt" style="color:var(--cyan)">1.1 kg</div>
                 <div class="ds">Algo de margen disponible</div>
             </div>
         </div>
@@ -782,11 +782,11 @@ LHS de R2:  =SUMAPRODUCTO(B8:D8, $B$2:$D$2) <span class="cm">// coefs M.O. × va
         <div class="conclusion">
             <h3>💡 Conclusiones — Panadería</h3>
             <ul>
-                <li><strong>Producir 15 panes, 8 croissants y 11 tortas al día</strong> genera la máxima ganancia de $198.500 COP.</li>
-                <li>El <strong>horno es el cuello de botella</strong> (97.9% de uso). Si doña Carmen quiere crecer, debe invertir en un segundo horno o ampliar horario.</li>
+                <li><strong>Producir 15 panes, 8 croissants y 12 tortas al día</strong> genera la máxima ganancia de $188.500 COP.</li>
+                <li>El <strong>horno es el cuello de botella</strong> (100% de uso). Si doña Carmen quiere crecer, debe invertir en un segundo horno o ampliar horario.</li>
                 <li>Las tortas son el producto más rentable ($8.000/u), pero consumen más recursos. Solver balancea eso automáticamente.</li>
-                <li>La mano de obra sobra (140 min libres). No vale la pena contratar ayudante extra por ahora.</li>
-                <li><strong>Ganancia mensual estimada</strong> (26 días): 198.500 × 26 = <strong>$5.161.000 COP</strong>.</li>
+                <li>La mano de obra está casi al límite (97%). Los dos recursos principales están muy ajustados.</li>
+                <li><strong>Ganancia mensual estimada</strong> (26 días): 188.500 × 26 = <strong>$4.901.000 COP</strong>.</li>
             </ul>
         </div>
     </div>
@@ -855,21 +855,21 @@ LHS de R2:  =SUMAPRODUCTO(B8:D8, $B$2:$D$2) <span class="cm">// coefs M.O. × va
                             <td>120</td>
                             <td>150</td>
                             <td>200</td>
-                            <td class="rs">7.500 m³</td>
+                            <td class="rs">8.000 m³</td>
                         </tr>
                         <tr>
                             <td class="rh">Jornales (días/ha/sem)</td>
                             <td>45</td>
                             <td>70</td>
                             <td>30</td>
-                            <td class="rs">2.400 jornales</td>
+                            <td class="rs">2.650 jornales</td>
                         </tr>
                         <tr>
                             <td class="rh">Insumos (COP/ha en millones)</td>
                             <td>1.8</td>
                             <td>3.2</td>
                             <td>1.0</td>
-                            <td class="rs">$100M</td>
+                            <td class="rs">$113M</td>
                         </tr>
                         <tr>
                             <td class="rh">Mín. hectáreas café</td>
@@ -922,9 +922,9 @@ Max Z = 4.5x₁ + 8.0x₂ + 3.0x₃  <span class="cm">// en millones COP</span><
             <div class="card-title">📐 Restricciones</div>
             <div class="fb">
 R1: x₁ + x₂ + x₃ ≤ 50               <span class="cm">// Tierra total (ha)</span><br>
-R2: 120x₁ + 150x₂ + 200x₃ ≤ 7500    <span class="cm">// Agua (m³)</span><br>
-R3: 45x₁ + 70x₂ + 30x₃ ≤ 2400       <span class="cm">// Jornales disponibles</span><br>
-R4: 1.8x₁ + 3.2x₂ + 1.0x₃ ≤ 100     <span class="cm">// Presupuesto insumos ($M)</span><br>
+R2: 120x₁ + 150x₂ + 200x₃ ≤ 8000    <span class="cm">// Agua (m³)</span><br>
+R3: 45x₁ + 70x₂ + 30x₃ ≤ 2650       <span class="cm">// Jornales disponibles</span><br>
+R4: 1.8x₁ + 3.2x₂ + 1.0x₃ ≤ 113     <span class="cm">// Presupuesto insumos ($M)</span><br>
 R5: x₁ + x₂ ≥ 20                     <span class="cm">// Mínimo café (cooperativa)</span><br>
 R6: x₃ ≤ 15                           <span class="cm">// Máximo plátano (mercado)</span><br>
 R7: x₁, x₂, x₃ ≥ 0, enteros
@@ -995,21 +995,21 @@ R7: x₁, x₂, x₃ ≥ 0, enteros
                         <td>120</td>
                         <td>150</td>
                         <td>200</td>
-                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">7.500</span></td>
+                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">8.000</span></td>
                     </tr>
                     <tr>
                         <td class="rh">R3 Jornales</td>
                         <td>45</td>
                         <td>70</td>
                         <td>30</td>
-                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">2.400</span></td>
+                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">2.650</span></td>
                     </tr>
                     <tr>
                         <td class="rh">R4 Insumos ($M)</td>
                         <td>1.8</td>
                         <td>3.2</td>
                         <td>1.0</td>
-                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">100</span></td>
+                        <td><span class="fm">SUMAPRODUCTO</span> ≤ <span class="rs">113</span></td>
                     </tr>
                     <tr>
                         <td class="rh">R5 Mín. café (coop.)</td>
@@ -1068,9 +1068,9 @@ R7: x₁, x₂, x₃ ≥ 0, enteros
                     <label>Sujeto a las restricciones</label>
                     <div class="sc">
                         <div>$E$7 ≤ $F$7&nbsp;&nbsp; <span style="color:var(--text3)">// Tierra: LHS ≤ 50</span></div>
-                        <div>$E$8 ≤ $F$8&nbsp;&nbsp; <span style="color:var(--text3)">// Agua: LHS ≤ 7.500</span></div>
-                        <div>$E$9 ≤ $F$9&nbsp;&nbsp; <span style="color:var(--text3)">// Jornales: LHS ≤ 2.400</span></div>
-                        <div>$E$10 ≤ $F$10 <span style="color:var(--text3)">// Insumos: LHS ≤ 100</span></div>
+                        <div>$E$8 ≤ $F$8&nbsp;&nbsp; <span style="color:var(--text3)">// Agua: LHS ≤ 8.000</span></div>
+                        <div>$E$9 ≤ $F$9&nbsp;&nbsp; <span style="color:var(--text3)">// Jornales: LHS ≤ 2.650</span></div>
+                        <div>$E$10 ≤ $F$10 <span style="color:var(--text3)">// Insumos: LHS ≤ 113</span></div>
                         <div>$E$11 ≥ $F$11 <span style="color:var(--text3)">// Mín. café: LHS ≥ 20 ⚠️</span></div>
                         <div>$E$12 ≤ $F$12 <span style="color:var(--text3)">// Máx. plátano: LHS ≤ 15</span></div>
                         <div>$B$2:$D$2 ≥ 0&nbsp; <span style="color:var(--text3)">// No negatividad</span></div>
@@ -1099,7 +1099,7 @@ R7: x₁, x₂, x₃ ≥ 0, enteros
     <div class="step-body">
         <div class="feasible-banner">
             <div style="font-size:1.5rem; margin-bottom:0.3rem">✅</div>
-            <div class="big">Z* = $258.5M COP/semestre</div>
+            <div class="big">Z* = $290M COP/semestre</div>
             <div class="sub-big">Ingreso semestral óptimo de la finca</div>
         </div>
 
@@ -1133,18 +1133,18 @@ R7: x₁, x₂, x₃ ≥ 0, enteros
         </div>
         <div class="bar-row">
             <div class="bar-label">Agua</div>
-            <div class="bar-track"><div class="bar-fill cyan" style="width: 92%">6.950/7.500</div></div>
-            <div class="bar-val">92.7%</div>
+            <div class="bar-track"><div class="bar-fill cyan" style="width: 99.4%">7.950/8.000</div></div>
+            <div class="bar-val">99.4%</div>
         </div>
         <div class="bar-row">
             <div class="bar-label">Jornales</div>
-            <div class="bar-track"><div class="bar-fill orange" style="width: 93.8%">2.250/2.400</div></div>
-            <div class="bar-val">93.8%</div>
+            <div class="bar-track"><div class="bar-fill orange" style="width: 100%">2.650/2.650</div></div>
+            <div class="bar-val">100%</div>
         </div>
         <div class="bar-row">
             <div class="bar-label">Insumos</div>
-            <div class="bar-track"><div class="bar-fill purple" style="width: 98%">$98M/$100M</div></div>
-            <div class="bar-val">98.0%</div>
+            <div class="bar-track"><div class="bar-fill purple" style="width: 100%">$113M/$113M</div></div>
+            <div class="bar-val">100%</div>
         </div>
 
         <div class="ig" style="margin-top:1.5rem">
@@ -1168,12 +1168,12 @@ R7: x₁, x₂, x₃ ≥ 0, enteros
         <div class="conclusion">
             <h3>💡 Conclusiones — Finca Cafetera</h3>
             <ul>
-                <li><strong>Dedicar 10 ha a café tradicional, 25 ha a especial y 15 ha a plátano</strong> genera $258.5M COP semestrales.</li>
-                <li>El <strong>café especial domina</strong> (77% del ingreso). Aunque es más costoso en jornales e insumos, su rentabilidad de $8M/ha lo hace imbatible.</li>
-                <li>La <strong>tierra es el recurso limitante</strong> (100% usada). Si don Hernando pudiera arrendar más hectáreas, el ingreso crecería.</li>
-                <li>El presupuesto de insumos queda al 98% — casi no hay margen. Una subida de precio del fertilizante podría hacer <strong>infactible</strong> la solución actual.</li>
+                <li><strong>Dedicar 10 ha a café tradicional, 25 ha a especial y 15 ha a plátano</strong> genera $290M COP semestrales.</li>
+                <li>El <strong>café especial domina</strong> (69% del ingreso). Aunque es más costoso en jornales e insumos, su rentabilidad de $8M/ha lo hace imbatible.</li>
+                <li><strong>Tierra, jornales e insumos al límite</strong> (100% usados). Si don Hernando pudiera arrendar más hectáreas o conseguir más jornaleros, el ingreso crecería.</li>
+                <li>El agua queda al 99.4% — prácticamente al tope. Cualquier sequía haría <strong>infactible</strong> la solución actual.</li>
                 <li>El plátano llega al tope del mercado (15 ha). <strong>Buscar nuevos compradores</strong> de plátano abriría la restricción R6 y podría mejorar la mezcla.</li>
-                <li><strong>Ingreso anual estimado</strong> (2 semestres): 258.5 × 2 = <strong>$517M COP</strong>.</li>
+                <li><strong>Ingreso anual estimado</strong> (2 semestres): 290 × 2 = <strong>$580M COP</strong>.</li>
             </ul>
         </div>
     </div>
@@ -1562,8 +1562,8 @@ R10: x₁, x₂, x₃ ≥ 0, enteros
         </div>
         <div class="bar-row">
             <div class="bar-label">Confección</div>
-            <div class="bar-track"><div class="bar-fill pink" style="width: 49.1%">2.260/5.400</div></div>
-            <div class="bar-val">41.9%</div>
+            <div class="bar-track"><div class="bar-fill pink" style="width: 60.4%">3.260/5.400</div></div>
+            <div class="bar-val">60.4%</div>
         </div>
         <div class="bar-row">
             <div class="bar-label">Tela</div>
@@ -1579,7 +1579,7 @@ R10: x₁, x₂, x₃ ≥ 0, enteros
             </div>
             <div class="ic">
                 <div class="lb">Holgura confección</div>
-                <div class="mt" style="color:var(--pink)">3.140</div>
+                <div class="mt" style="color:var(--pink)">2.140</div>
                 <div class="ds">minutos libres — operarias con capacidad</div>
             </div>
             <div class="ic">
@@ -1662,14 +1662,14 @@ R10: x₁, x₂, x₃ ≥ 0, enteros
                     </tr>
                     <tr>
                         <td class="rh">Resultado</td>
-                        <td class="rs">$198.500/día</td>
-                        <td class="rs">$258.5M/sem.</td>
+                        <td class="rs">$188.500/día</td>
+                        <td class="rs">$290M/sem.</td>
                         <td class="rs">$1.660.000/sem.</td>
                     </tr>
                     <tr>
                         <td class="rh">Cuello de botella</td>
-                        <td class="ct">Horno (97.9%)</td>
-                        <td class="ct">Tierra (100%)</td>
+                        <td class="ct">Horno (100%)</td>
+                        <td class="ct">Tierra/Jorn. (100%)</td>
                         <td class="ct">Ninguno (holgura)</td>
                     </tr>
                     <tr>
