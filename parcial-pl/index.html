@@ -20,20 +20,44 @@
   ║        .getActiveSheet();                                ║
   ║      var data = JSON.parse(e.postData.contents);         ║
   ║      if (sheet.getLastRow() === 0) {                     ║
-  ║        sheet.appendRow(['Fecha','Nombre','Código',       ║
+  ║        sheet.appendRow(['Fecha','Integrante 1',          ║
+  ║          'Código 1','Integrante 2','Código 2',           ║
   ║          'Cap1','Cap2','Cap3','NOTA FINAL',              ║
   ║          'Tiempo (min)','Ruta','Detalle']);               ║
   ║      }                                                   ║
-  ║      sheet.appendRow([                                   ║
-  ║        new Date().toLocaleString('es-CO'),               ║
-  ║        data.nombre, data.codigo,                         ║
-  ║        data.notaCap1, data.notaCap2, data.notaCap3,      ║
-  ║        data.notaFinal, data.tiempoUsado,                 ║
-  ║        data.ruta, JSON.stringify(data.respuestas)        ║
-  ║      ]);                                                 ║
-  ║      return ContentService.createTextOutput(             ║
-  ║        JSON.stringify({status:'ok'})                     ║
-  ║      ).setMimeType(ContentService.MimeType.JSON);        ║
+  ║      if (data.action === 'register') {                   ║
+  ║        sheet.appendRow([                                 ║
+  ║          new Date().toLocaleString('es-CO'),             ║
+  ║          data.nombre1, data.codigo1,                     ║
+  ║          data.nombre2 || '', data.codigo2 || '',         ║
+  ║          '','','','','','','']);                          ║
+  ║        return ContentService.createTextOutput(           ║
+  ║          JSON.stringify({status:'ok',                    ║
+  ║            row:sheet.getLastRow()})                      ║
+  ║        ).setMimeType(ContentService.MimeType.JSON);      ║
+  ║      }                                                   ║
+  ║      if (data.action === 'update') {                     ║
+  ║        var rows = sheet.getDataRange().getValues();       ║
+  ║        for (var i = rows.length-1; i >= 1; i--) {        ║
+  ║          if (String(rows[i][2]) === String(data.codigo1))║
+  ║          {                                               ║
+  ║            var r = i + 1;                                ║
+  ║            sheet.getRange(r,6).setValue(data.notaCap1);   ║
+  ║            sheet.getRange(r,7).setValue(data.notaCap2);   ║
+  ║            sheet.getRange(r,8).setValue(data.notaCap3);   ║
+  ║            sheet.getRange(r,9).setValue(data.notaFinal);  ║
+  ║            sheet.getRange(r,10).setValue(data.tiempoUsado)║
+  ║            ;                                             ║
+  ║            sheet.getRange(r,11).setValue(data.ruta);      ║
+  ║            sheet.getRange(r,12).setValue(                 ║
+  ║              JSON.stringify(data.respuestas));            ║
+  ║            break;                                        ║
+  ║          }                                               ║
+  ║        }                                                 ║
+  ║        return ContentService.createTextOutput(           ║
+  ║          JSON.stringify({status:'ok'})                   ║
+  ║        ).setMimeType(ContentService.MimeType.JSON);      ║
+  ║      }                                                   ║
   ║    } catch(err) {                                        ║
   ║      return ContentService.createTextOutput(             ║
   ║        JSON.stringify({status:'error',msg:err.message})  ║
@@ -605,6 +629,7 @@ function generateAct3(rng) {
 const state = {
   screen: 'splash',
   nombre: '', codigo: '',
+  nombre2: '', codigo2: '',
   rng: null, seed: 0,
   act1: null, act2: null, act3: null,
   act1Answers: {}, act2Answers: {}, act3Answers: {},
@@ -921,8 +946,8 @@ async function submitToSheets() {
   if (!SHEETS_URL) return false;
   try {
     const data = {
-      nombre: state.nombre,
-      codigo: state.codigo,
+      action: 'update',
+      codigo1: state.codigo,
       notaCap1: (state.act1Score / 100 * 5).toFixed(1),
       notaCap2: (state.act2Score / 100 * 5).toFixed(1),
       notaCap3: (state.act3Score / 100 * 5).toFixed(1),
@@ -1017,14 +1042,27 @@ function showSplash() {
         Una empresa. Recursos limitados. Decisiones que importan.<br>
         <em>Pereira, Colombia — ${new Date().toLocaleDateString('es-CO', {year:'numeric',month:'long',day:'numeric'})}</em>
       </p>
-      <div class="card fade-in delay-3" style="max-width:420px;width:100%">
-        <div class="form-group">
-          <label>Nombre completo</label>
-          <input class="input" id="regName" placeholder="Tu nombre..." autofocus>
+      <div class="card fade-in delay-3" style="max-width:500px;width:100%">
+        <p style="color:var(--amber);font-weight:600;font-size:.85rem;margin-bottom:.8rem;text-align:center">Puede ser individual o en parejas</p>
+        <div style="display:flex;gap:1rem">
+          <div class="form-group" style="flex:2">
+            <label>Integrante 1 — Nombre</label>
+            <input class="input" id="regName" placeholder="Nombre completo..." autofocus>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Código</label>
+            <input class="input" id="regCode" placeholder="1088...">
+          </div>
         </div>
-        <div class="form-group">
-          <label>Código estudiantil</label>
-          <input class="input" id="regCode" placeholder="Ej: 1088345678">
+        <div id="pairFields" style="display:flex;gap:1rem;opacity:.5;transition:opacity .3s">
+          <div class="form-group" style="flex:2">
+            <label>Integrante 2 — Nombre <span style="color:var(--text3)">(opcional)</span></label>
+            <input class="input" id="regName2" placeholder="Nombre del compañero/a..." onfocus="document.getElementById('pairFields').style.opacity='1'">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Código</label>
+            <input class="input" id="regCode2" placeholder="1088...">
+          </div>
         </div>
         <button class="btn btn-primary btn-lg" style="width:100%;margin-top:.5rem" onclick="startExam()">
           Comenzar Misión &#128640;
@@ -1047,7 +1085,7 @@ function showBriefing() {
       <p>Antes de entrar a la planta, lee las reglas</p>
     </div>
 
-    ${dialogueBox('hernando', `¡Hola, <strong>${state.nombre.split(' ')[0]}</strong>! Bienvenido/a a <em>Sabores del Eje Cafetero</em>. Somos una empresa familiar que empezó con un puesto de pandebonos en la Plaza de Bolívar y hoy abastecemos todo el Eje Cafetero.`)}
+    ${dialogueBox('hernando', `¡Hola, <strong>${state.nombre.split(' ')[0]}${state.nombre2 ? ' y ' + state.nombre2.split(' ')[0] : ''}</strong>! Bienvenido/a a <em>Sabores del Eje Cafetero</em>. Somos una empresa familiar que empezó con un puesto de pandebonos en la Plaza de Bolívar y hoy abastecemos todo el Eje Cafetero.`)}
 
     ${dialogueBox('hernando', `Necesito que optimices nuestra producción. Vas a enfrentar <strong>3 desafíos</strong> que pondrán a prueba tu capacidad de análisis. Cada decisión que tomes cambiará el rumbo de la empresa.`)}
 
@@ -1886,16 +1924,16 @@ function showResults() {
 
     <div class="card slide-up delay-3">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
-        <div><span style="color:var(--text3)">Estudiante:</span> <strong>${state.nombre}</strong></div>
-        <div><span style="color:var(--text3)">Código:</span> <strong>${state.codigo}</strong></div>
+        <div><span style="color:var(--text3)">Integrante 1:</span> <strong>${state.nombre}</strong> (${state.codigo})</div>
+        ${state.nombre2 ? `<div><span style="color:var(--text3)">Integrante 2:</span> <strong>${state.nombre2}</strong> (${state.codigo2})</div>` : ''}
         <div><span style="color:var(--text3)">Tiempo:</span> <strong>${timeUsed} min</strong></div>
         <div><span style="color:var(--text3)">Ruta:</span> <strong>${state.path === 'A' ? 'Expansión' : state.path === 'B' ? 'Crisis Proveedor' : 'Red. Costos'}</strong></div>
       </div>
     </div>
 
     ${dialogueBox('hernando', grade >= 3.0
-      ? `Ha sido un placer tenerte en el equipo, <strong>${state.nombre.split(' ')[0]}</strong>. Sabores del Eje tiene futuro gracias a personas como tú. ¡Éxitos!`
-      : `<strong>${state.nombre.split(' ')[0]}</strong>, la programación lineal es una herramienta poderosa. Te invito a practicar más — la próxima vez lo vas a dominar. ¡Ánimo!`
+      ? `Ha sido un placer tenerlos en el equipo, <strong>${state.nombre.split(' ')[0]}${state.nombre2 ? ' y ' + state.nombre2.split(' ')[0] : ''}</strong>. Sabores del Eje tiene futuro gracias a personas como ustedes. ¡Éxitos!`
+      : `<strong>${state.nombre.split(' ')[0]}${state.nombre2 ? ' y ' + state.nombre2.split(' ')[0] : ''}</strong>, la programación lineal es una herramienta poderosa. Los invito a practicar más — la próxima vez lo van a dominar. ¡Ánimo!`
     )}
 
     <div id="submitSection" style="text-align:center;margin:2rem 0">
@@ -1959,11 +1997,13 @@ function startExam() {
   const name = ($('regName') || {}).value?.trim();
   const code = ($('regCode') || {}).value?.trim();
   if (!name || !code) {
-    toast('Completa tu nombre y código', 'warning');
+    toast('Completa el nombre y código del integrante 1', 'warning');
     return;
   }
   state.nombre = name;
   state.codigo = code;
+  state.nombre2 = ($('regName2') || {}).value?.trim() || '';
+  state.codigo2 = ($('regCode2') || {}).value?.trim() || '';
   state.seed = seedFromString(code);
   state.rng = mulberry32(state.seed);
 
@@ -1971,7 +2011,30 @@ function startExam() {
   state.act1 = generateAct1(state.rng);
   state.act3 = generateAct3(state.rng);
 
+  // Registrar en Google Sheets inmediatamente (fila con nombres, sin notas)
+  registerInSheets();
+
   showBriefing();
+}
+
+async function registerInSheets() {
+  if (!SHEETS_URL) return;
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'register',
+        nombre1: state.nombre,
+        codigo1: state.codigo,
+        nombre2: state.nombre2,
+        codigo2: state.codigo2,
+      }),
+      headers: { 'Content-Type': 'text/plain' },
+      mode: 'no-cors',
+    });
+  } catch (e) {
+    console.error('Error registrando en Sheets:', e);
+  }
 }
 
 function beginAct1() {
