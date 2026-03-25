@@ -3,2241 +3,1123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sabores del Eje Cafetero - Parcial Simulador Gerencial</title>
+<title>Sabores del Eje — Novela Gerencial Interactiva</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
-<!--
-  ╔══════════════════════════════════════════════════════════╗
-  ║  SETUP GOOGLE SHEETS - INSTRUCCIONES PARA EL PROFESOR   ║
-  ╠══════════════════════════════════════════════════════════╣
-  ║                                                          ║
-  ║  1. Crear un Google Sheet nuevo                          ║
-  ║  2. Ir a Extensiones > Apps Script                       ║
-  ║  3. Borrar todo y pegar este código:                     ║
-  ║                                                          ║
-  ║  function doPost(e) {                                    ║
-  ║    try {                                                 ║
-  ║      var sheet = SpreadsheetApp.getActiveSpreadsheet()   ║
-  ║        .getActiveSheet();                                ║
-  ║      var data = JSON.parse(e.postData.contents);         ║
-  ║      if (sheet.getLastRow() === 0) {                     ║
-  ║        sheet.appendRow(['Fecha','Integrante 1',          ║
-  ║          'Código 1','Integrante 2','Código 2',           ║
-  ║          'Cap1','Cap2','Cap3','NOTA FINAL',              ║
-  ║          'Tiempo (min)','Ruta','Detalle']);               ║
-  ║      }                                                   ║
-  ║      if (data.action === 'register') {                   ║
-  ║        sheet.appendRow([                                 ║
-  ║          new Date().toLocaleString('es-CO'),             ║
-  ║          data.nombre1, data.codigo1,                     ║
-  ║          data.nombre2 || '', data.codigo2 || '',         ║
-  ║          '','','','','','','']);                          ║
-  ║        return ContentService.createTextOutput(           ║
-  ║          JSON.stringify({status:'ok',                    ║
-  ║            row:sheet.getLastRow()})                      ║
-  ║        ).setMimeType(ContentService.MimeType.JSON);      ║
-  ║      }                                                   ║
-  ║      if (data.action === 'update') {                     ║
-  ║        var rows = sheet.getDataRange().getValues();       ║
-  ║        for (var i = rows.length-1; i >= 1; i--) {        ║
-  ║          if (String(rows[i][2]) === String(data.codigo1))║
-  ║          {                                               ║
-  ║            var r = i + 1;                                ║
-  ║            sheet.getRange(r,6).setValue(data.notaCap1);   ║
-  ║            sheet.getRange(r,7).setValue(data.notaCap2);   ║
-  ║            sheet.getRange(r,8).setValue(data.notaCap3);   ║
-  ║            sheet.getRange(r,9).setValue(data.notaFinal);  ║
-  ║            sheet.getRange(r,10).setValue(data.tiempoUsado)║
-  ║            ;                                             ║
-  ║            sheet.getRange(r,11).setValue(data.ruta);      ║
-  ║            sheet.getRange(r,12).setValue(                 ║
-  ║              JSON.stringify(data.respuestas));            ║
-  ║            break;                                        ║
-  ║          }                                               ║
-  ║        }                                                 ║
-  ║        return ContentService.createTextOutput(           ║
-  ║          JSON.stringify({status:'ok'})                   ║
-  ║        ).setMimeType(ContentService.MimeType.JSON);      ║
-  ║      }                                                   ║
-  ║    } catch(err) {                                        ║
-  ║      return ContentService.createTextOutput(             ║
-  ║        JSON.stringify({status:'error',msg:err.message})  ║
-  ║      ).setMimeType(ContentService.MimeType.JSON);        ║
-  ║    }                                                     ║
-  ║  }                                                       ║
-  ║  function doGet() {                                      ║
-  ║    return ContentService.createTextOutput('Activo');      ║
-  ║  }                                                       ║
-  ║                                                          ║
-  ║  4. Deploy > New deployment > Web app                    ║
-  ║     - Execute as: Me                                     ║
-  ║     - Who has access: Anyone                             ║
-  ║  5. Copiar la URL y pegarla abajo en SHEETS_URL          ║
-  ╚══════════════════════════════════════════════════════════╝
--->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0e1a;--bg2:#111827;--card:#1a2236;--card2:#1e293b;
+  --bg:#0a0e1a;--card:#151d30;--card2:#1a2540;
   --amber:#f59e0b;--amber-d:#d97706;--amber-l:#fbbf24;
   --green:#10b981;--green-d:#059669;--red:#f43f5e;--red-d:#e11d48;
-  --blue:#3b82f6;--purple:#8b5cf6;--teal:#14b8a6;
+  --blue:#3b82f6;--purple:#8b5cf6;--teal:#14b8a6;--pink:#ec4899;
   --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
-  --radius:12px;--radius-sm:8px;
-  --shadow:0 4px 24px rgba(0,0,0,.4);
-  --transition:all .3s cubic-bezier(.4,0,.2,1);
+  --radius:14px;--shadow:0 8px 32px rgba(0,0,0,.5);
 }
 html{font-size:16px;scroll-behavior:smooth}
 body{
   font-family:'Inter',system-ui,sans-serif;
   background:var(--bg);color:var(--text);
   min-height:100vh;overflow-x:hidden;
-  background-image:radial-gradient(ellipse at 20% 50%,rgba(245,158,11,.06) 0%,transparent 50%),
-                   radial-gradient(ellipse at 80% 20%,rgba(59,130,246,.05) 0%,transparent 50%);
 }
-h1,h2,h3{font-family:'Playfair Display',serif;font-weight:700}
-.app{max-width:900px;margin:0 auto;padding:1rem;min-height:100vh;position:relative}
+h1,h2,h3{font-family:'Playfair Display',serif}
 
-/* TIMER BAR */
-.timer-bar{
-  position:fixed;top:0;left:0;right:0;z-index:1000;
-  background:rgba(10,14,26,.95);backdrop-filter:blur(12px);
-  border-bottom:1px solid rgba(245,158,11,.2);
-  padding:.6rem 1.5rem;display:none;
-  justify-content:space-between;align-items:center;
+/* ===== HUD (Header) ===== */
+.hud{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(10,14,26,.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  display:none;padding:.6rem 1.2rem;
+  align-items:center;justify-content:space-between;
 }
-.timer-bar.active{display:flex}
-.timer-clock{
-  font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;
-  letter-spacing:2px;
-}
-.timer-clock.warning{color:var(--amber)}
-.timer-clock.danger{color:var(--red);animation:pulse 1s infinite}
-.timer-clock.ok{color:var(--green)}
-.timer-progress{font-size:.85rem;color:var(--text2)}
-.timer-bar-fill{
-  position:absolute;bottom:0;left:0;height:3px;
-  background:linear-gradient(90deg,var(--green),var(--amber),var(--red));
-  transition:width 1s linear;
-}
+.hud.active{display:flex}
+.hud-money{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:1.15rem}
+.hud-money .symbol{color:var(--amber);font-size:1.3rem}
+.hud-money .amount{font-variant-numeric:tabular-nums;transition:color .3s}
+.hud-chapter{font-size:.8rem;color:var(--text3);text-align:center}
+.hud-timer{font-size:1.1rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.hud-timer.ok{color:var(--green)}.hud-timer.warn{color:var(--amber)}.hud-timer.danger{color:var(--red);animation:pulse 1s infinite}
 
-/* TOASTS */
-#toasts{position:fixed;top:70px;right:1rem;z-index:2000;display:flex;flex-direction:column;gap:.5rem}
+/* ===== MONEY FLOAT ===== */
+.money-float{
+  position:fixed;top:55px;left:50%;transform:translateX(-50%);
+  font-size:1.6rem;font-weight:900;z-index:200;
+  pointer-events:none;animation:floatUp 1.8s ease-out forwards;
+  text-shadow:0 2px 12px rgba(0,0,0,.7);
+}
+.money-float.pos{color:var(--green)}
+.money-float.neg{color:var(--red)}
+@keyframes floatUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-60px)}}
+
+/* ===== TOASTS ===== */
+#toasts{position:fixed;top:60px;right:1rem;z-index:300;display:flex;flex-direction:column;gap:.5rem}
 .toast{
-  padding:.8rem 1.2rem;border-radius:var(--radius-sm);
-  font-weight:600;font-size:.9rem;
-  transform:translateX(120%);opacity:0;
-  transition:all .4s cubic-bezier(.4,0,.2,1);
-  max-width:360px;box-shadow:var(--shadow);
+  padding:.7rem 1.1rem;border-radius:10px;font-weight:600;font-size:.88rem;
+  max-width:380px;box-shadow:var(--shadow);
+  transform:translateX(120%);opacity:0;transition:all .4s cubic-bezier(.4,0,.2,1);
 }
 .toast.show{transform:translateX(0);opacity:1}
 .toast.info{background:var(--blue);color:#fff}
 .toast.success{background:var(--green-d);color:#fff}
 .toast.warning{background:var(--amber-d);color:#fff}
-.toast.danger{background:var(--red-d);color:#fff;animation:shake .5s}
+.toast.danger{background:var(--red-d);color:#fff}
 
-/* SCREENS */
-.screen{
-  display:none;opacity:0;transform:translateY(20px);
-  transition:opacity .5s,transform .5s;padding-top:4.5rem;
+/* ===== SCENE CONTAINER ===== */
+.scene{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;padding:5rem 1.2rem 2rem;
+  max-width:720px;margin:0 auto;
+  opacity:0;transform:translateY(15px);
+  transition:opacity .5s,transform .5s;
 }
-.screen.active{display:block;opacity:1;transform:translateY(0)}
+.scene.visible{opacity:1;transform:translateY(0)}
 
-/* SPLASH */
-.splash{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100vh;text-align:center;padding-top:0 !important;
+/* ===== SCENE ILLUSTRATION ===== */
+.scene-illust{
+  text-align:center;font-size:4rem;margin-bottom:1rem;
+  filter:drop-shadow(0 4px 20px rgba(245,158,11,.2));
+  animation:float 4s ease-in-out infinite;
 }
-.splash-logo{font-size:4rem;margin-bottom:1rem;animation:float 3s ease-in-out infinite}
-.splash h1{font-size:2.8rem;line-height:1.1;margin-bottom:.5rem;
-  background:linear-gradient(135deg,var(--amber-l),var(--amber),var(--amber-d));
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ===== CHAPTER TAG ===== */
+.chapter-tag{
+  text-align:center;text-transform:uppercase;letter-spacing:5px;
+  font-size:.72rem;font-weight:700;color:var(--amber);margin-bottom:.3rem;
+}
+.scene-title{
+  text-align:center;font-size:1.8rem;margin-bottom:1.2rem;
+  background:linear-gradient(135deg,var(--amber-l),var(--amber));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-.splash .subtitle{font-size:1.3rem;color:var(--text2);margin-bottom:2rem;font-weight:300}
-.splash .tagline{
-  font-size:1rem;color:var(--text3);max-width:500px;line-height:1.6;
-  margin-bottom:3rem;
-}
 
-/* CARDS */
-.card{
-  background:var(--card);border:1px solid rgba(255,255,255,.06);
-  border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;
-  box-shadow:var(--shadow);transition:var(--transition);
-}
-.card:hover{border-color:rgba(245,158,11,.15)}
-.card-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1rem}
-.card-icon{
-  width:44px;height:44px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.4rem;flex-shrink:0;
-}
-
-/* CHARACTER DIALOGUE */
-.dialogue{
-  background:var(--card2);border-left:4px solid var(--amber);
-  border-radius:0 var(--radius) var(--radius) 0;
-  padding:1.2rem 1.5rem;margin:1rem 0;position:relative;
-}
-.dialogue::before{
-  content:'';position:absolute;left:-4px;top:12px;
-  width:0;height:0;border:8px solid transparent;
-  border-right-color:var(--card2);
-}
-.dialogue .char-name{font-weight:700;font-size:.85rem;margin-bottom:.3rem}
-.dialogue .char-name.hernando{color:var(--amber)}
-.dialogue .char-name.marcela{color:var(--teal)}
-.dialogue .char-name.camilo{color:var(--purple)}
-.dialogue p{color:var(--text2);line-height:1.7;font-size:.95rem}
-
-/* CHARACTER AVATAR */
-.avatar{
-  width:48px;height:48px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.3rem;font-weight:800;flex-shrink:0;
-}
-.avatar.hernando{background:linear-gradient(135deg,var(--amber),var(--amber-d))}
-.avatar.marcela{background:linear-gradient(135deg,var(--teal),#0d9488)}
-.avatar.camilo{background:linear-gradient(135deg,var(--purple),#7c3aed)}
-
-/* FORMS */
-.form-group{margin-bottom:1.2rem}
-.form-group label{display:block;font-weight:600;margin-bottom:.4rem;font-size:.9rem;color:var(--text2)}
-.input{
-  width:100%;padding:.7rem 1rem;border-radius:var(--radius-sm);
-  border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);
-  color:var(--text);font-size:1rem;font-family:inherit;
-  transition:var(--transition);
-}
-.input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
-.input::placeholder{color:var(--text3)}
-.input-sm{width:80px;text-align:center;padding:.5rem;font-weight:600}
-select.input{cursor:pointer}
-
-/* BUTTONS */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
-  padding:.8rem 2rem;border-radius:var(--radius-sm);font-weight:700;
-  font-size:1rem;border:none;cursor:pointer;
-  transition:var(--transition);font-family:inherit;
-}
-.btn:active{transform:scale(.97)}
-.btn-primary{
-  background:linear-gradient(135deg,var(--amber),var(--amber-d));
-  color:#000;box-shadow:0 4px 15px rgba(245,158,11,.3);
-}
-.btn-primary:hover{box-shadow:0 6px 25px rgba(245,158,11,.5);transform:translateY(-1px)}
-.btn-secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid rgba(255,255,255,.15)}
-.btn-secondary:hover{background:rgba(255,255,255,.12)}
-.btn-success{background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff}
-.btn-danger{background:linear-gradient(135deg,var(--red),var(--red-d));color:#fff}
-.btn-lg{padding:1rem 3rem;font-size:1.1rem;border-radius:var(--radius)}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none !important}
-
-/* DATA TABLE */
-.data-table{
-  width:100%;border-collapse:separate;border-spacing:0;
-  margin:1rem 0;border-radius:var(--radius);overflow:hidden;
-  border:1px solid rgba(255,255,255,.08);
-}
-.data-table th{
-  background:rgba(245,158,11,.12);color:var(--amber-l);
-  padding:.8rem 1rem;text-align:center;font-weight:700;font-size:.85rem;
-  text-transform:uppercase;letter-spacing:1px;
-}
-.data-table td{
-  padding:.7rem 1rem;text-align:center;border-top:1px solid rgba(255,255,255,.05);
-  font-variant-numeric:tabular-nums;
-}
-.data-table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
-.data-table .row-label{text-align:left;font-weight:600;color:var(--amber-l)}
-
-/* LP FORMULATION */
-.lp-row{
-  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
-  margin:.6rem 0;padding:.6rem;background:rgba(255,255,255,.03);
-  border-radius:var(--radius-sm);
-}
-.lp-row .lp-label{min-width:100px;font-weight:600;color:var(--text2);font-size:.85rem}
-.lp-row .var-name{color:var(--amber);font-weight:700;font-size:.95rem}
-.lp-row .operator{color:var(--text3);font-weight:500;padding:0 2px}
-
-/* QUESTION BLOCKS */
-.question{
-  background:var(--card);border:1px solid rgba(255,255,255,.06);
-  border-radius:var(--radius);padding:1.5rem;margin:1.2rem 0;
-  counter-increment:q;
-}
-.question .q-header{
-  display:flex;align-items:flex-start;gap:.8rem;margin-bottom:1rem;
-}
-.question .q-num{
-  background:var(--amber);color:#000;font-weight:800;
-  min-width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:.85rem;flex-shrink:0;
-}
-.question .q-text{font-weight:600;line-height:1.5;font-size:.95rem}
-.question .q-pts{
-  margin-left:auto;background:rgba(245,158,11,.1);color:var(--amber);
-  padding:.2rem .6rem;border-radius:20px;font-size:.75rem;font-weight:700;
-  white-space:nowrap;
-}
-
-/* OPTIONS (RADIO) */
-.options{display:flex;flex-direction:column;gap:.5rem;margin-top:.8rem}
-.option{
-  display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;
-  border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);
-  cursor:pointer;transition:var(--transition);
-}
-.option:hover{background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2)}
-.option.selected{background:rgba(245,158,11,.1);border-color:var(--amber)}
-.option input[type="radio"]{display:none}
-.option .radio{
-  width:20px;height:20px;border-radius:50%;
-  border:2px solid var(--text3);flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  transition:var(--transition);
-}
-.option.selected .radio{border-color:var(--amber);background:var(--amber)}
-.option.selected .radio::after{content:'';width:8px;height:8px;background:#000;border-radius:50%}
-
-/* SCORE DISPLAY */
-.score-card{
-  text-align:center;padding:2rem;
-  background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(59,130,246,.05));
-  border:1px solid rgba(245,158,11,.2);border-radius:var(--radius);
-  margin:1.5rem 0;
-}
-.score-big{font-size:4rem;font-weight:900;font-family:'Playfair Display',serif}
-.score-label{color:var(--text2);font-size:1rem;margin-top:.3rem}
-
-/* GRADE BAR */
-.grade-bar{
-  height:12px;background:rgba(255,255,255,.08);border-radius:20px;
-  overflow:hidden;margin:.8rem 0;
-}
-.grade-bar-fill{height:100%;border-radius:20px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
-.grade-bar-fill.low{background:linear-gradient(90deg,var(--red),var(--red-d))}
-.grade-bar-fill.mid{background:linear-gradient(90deg,var(--amber),var(--amber-d))}
-.grade-bar-fill.high{background:linear-gradient(90deg,var(--green),var(--green-d))}
-
-/* SCENE HEADER */
-.scene-header{
-  text-align:center;margin:2rem 0;padding:2rem;
-  background:linear-gradient(135deg,rgba(245,158,11,.05),transparent);
-  border-radius:var(--radius);border:1px solid rgba(245,158,11,.1);
-}
-.scene-header .chapter{
-  font-size:.8rem;text-transform:uppercase;letter-spacing:4px;
-  color:var(--amber);font-weight:700;margin-bottom:.5rem;
-}
-.scene-header h2{font-size:2rem;margin-bottom:.5rem}
-.scene-header p{color:var(--text2);font-size:.95rem}
-
-/* NARRATIVE */
+/* ===== NARRATIVE ===== */
 .narrative{
-  font-size:1.05rem;line-height:1.8;color:var(--text2);
-  margin:1rem 0;padding:1rem 0;
-  border-bottom:1px solid rgba(255,255,255,.05);
+  font-size:1.02rem;line-height:1.85;color:var(--text2);
+  margin-bottom:1rem;padding-bottom:1rem;
+  border-bottom:1px solid rgba(255,255,255,.04);
 }
 .narrative em{color:var(--amber-l);font-style:italic}
 .narrative strong{color:var(--text);font-weight:600}
 
-/* RESULT SCREEN */
-.result-actions{display:flex;gap:1rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap}
-
-/* TEXTAREA */
-textarea.input{min-height:100px;resize:vertical;line-height:1.6}
-
-/* LOADING */
-.loading-dots{display:flex;gap:.3rem;justify-content:center;padding:2rem}
-.loading-dots span{
-  width:10px;height:10px;background:var(--amber);border-radius:50%;
-  animation:bounce .6s infinite alternate;
+/* ===== DIALOGUE ===== */
+.dialogue{
+  display:flex;gap:.8rem;margin:.8rem 0;
+  animation:fadeSlide .4s ease-out both;
 }
-.loading-dots span:nth-child(2){animation-delay:.2s}
-.loading-dots span:nth-child(3){animation-delay:.4s}
-
-/* BADGE */
-.badge{
-  display:inline-flex;align-items:center;gap:.3rem;
-  padding:.3rem .8rem;border-radius:20px;font-size:.8rem;font-weight:600;
+.dialogue .avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
 }
-.badge.good{background:rgba(16,185,129,.15);color:var(--green)}
-.badge.mid{background:rgba(245,158,11,.15);color:var(--amber)}
-.badge.bad{background:rgba(244,63,94,.15);color:var(--red)}
+.dialogue .bubble{
+  background:var(--card2);border-radius:2px var(--radius) var(--radius) var(--radius);
+  padding:.8rem 1.1rem;flex:1;position:relative;
+}
+.dialogue .bubble::before{
+  content:'';position:absolute;left:-6px;top:10px;
+  border:6px solid transparent;border-right-color:var(--card2);
+}
+.dialogue .char-name{font-size:.75rem;font-weight:700;margin-bottom:.2rem}
+.dialogue .char-text{font-size:.93rem;line-height:1.6;color:var(--text2)}
+.av-hernando{background:linear-gradient(135deg,var(--amber),var(--amber-d))}
+.av-marcela{background:linear-gradient(135deg,var(--teal),#0d9488)}
+.av-camilo{background:linear-gradient(135deg,var(--purple),#7c3aed)}
+.nm-hernando{color:var(--amber)}.nm-marcela{color:var(--teal)}.nm-camilo{color:var(--purple)}
 
-/* FOOTER */
-.exam-footer{text-align:center;padding:2rem;color:var(--text3);font-size:.8rem;margin-top:2rem}
+/* ===== DATA TABLE (for LP data) ===== */
+.lp-table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  margin:1rem 0;border-radius:var(--radius);overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);font-size:.88rem;
+}
+.lp-table th{background:rgba(245,158,11,.1);color:var(--amber-l);padding:.6rem .8rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px}
+.lp-table td{padding:.5rem .8rem;text-align:center;border-top:1px solid rgba(255,255,255,.04);font-variant-numeric:tabular-nums}
+.lp-table .label{text-align:left;font-weight:600;color:var(--amber-l)}
 
-/* ANIMATIONS */
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+/* ===== CHOICES ===== */
+.choices{display:flex;flex-direction:column;gap:.7rem;margin-top:1.2rem}
+.choice-btn{
+  display:flex;align-items:flex-start;gap:.8rem;
+  padding:1rem 1.2rem;border-radius:var(--radius);
+  background:var(--card);border:2px solid rgba(255,255,255,.07);
+  cursor:pointer;transition:all .25s;text-align:left;
+  font-family:inherit;font-size:.95rem;color:var(--text);
+  line-height:1.5;width:100%;
+}
+.choice-btn:hover{background:var(--card2);border-color:rgba(245,158,11,.25);transform:translateX(4px)}
+.choice-btn:active{transform:translateX(2px) scale(.99)}
+.choice-btn .letter{
+  min-width:36px;height:36px;border-radius:50%;
+  background:rgba(245,158,11,.12);color:var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.95rem;flex-shrink:0;
+}
+.choice-btn .choice-text{padding-top:.3rem}
+.choice-btn.disabled{opacity:.5;pointer-events:none}
+.choice-btn.correct{border-color:var(--green);background:rgba(16,185,129,.08)}
+.choice-btn.wrong{border-color:var(--red);background:rgba(244,63,94,.06);opacity:.6}
+.choice-btn.selected-correct{border-color:var(--green);background:rgba(16,185,129,.15);box-shadow:0 0 20px rgba(16,185,129,.15)}
+.choice-btn.selected-wrong{border-color:var(--red);background:rgba(244,63,94,.12);box-shadow:0 0 20px rgba(244,63,94,.15)}
+
+/* ===== FEEDBACK ===== */
+.feedback{
+  margin-top:1rem;padding:1.2rem;border-radius:var(--radius);
+  animation:fadeSlide .4s ease-out both;
+}
+.feedback.correct{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+.feedback.wrong{background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.15)}
+.feedback .fb-icon{font-size:1.5rem;margin-bottom:.3rem}
+.feedback .fb-text{color:var(--text2);line-height:1.6;font-size:.92rem}
+.feedback .fb-money{font-size:1.2rem;font-weight:800;margin-top:.5rem}
+
+/* ===== CONTINUE BUTTON ===== */
+.btn-continue{
+  display:block;width:100%;padding:1rem;margin-top:1.2rem;
+  border:none;border-radius:var(--radius);font-family:inherit;
+  font-size:1.05rem;font-weight:700;cursor:pointer;
+  transition:all .25s;
+}
+.btn-continue.primary{
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  color:#000;box-shadow:0 4px 20px rgba(245,158,11,.25);
+}
+.btn-continue.primary:hover{box-shadow:0 6px 30px rgba(245,158,11,.4);transform:translateY(-1px)}
+.btn-continue.success{background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff}
+.btn-continue.danger{background:linear-gradient(135deg,var(--red),var(--red-d));color:#fff}
+.btn-continue:active{transform:scale(.98)}
+
+/* ===== SPLASH (REGISTRATION) ===== */
+.splash{text-align:center;padding-top:0 !important;justify-content:center}
+.splash-icon{font-size:4.5rem;margin-bottom:.8rem;animation:float 3s ease-in-out infinite}
+.splash h1{font-size:2.6rem;line-height:1.1;margin-bottom:.3rem;background:linear-gradient(135deg,var(--amber-l),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.splash .sub{font-size:1.15rem;color:var(--text2);font-weight:300;margin-bottom:2rem}
+.reg-card{
+  background:var(--card);border:1px solid rgba(255,255,255,.06);
+  border-radius:var(--radius);padding:1.5rem;max-width:500px;
+  margin:0 auto;box-shadow:var(--shadow);text-align:left;
+}
+.form-row{display:flex;gap:.8rem;margin-bottom:.8rem}
+.form-row .fg{flex:1}
+.fg label{display:block;font-weight:600;font-size:.82rem;color:var(--text2);margin-bottom:.3rem}
+.input{
+  width:100%;padding:.65rem .9rem;border-radius:8px;
+  border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);
+  color:var(--text);font-size:.95rem;font-family:inherit;transition:all .2s;
+}
+.input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+.pair-label{font-size:.8rem;color:var(--amber);font-weight:600;text-align:center;margin-bottom:.6rem}
+
+/* ===== RESULTS ===== */
+.result-big{font-size:5rem;font-weight:900;font-family:'Playfair Display',serif;text-align:center}
+.result-sub{text-align:center;font-size:1.15rem;color:var(--text2);margin-top:.3rem}
+.grade-bar{height:10px;background:rgba(255,255,255,.06);border-radius:20px;overflow:hidden;margin:.8rem 0}
+.grade-fill{height:100%;border-radius:20px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.grade-fill.high{background:linear-gradient(90deg,var(--green),var(--green-d))}
+.grade-fill.mid{background:linear-gradient(90deg,var(--amber),var(--amber-d))}
+.grade-fill.low{background:linear-gradient(90deg,var(--red),var(--red-d))}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1rem 0}
+.stat-item{background:var(--card);border-radius:10px;padding:.8rem;text-align:center}
+.stat-item .stat-val{font-size:1.3rem;font-weight:800}
+.stat-item .stat-lbl{font-size:.75rem;color:var(--text3);margin-top:.2rem}
+
+/* ===== CONFETTI ===== */
+.confetti{position:fixed;width:8px;height:8px;top:-10px;z-index:400;animation:confettiFall 3s ease-out forwards}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
-@keyframes bounce{to{transform:translateY(-8px)}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-@keyframes confetti{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(300px) rotate(720deg);opacity:0}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 
-.fade-in{animation:fadeIn .5s ease-out both}
-.slide-up{animation:slideUp .6s ease-out both}
-.delay-1{animation-delay:.1s}
-.delay-2{animation-delay:.2s}
-.delay-3{animation-delay:.3s}
-.delay-4{animation-delay:.4s}
-
-/* RESPONSIVE */
-@media(max-width:640px){
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
   .splash h1{font-size:2rem}
-  .lp-row{flex-direction:column;align-items:flex-start}
-  .data-table{font-size:.85rem}
-  .data-table th,.data-table td{padding:.5rem}
-  .timer-bar{padding:.4rem .8rem}
-  .timer-clock{font-size:1.2rem}
-}
-
-/* CONFETTI */
-.confetti-piece{
-  position:fixed;width:10px;height:10px;top:-10px;z-index:3000;
-  animation:confetti 3s ease-out forwards;
+  .scene-title{font-size:1.4rem}
+  .form-row{flex-direction:column;gap:.5rem}
+  .hud{padding:.4rem .8rem;font-size:.9rem}
+  .hud-money{font-size:1rem}
 }
 </style>
 </head>
 <body>
 
-<!-- TIMER BAR -->
-<div class="timer-bar" id="timerBar">
-  <div style="display:flex;align-items:center;gap:1rem">
-    <span style="font-size:1.2rem">&#9202;</span>
-    <span class="timer-clock" id="timerClock">01:25:00</span>
-  </div>
-  <div class="timer-progress" id="timerProgress"></div>
-  <div class="timer-bar-fill" id="timerFill" style="width:100%"></div>
+<div class="hud" id="hud">
+  <div class="hud-money"><span class="symbol">💰</span> $<span class="amount" id="hudMoney">100,000,000</span></div>
+  <div class="hud-chapter" id="hudChapter"></div>
+  <div class="hud-timer ok" id="hudTimer">01:25:00</div>
 </div>
-
-<!-- TOASTS -->
 <div id="toasts"></div>
-
-<!-- APP -->
-<div class="app" id="app"></div>
+<div id="moneyFloats"></div>
+<div id="app"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   CONFIGURACIÓN — Cambiar SHEETS_URL antes de usar
-   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════ */
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbypn0lbCvbnqJBva6fnSTioT_mIiLA8L5yjz8IwT73ZTnGYZgRyKFcy0ardXGXpGKHPiQ/exec';
-const TOTAL_TIME = 85 * 60; // 1h 25min en segundos
-const TEACHER_KEY = 'profe2025'; // Código para modo profesor
+const TOTAL_TIME = 85 * 60;
+const START_MONEY = 100_000_000;
+const TEACHER_KEY = 'profe2025';
 
-/* ═══════════════════════════════════════════════════
-   UTILIDADES
-   ═══════════════════════════════════════════════════ */
-function mulberry32(seed) {
-  return function() {
-    let t = seed += 0x6D2B79F5;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
-function seedFromString(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = ((h << 5) - h) + str.charCodeAt(i) | 0;
-  return Math.abs(h) || 12345;
-}
-function randInt(rng, min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
-function fmt$(n) { return '$' + n.toLocaleString('es-CO'); }
-function fmtK(n) { return fmt$(n * 1000); }
-function fmtTime(s) {
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-}
+/* ═══════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════ */
+function mulberry32(s){return function(){let t=s+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function seedFromStr(s){let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0;return Math.abs(h)||12345}
+function ri(rng,a,b){return Math.floor(rng()*(b-a+1))+a}
+function fmt$(n){return'$'+n.toLocaleString('es-CO')}
+function fmtK(n){return fmt$(n*1000)}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`}
+function shuffle(arr,rng){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    SIMPLEX SOLVER
-   ═══════════════════════════════════════════════════ */
-function solveSimplex(c, A, b) {
-  const m = A.length, n = c.length;
-  const T = [];
-  for (let i = 0; i < m; i++) {
-    const row = [...A[i]];
-    for (let j = 0; j < m; j++) row.push(i === j ? 1 : 0);
-    row.push(b[i]);
-    T.push(row);
+   ═══════════════════════════════════════════ */
+function simplex(c,A,b){
+  const m=A.length,n=c.length,T=[];
+  for(let i=0;i<m;i++){const r=[...A[i]];for(let j=0;j<m;j++)r.push(i===j?1:0);r.push(b[i]);T.push(r)}
+  const obj=c.map(v=>-v);for(let j=0;j<m;j++)obj.push(0);obj.push(0);T.push(obj);
+  const cols=n+m+1,basis=Array.from({length:m},(_,i)=>n+i);
+  for(let it=0;it<200;it++){
+    let pc=-1,mv=-1e-9;for(let j=0;j<cols-1;j++)if(T[m][j]<mv){mv=T[m][j];pc=j}
+    if(pc===-1)break;
+    let pr=-1,mr=Infinity;for(let i=0;i<m;i++)if(T[i][pc]>1e-9){const r=T[i][cols-1]/T[i][pc];if(r<mr){mr=r;pr=i}}
+    if(pr===-1)return null;
+    const pv=T[pr][pc];for(let j=0;j<cols;j++)T[pr][j]/=pv;
+    for(let i=0;i<=m;i++){if(i===pr)continue;const f=T[i][pc];for(let j=0;j<cols;j++)T[i][j]-=f*T[pr][j]}
+    basis[pr]=pc;
   }
-  const obj = c.map(v => -v);
-  for (let j = 0; j < m; j++) obj.push(0);
-  obj.push(0);
-  T.push(obj);
-  const cols = n + m + 1;
-  const basis = Array.from({length: m}, (_, i) => n + i);
-
-  for (let iter = 0; iter < 200; iter++) {
-    let pCol = -1, minV = -1e-9;
-    for (let j = 0; j < cols - 1; j++) {
-      if (T[m][j] < minV) { minV = T[m][j]; pCol = j; }
-    }
-    if (pCol === -1) break;
-    let pRow = -1, minR = Infinity;
-    for (let i = 0; i < m; i++) {
-      if (T[i][pCol] > 1e-9) {
-        const r = T[i][cols - 1] / T[i][pCol];
-        if (r < minR) { minR = r; pRow = i; }
-      }
-    }
-    if (pRow === -1) return null;
-    const pv = T[pRow][pCol];
-    for (let j = 0; j < cols; j++) T[pRow][j] /= pv;
-    for (let i = 0; i <= m; i++) {
-      if (i === pRow) continue;
-      const f = T[i][pCol];
-      for (let j = 0; j < cols; j++) T[i][j] -= f * T[pRow][j];
-    }
-    basis[pRow] = pCol;
-  }
-  const sol = new Array(n).fill(0);
-  for (let i = 0; i < m; i++) if (basis[i] < n) sol[basis[i]] = Math.round(T[i][cols-1] * 100) / 100;
-  const Z = Math.round(T[m][cols - 1] * 100) / 100;
-  const slacks = [];
-  for (let i = 0; i < m; i++) {
-    let used = 0;
-    for (let j = 0; j < n; j++) used += A[i][j] * sol[j];
-    slacks.push(Math.round((b[i] - used) * 100) / 100);
-  }
-  return { solution: sol, Z, slacks };
+  const sol=new Array(n).fill(0);for(let i=0;i<m;i++)if(basis[i]<n)sol[basis[i]]=Math.round(T[i][cols-1]*100)/100;
+  const Z=Math.round(T[m][cols-1]*100)/100;
+  const sl=[];for(let i=0;i<m;i++){let u=0;for(let j=0;j<n;j++)u+=A[i][j]*sol[j];sl.push(Math.round((b[i]-u)*100)/100)}
+  return{sol,Z,sl};
 }
 
-/* ═══════════════════════════════════════════════════
-   GENERADOR DE PROBLEMAS
-   ═══════════════════════════════════════════════════ */
-const PRODUCTS = ['Pandebonos', 'Buñuelos', 'Empanadas'];
-const PRODUCTS_EMOJI = ['🥐', '🫓', '🥟'];
-const RESOURCES = ['Harina de yuca (kg)', 'Queso campesino (kg)', 'Mano de obra (horas)', 'Horno (tandas)'];
-const RESOURCES_SHORT = ['Harina', 'Queso', 'M. Obra', 'Horno'];
-
-function generateAct1(rng) {
+/* ═══════════════════════════════════════════
+   GENERATE LP DATA (per student seed)
+   ═══════════════════════════════════════════ */
+function genData(rng) {
+  const c = [ri(rng,100,150), ri(rng,70,120), ri(rng,80,130)];
   const A = [
-    [randInt(rng, 3, 5), randInt(rng, 4, 6), randInt(rng, 2, 3)],
-    [randInt(rng, 4, 6), randInt(rng, 2, 4), randInt(rng, 1, 2)],
-    [randInt(rng, 1, 2), randInt(rng, 2, 3), randInt(rng, 2, 3)],
-    [randInt(rng, 1, 2), randInt(rng, 1, 2), randInt(rng, 1, 2)],
+    [ri(rng,3,5), ri(rng,4,6), ri(rng,2,3)],
+    [ri(rng,4,6), ri(rng,2,4), ri(rng,1,2)],
+    [ri(rng,1,2), ri(rng,2,3), ri(rng,2,3)],
+    [ri(rng,1,2), ri(rng,1,2), ri(rng,1,2)],
   ];
-  const b = [
-    randInt(rng, 80, 120) * 10,
-    randInt(rng, 50, 80) * 10,
-    randInt(rng, 16, 28) * 10,
-    randInt(rng, 25, 45) * 10,
-  ];
-  const c = [
-    randInt(rng, 80, 150),
-    randInt(rng, 60, 120),
-    randInt(rng, 70, 130),
-  ];
-  const sol = solveSimplex(c, A, b);
-  return { A, b, c, sol, products: PRODUCTS, resources: RESOURCES };
+  const b = [ri(rng,80,120)*10, ri(rng,50,80)*10, ri(rng,18,28)*10, ri(rng,25,45)*10];
+  const res = simplex(c,A,b);
+  // 2-var problem for final
+  const c2 = [ri(rng,60,110), ri(rng,50,100)];
+  const A2 = [[ri(rng,2,4),ri(rng,3,5)],[ri(rng,3,5),ri(rng,1,3)],[ri(rng,1,2),ri(rng,2,3)]];
+  const b2 = [ri(rng,50,90)*10, ri(rng,40,70)*10, ri(rng,20,40)*10];
+  const res2 = simplex(c2,A2,b2);
+  // Chorizo for expansion
+  const c4 = [...c, ri(rng,90,160)];
+  const A4 = A.map((r,i) => [...r, ri(rng,1,3)]);
+  const b4 = b.map(v => v + ri(rng,5,15)*10);
+  const res4 = simplex(c4,A4,b4);
+  return {c,A,b,res, c2,A2,b2,res2, c4,A4,b4,res4, rng};
 }
 
-function generateAct2A(rng) {
-  // EXPANSION: 4 productos, 4 recursos
-  const prods = ['Pandebonos', 'Buñuelos', 'Empanadas', 'Chorizos'];
-  const emojis = ['🥐', '🫓', '🥟', '🌭'];
-  const A = [
-    [randInt(rng,3,4), randInt(rng,4,5), randInt(rng,2,3), randInt(rng,2,3)],
-    [randInt(rng,4,5), randInt(rng,2,3), randInt(rng,1,2), randInt(rng,3,4)],
-    [randInt(rng,1,2), randInt(rng,2,3), randInt(rng,2,3), randInt(rng,1,2)],
-    [randInt(rng,1,2), randInt(rng,1,2), randInt(rng,1,2), randInt(rng,1,2)],
-  ];
-  const b = [
-    randInt(rng,100,140)*10,
-    randInt(rng,60,90)*10,
-    randInt(rng,20,32)*10,
-    randInt(rng,30,50)*10,
-  ];
-  const c = [randInt(rng,80,140),randInt(rng,60,110),randInt(rng,70,120),randInt(rng,90,160)];
-  const sol = solveSimplex(c, A, b);
-  return { A, b, c, sol, products: prods, emojis, resources: RESOURCES };
-}
+/* ═══════════════════════════════════════════
+   BUILD SCENES
+   ═══════════════════════════════════════════ */
+const PRODS = ['Pandebonos','Buñuelos','Empanadas'];
+const EMOJI = ['🥐','🫓','🥟'];
+const RES = ['Harina de yuca','Queso campesino','Mano de obra','Horno'];
 
-function generateAct2B(rng, act1) {
-  // CRISIS: mismos productos pero queso a la mitad + nuevo recurso limitado
-  const A = act1.A.map(r => [...r]);
-  const b = [...act1.b];
-  b[1] = Math.floor(b[1] * 0.5); // queso a la mitad
-  const c = [...act1.c];
-  const sol = solveSimplex(c, A, b);
-  return { A, b, c, sol, products: PRODUCTS, resources: RESOURCES, originalB1: act1.b[1] };
-}
+function buildScenes(d) {
+  const {c,A,b,res,c2,A2,b2,res2,c4,A4,b4,res4} = d;
+  const bindingIdx = res ? res.sl.indexOf(Math.min(...res.sl)) : 0;
+  const slackIdx = res ? res.sl.indexOf(Math.max(...res.sl)) : 3;
+  const shadowApprox = res ? Math.round(c[bindingIdx] / A[bindingIdx][bindingIdx]) : 500;
 
-function generateAct2C(rng) {
-  // MINIMIZACIÓN: minimizar costo de producción cumpliendo demanda mínima
-  const prods = ['Pandebonos', 'Buñuelos', 'Empanadas'];
-  const costs = [randInt(rng,30,60), randInt(rng,25,50), randInt(rng,35,55)];
-  // Demanda mínima
-  const demand = [randInt(rng,20,40), randInt(rng,15,35), randInt(rng,20,40)];
-  // Recurso limitado: harina total
-  const harinaPerUnit = [randInt(rng,2,4), randInt(rng,3,5), randInt(rng,2,3)];
-  const maxHarina = randInt(rng,250,400);
-  // Presupuesto MO
-  const moPerUnit = [randInt(rng,1,2), randInt(rng,1,2), randInt(rng,2,3)];
-  const maxMO = randInt(rng,120,200);
-
-  // Para solver: Min c'x => Max -c'x, demanda xi >= di => -xi <= -di
-  const cNeg = costs.map(v => -v);
-  const Aall = [
-    [-1, 0, 0],
-    [0, -1, 0],
-    [0, 0, -1],
-    harinaPerUnit,
-    moPerUnit,
-  ];
-  const ball = [
-    -demand[0], -demand[1], -demand[2],
-    maxHarina, maxMO,
-  ];
-  const solRaw = solveSimplex(cNeg, Aall, ball);
-  let sol = null;
-  if (solRaw) {
-    sol = {
-      solution: solRaw.solution,
-      Z: -solRaw.Z,
-      slacks: solRaw.slacks,
-    };
+  function wrongSols(sol,Z,n){
+    const w=[];
+    w.push({x:sol.map((v,i)=>Math.round(v*(i===0?.7:1.3))),label:'A'});
+    w.push({x:sol.map(v=>Math.round(v*0.5)),label:'B'});
+    w.push({x:sol.map((_,i)=>Math.round(b[i]/(A[i].reduce((a,b)=>a+b,0)||1))),label:'C'});
+    w.forEach(o=>{o.Z=0;for(let i=0;i<n;i++)o.Z+=c[i]*(o.x[i]||0);o.Z=Math.round(o.Z)});
+    return w;
   }
-  return { costs, demand, harinaPerUnit, moPerUnit, maxHarina, maxMO, sol, products: prods };
+
+  const scenes = {
+    /* ────── ACT 1: LLEGADA ────── */
+    intro: {
+      ch:'Prólogo', title:'Pereira, 6:00 AM', icon:'🌅',
+      narr: `El aroma del café recién tostado se mezcla con el olor a pandebono caliente. Tu teléfono vibra con un mensaje urgente.`,
+      dial:[{c:'hernando',t:`¡Buenos días! Soy Hernando Mejía, fundador de <em>Sabores del Eje Cafetero</em>. Necesito que vengas a la planta en Dosquebradas. <strong>¡Urgente!</strong>`}],
+      next:'arrive',
+    },
+    arrive: {
+      ch:'Capítulo 1 — Llegada', title:'La Planta en Dosquebradas', icon:'🏭',
+      narr:`Llegas a la planta. El ruido de las máquinas llena el aire. Don Hernando te espera en la oficina con Marcela, la jefa de planta.`,
+      dial:[
+        {c:'hernando',t:`Producimos tres líneas: <strong>${PRODS.join(', ')}</strong>. Cada lote es de 100 unidades.`},
+        {c:'marcela',t:`Tenemos <strong>4 recursos limitados</strong>: harina, queso, mano de obra y horno. Necesitamos optimizar.`},
+        {c:'hernando',t:`Tu primera misión: ayúdanos a plantear esto como un modelo matemático. Empecemos por lo básico.`},
+      ],
+      next:'q_variables',
+    },
+
+    /* ────── Q1: VARIABLES ────── */
+    q_variables: {
+      ch:'Capítulo 1', title:'¿Qué Estamos Decidiendo?', icon:'🤔',
+      narr:`Don Hernando te mira expectante. El primer paso para optimizar es definir <strong>qué controlamos</strong>.`,
+      dial:[{c:'marcela',t:`¿Cómo definirías las <em>variables de decisión</em> para nuestro modelo?`}],
+      choices:[
+        {l:'A',t:`x₁ = lotes de ${PRODS[0]}, x₂ = lotes de ${PRODS[1]}, x₃ = lotes de ${PRODS[2]} a producir por semana`,ok:true,$:10e6,
+         fb:`¡Perfecto! Las variables representan lo que <strong>decidimos</strong>: cuántas unidades producir de cada línea.`,
+         react:{c:'hernando',t:'¡Exacto! Así se piensa. Sigamos.'},nx:'q_objective'},
+        {l:'B',t:`x₁ = kg de harina, x₂ = kg de queso, x₃ = horas de mano de obra a usar`,$:-6e6,
+         fb:`No. Las materias primas son <strong>recursos limitados</strong> — van en las restricciones, no son lo que decidimos.`,
+         react:{c:'marcela',t:'Hmm, la harina y el queso son limitaciones, no decisiones...'},nx:'q_objective'},
+        {l:'C',t:`x₁ = ganancia de ${PRODS[0]}, x₂ = ganancia de ${PRODS[1]}, x₃ = ganancia de ${PRODS[2]}`,$:-4e6,
+         fb:`La ganancia es el <strong>resultado</strong> de optimizar, no una variable. Es lo que va en la función objetivo.`,
+         react:{c:'hernando',t:'La ganancia es lo que queremos MAXIMIZAR, no una variable.'},nx:'q_objective'},
+        {l:'D',t:`x₁ = precio de venta de cada pandebono, x₂ = precio de cada buñuelo, x₃ = precio de cada empanada`,$:-5e6,
+         fb:`Los precios ya están definidos por el mercado. No los controlamos nosotros en este modelo.`,
+         react:{c:'marcela',t:'Los precios los pone el mercado, no nosotros.'},nx:'q_objective'},
+      ],
+    },
+
+    /* ────── Q2: FUNCIÓN OBJETIVO ────── */
+    q_objective: {
+      ch:'Capítulo 1', title:'El Objetivo del Negocio', icon:'🎯',
+      narr:`Marcela te muestra las ganancias por lote: ${PRODS.map((p,i)=>`<strong>${EMOJI[i]} ${p}: ${fmtK(c[i])}</strong>`).join(', ')}.`,
+      dial:[{c:'hernando',t:`Queremos ganar lo máximo posible esta semana. ¿Cómo escribimos eso matemáticamente?`}],
+      choices:[
+        {l:'A',t:`Max Z = ${c[0]}x₁ + ${c[1]}x₂ + ${c[2]}x₃`,ok:true,$:10e6,
+         fb:`¡Correcto! Maximizamos la ganancia total, que es la suma de (ganancia unitaria × cantidad) de cada producto.`,
+         react:{c:'marcela',t:'¡Perfecto! Esa es la función objetivo.'},nx:'q_constraint1'},
+        {l:'B',t:`Min Z = ${c[0]}x₁ + ${c[1]}x₂ + ${c[2]}x₃`,$:-8e6,
+         fb:`Casi, pero queremos <strong>MAXIMIZAR</strong> ganancia, no minimizarla. Minimizar se usa para costos.`,
+         react:{c:'hernando',t:'¡No! Queremos GANAR más, no menos.'},nx:'q_constraint1'},
+        {l:'C',t:`Max Z = x₁ + x₂ + x₃`,$:-6e6,
+         fb:`Te faltaron los coeficientes. Cada producto genera una ganancia DIFERENTE — esos son los coeficientes.`,
+         react:{c:'marcela',t:'Cada producto tiene una ganancia distinta. No puedes sumarlos igual.'},nx:'q_constraint1'},
+        {l:'D',t:`Max Z = ${c[0]} + ${c[1]} + ${c[2]}`,$:-7e6,
+         fb:`Eso sería una constante, no una función. Las variables x deben multiplicar los coeficientes.`,
+         react:{c:'hernando',t:'¿Y las variables? Sin ellas no hay nada que optimizar.'},nx:'q_constraint1'},
+      ],
+    },
+
+    /* ────── Q3: RESTRICCIÓN 1 ────── */
+    q_constraint1: {
+      ch:'Capítulo 2 — Restricciones', title:'El Límite de la Harina', icon:'🌾',
+      narr:`Marcela abre su libreta: <em>"Tenemos ${b[0]} kg de harina de yuca por semana."</em> Cada lote usa: ${PRODS.map((p,i)=>`${EMOJI[i]} ${p}: ${A[0][i]} kg`).join(', ')}.`,
+      dial:[{c:'marcela',t:`¿Cómo se escribe la restricción de harina?`}],
+      choices:[
+        {l:'A',t:`${A[0][0]}x₁ + ${A[0][1]}x₂ + ${A[0][2]}x₃ ≤ ${b[0]}`,ok:true,$:8e6,
+         fb:`¡Exacto! El consumo total de harina no puede exceder lo disponible. Se usa ≤ porque es un recurso limitado.`,
+         react:{c:'marcela',t:'¡Así es! No podemos usar más harina de la que hay.'},nx:'q_constraint2'},
+        {l:'B',t:`${A[0][0]}x₁ + ${A[0][1]}x₂ + ${A[0][2]}x₃ ≥ ${b[0]}`,$:-8e6,
+         fb:`El signo está al revés. Usamos ≥ para <strong>demanda mínima</strong>, no para recursos limitados. Aquí el consumo debe ser MENOR O IGUAL a lo disponible.`,
+         react:{c:'hernando',t:'Si fuera ≥, estaríamos obligados a gastar TODA la harina. No tiene sentido.'},nx:'q_constraint2'},
+        {l:'C',t:`x₁ + x₂ + x₃ ≤ ${b[0]}`,$:-5e6,
+         fb:`Faltan los coeficientes. Cada producto consume una cantidad DIFERENTE de harina por lote.`,
+         react:{c:'marcela',t:'No todos los productos usan la misma cantidad de harina...'},nx:'q_constraint2'},
+      ],
+    },
+
+    /* ────── Q4: RESTRICCIÓN 2 ────── */
+    q_constraint2: {
+      ch:'Capítulo 2', title:'El Queso del Quindío', icon:'🧀',
+      narr:`<em>"El queso campesino viene de Santa Rosa. Tenemos ${b[1]} kg semanales."</em> Consumo por lote: ${PRODS.map((p,i)=>`${EMOJI[i]} ${A[1][i]} kg`).join(', ')}.`,
+      dial:[{c:'hernando',t:`¿Y la restricción del queso? Es nuestro ingrediente más preciado.`}],
+      choices:[
+        {l:'A',t:`${A[1][0]}x₁ + ${A[1][1]}x₂ + ${A[1][2]}x₃ ≤ ${b[1]}`,ok:true,$:8e6,
+         fb:`¡Bien! Misma lógica: el consumo total de queso ≤ disponibilidad.`,
+         react:{c:'hernando',t:'¡Perfecto! Ya tienes 2 restricciones.'},nx:'q_noneg'},
+        {l:'B',t:`${A[1][0]}x₁ + ${A[1][1]}x₂ + ${A[1][2]}x₃ = ${b[1]}`,$:-3e6,
+         fb:`Usar = obligaría a consumir TODO el queso. En PL usamos ≤ para recursos: se puede usar menos del máximo.`,
+         react:{c:'marcela',t:'Con = no tendríamos flexibilidad. Usamos ≤.'},nx:'q_noneg'},
+        {l:'C',t:`${A[1][2]}x₁ + ${A[1][0]}x₂ + ${A[1][1]}x₃ ≤ ${b[1]}`,$:-6e6,
+         fb:`Los coeficientes están en el orden equivocado. x₁ es ${PRODS[0]} y usa ${A[1][0]} kg, no ${A[1][2]}.`,
+         react:{c:'marcela',t:'¡Cuidado con el orden de los coeficientes!'},nx:'q_noneg'},
+      ],
+    },
+
+    /* ────── Q5: NO NEGATIVIDAD ────── */
+    q_noneg: {
+      ch:'Capítulo 2', title:'Una Restricción Obvia', icon:'🚫',
+      narr:`Ya tienes la función objetivo y las restricciones de recursos. Pero falta algo...`,
+      dial:[{c:'camilo',t:`Soy Camilo, el analista financiero. Hay una restricción que muchos olvidan. ¿Cuál es?`}],
+      choices:[
+        {l:'A',t:`x₁, x₂, x₃ ≥ 0 — No se pueden producir cantidades negativas`,ok:true,$:7e6,
+         fb:`¡Correcto! La no negatividad es fundamental. No puedes producir -50 lotes de pandebonos.`,
+         react:{c:'camilo',t:'¡Bien! Parece obvio, pero sin esto el Simplex podría dar soluciones absurdas.'},nx:'q_solve1'},
+        {l:'B',t:`x₁ + x₂ + x₃ ≥ 100 — Hay que producir al menos 100 lotes en total`,$:-5e6,
+         fb:`No hay demanda mínima en este problema. La restricción que falta es la <strong>no negatividad</strong>: las variables no pueden ser negativas.`,
+         react:{c:'camilo',t:'No nos pidieron producción mínima. Lo que falta es más básico.'},nx:'q_solve1'},
+        {l:'C',t:`Z ≤ ${fmt$(res?res.Z*1000:500000)} — La ganancia tiene un tope`,$:-7e6,
+         fb:`¡No! La ganancia no se restringe manualmente. El Simplex encuentra el máximo naturalmente. Lo que falta es x₁, x₂, x₃ ≥ 0.`,
+         react:{c:'hernando',t:'¿Limitar ganancias? ¡Jamás! Queremos ganar todo lo posible.'},nx:'q_solve1'},
+      ],
+    },
+
+    /* ────── Q6: RESOLVER EL MODELO ────── */
+    q_solve1: {
+      ch:'Capítulo 3 — Solución', title:'Hora de Resolver', icon:'💻',
+      narr: `<strong>El modelo completo es:</strong><br>
+Max Z = ${c[0]}x₁ + ${c[1]}x₂ + ${c[2]}x₃<br>
+s.a.<br>
+${RES.map((r,i) => `${A[i].map((a,j)=>`${a}x${j+1}`).join(' + ')} ≤ ${b[i]} <em>(${r})</em>`).join('<br>')}<br>
+x₁, x₂, x₃ ≥ 0<br><br>
+<em>💡 Puedes abrir Excel y usar Solver para encontrar la solución. Tómate tu tiempo.</em>`,
+      dial:[{c:'hernando',t:`Ya tenemos el modelo. ¡Resuélvelo! ¿Cuál es la producción óptima?`}],
+      choices: (function(){
+        if(!res) return [{l:'A',t:'Error en el modelo',ok:true,$:0,fb:'Error generando',nx:'branch1'}];
+        const correct = {l:'?',t:`${PRODS.map((p,i)=>`${EMOJI[i]} ${p}: ${res.sol[i].toFixed(1)} lotes`).join(', ')} → Z = ${fmtK(res.Z)}`,ok:true,$:12e6,
+          fb:`¡Excelente! Esa es la solución óptima del Simplex. La ganancia máxima es ${fmtK(res.Z)}.`,
+          react:{c:'hernando',t:'¡Increíble! Con esos números vamos a romperla esta semana.'},nx:'q_binding'};
+        const ws = wrongSols(res.sol,res.Z,3);
+        const wrongs = ws.map(w=>({l:'?',t:`${PRODS.map((p,i)=>`${EMOJI[i]} ${p}: ${w.x[i]} lotes`).join(', ')} → Z = ${fmtK(w.Z)}`,$:-8e6,
+          fb:`No es la solución óptima. La respuesta correcta da Z = ${fmtK(res.Z)}, que es mayor. Revisa tu modelo en Excel.`,
+          react:{c:'marcela',t:'Hmm, esos números no cuadran con lo que veo en la planta.'},nx:'q_binding'}));
+        const all = [correct,...wrongs];
+        const letters = ['A','B','C','D'];
+        const shuffled = shuffle(all, d.rng);
+        shuffled.forEach((o,i)=>o.l=letters[i]);
+        return shuffled;
+      })(),
+    },
+
+    /* ────── Q7: RESTRICCIÓN ACTIVA ────── */
+    q_binding: {
+      ch:'Capítulo 3', title:'El Cuello de Botella', icon:'🔒',
+      narr:`Con la solución óptima calculada, Marcela pregunta algo clave para la operación de la planta.`,
+      dial:[{c:'marcela',t:`De los 4 recursos, <strong>¿cuál se agota completamente?</strong> Es decir, ¿cuál restricción es activa (binding)?`}],
+      choices: RES.map((r,i) => ({
+        l:['A','B','C','D'][i], t:`${r} — se usa todo`,
+        ok: i===bindingIdx, $: i===bindingIdx ? 8e6 : -5e6,
+        fb: i===bindingIdx
+          ? `¡Correcto! ${r} tiene holgura = ${res?res.sl[i]:0}, es decir se agota completamente. Es el <strong>cuello de botella</strong>.`
+          : `No. ${r} tiene holgura de ${res?res.sl[i].toFixed(1):0}. El recurso que se agota es <strong>${RES[bindingIdx]}</strong> (holgura ≈ 0).`,
+        react: i===bindingIdx
+          ? {c:'marcela',t:'¡Ese es nuestro cuello de botella! Si conseguimos más, ganamos más.'}
+          : {c:'marcela',t:`No, ese recurso aún tiene holgura. Revisa los números.`},
+        nx:'q_slack',
+      })),
+    },
+
+    /* ────── Q8: HOLGURA ────── */
+    q_slack: {
+      ch:'Capítulo 3', title:'¿Qué Recurso Sobra?', icon:'📦',
+      narr:`Saber qué recurso tiene más <strong>holgura</strong> (slack) es clave: significa que estamos sobrepagando por algo que no usamos del todo.`,
+      dial:[{c:'camilo',t:`¿Cuál recurso tiene más holgura? Podríamos renegociar ese contrato.`}],
+      choices: RES.map((r,i) => ({
+        l:['A','B','C','D'][i], t:`${r} — sobra ${res?res.sl[i].toFixed(0):'?'} unidades`,
+        ok: i===slackIdx, $: i===slackIdx ? 8e6 : -4e6,
+        fb: i===slackIdx
+          ? `¡Bien! ${r} tiene la mayor holgura (${res?res.sl[i].toFixed(1):0}). Podríamos reducir el contrato de este recurso y ahorrar.`
+          : `No. La mayor holgura es de <strong>${RES[slackIdx]}</strong> con ${res?res.sl[slackIdx].toFixed(1):0} unidades sin usar.`,
+        react: i===slackIdx
+          ? {c:'camilo',t:'Con esa holgura podemos renegociar el contrato y ahorrar plata.'}
+          : {c:'camilo',t:'Revisa los números de nuevo.'},
+        nx:'branch1',
+      })),
+    },
+
+    /* ────── BRANCH 1 ────── */
+    branch1: {
+      branch: (st) => st.money >= 120e6 ? 'path_a_intro' : st.money >= 95e6 ? 'path_b_intro' : 'path_c_intro',
+    },
+
+    /* ═══════ PATH A: EXPANSIÓN ═══════ */
+    path_a_intro: {
+      ch:'Capítulo 4 — Expansión', title:'Nuevos Horizontes', icon:'🚀',
+      narr:`Don Hernando está <strong>impresionado</strong>. Tu análisis fue preciso y la planta optimizó su producción.`,
+      dial:[
+        {c:'hernando',t:'¡Esto es increíble! Con estos resultados, quiero meter un cuarto producto: <strong>chorizos santarrosanos</strong>.'},
+        {c:'marcela',t:'Los chorizos de Santa Rosa son una mina de oro. Pero el modelo cambia...'},
+      ],
+      next:'q_new_var',
+    },
+    q_new_var: {
+      ch:'Capítulo 4', title:'Agregar una Variable', icon:'➕',
+      narr:`Al agregar chorizos, el modelo pasa de 3 a 4 variables. ¿Qué cambia?`,
+      dial:[{c:'camilo',t:`Si agregamos x₄ = lotes de chorizos, ¿qué hay que modificar?`}],
+      choices:[
+        {l:'A',t:'Agregar x₄ a la función objetivo Y a TODAS las restricciones de recursos',ok:true,$:9e6,
+         fb:'¡Correcto! El nuevo producto consume recursos (va en restricciones) y genera ganancia (va en la FO). Todo se actualiza.',
+         react:{c:'camilo',t:'¡Exacto! Cada variable nueva afecta tanto la FO como las restricciones.'},nx:'q_expand_solve'},
+        {l:'B',t:'Solo agregar x₄ a la función objetivo, las restricciones no cambian',$:-7e6,
+         fb:'Incorrecto. Los chorizos también CONSUMEN recursos. Si no actualizas las restricciones, el modelo no refleja la realidad.',
+         react:{c:'marcela',t:'¿Y de dónde sale la harina para los chorizos? Hay que incluirla.'},nx:'q_expand_solve'},
+        {l:'C',t:'Crear un modelo completamente nuevo e independiente',$:-5e6,
+         fb:'No es necesario. Solo se amplía el modelo existente agregando la nueva variable donde corresponda.',
+         react:{c:'camilo',t:'No hace falta empezar de cero. Solo ampliamos el modelo.'},nx:'q_expand_solve'},
+      ],
+    },
+    q_expand_solve: {
+      ch:'Capítulo 4', title:'El Modelo Expandido', icon:'📊',
+      narr:`El modelo ahora tiene 4 productos. Ganancia chorizo: ${fmtK(c4[3])}. Nuevas disponibilidades ajustadas.<br><br><em>💡 Monta este modelo en Excel y resuélvelo con Solver.</em>`,
+      dial:[{c:'hernando',t:'¿Cuánto ganamos ahora con los 4 productos?'}],
+      choices:(function(){
+        if(!res4)return[{l:'A',t:'Error',$:0,ok:true,fb:'Error',nx:'crisis_call'}];
+        const opts = [
+          {t:`Z* = ${fmtK(res4.Z)} — se incluyen los chorizos en la producción`,ok:true,$:12e6,fb:`¡Correcto! Con chorizos la ganancia sube a ${fmtK(res4.Z)}.`,react:{c:'hernando',t:'¡Los chorizos fueron una genialidad!'}},
+          {t:`Z* = ${fmtK(Math.round(res4.Z*0.8))} — los chorizos no se producen`,$:-6e6,fb:`No. El Solver SÍ incluye chorizos porque son rentables. La respuesta correcta es Z* = ${fmtK(res4.Z)}.`,react:{c:'marcela',t:'Revisa el modelo en Excel.'}},
+          {t:`Z* = ${fmtK(Math.round(res4.Z*1.2))} — producción masiva de todo`,$:-7e6,fb:`Eso excede los recursos disponibles. La solución óptima real es ${fmtK(res4.Z)}.`,react:{c:'camilo',t:'Esos números violan las restricciones.'}},
+        ];
+        const letters=['A','B','C'];
+        const sh=shuffle(opts,d.rng);sh.forEach((o,i)=>{o.l=letters[i];o.nx='crisis_call'});
+        return sh;
+      })(),
+    },
+
+    /* ═══════ PATH B: OPERACIÓN NORMAL ═══════ */
+    path_b_intro: {
+      ch:'Capítulo 4 — Operaciones', title:'El Día a Día', icon:'⚙️',
+      narr:`Tu análisis estuvo bien, pero no brillante. Don Hernando decide mantener las 3 líneas actuales y enfocarse en eficiencia.`,
+      dial:[{c:'marcela',t:'Vamos a analizar más a fondo la solución. Hay información valiosa escondida en los números.'}],
+      next:'q_interpret_zero',
+    },
+    q_interpret_zero: {
+      ch:'Capítulo 4', title:'¿Por Qué Cero?', icon:'🔍',
+      narr:`${res && res.sol.some(v=>v<0.5) ? `La solución óptima indica producir <strong>0 lotes</strong> de uno de los productos.` : 'Imagina que la solución dice producir 0 de un producto.'}`,
+      dial:[{c:'camilo',t:'Si el Simplex dice que x₂ = 0 (no producir buñuelos), ¿qué significa?'}],
+      choices:[
+        {l:'A',t:'Que los buñuelos no son rentables en el contexto actual de recursos y ganancias',ok:true,$:8e6,
+         fb:'¡Correcto! No significa que los buñuelos sean malos, sino que con los recursos actuales, es más rentable destinarlos a otros productos.',
+         react:{c:'camilo',t:'Exacto. Es una cuestión de prioridad con los recursos disponibles.'},nx:'q_improve'},
+        {l:'B',t:'Que hay un error en el modelo, todos los productos deberían producirse',$:-6e6,
+         fb:'No hay error. Es perfectamente normal que el Simplex recomiende NO producir algo. Los recursos son limitados y hay que priorizarlos.',
+         react:{c:'marcela',t:'No es error. Es optimización: poner los recursos donde más rinden.'},nx:'q_improve'},
+        {l:'C',t:'Que los buñuelos tienen costo negativo',$:-5e6,
+         fb:'El costo no es negativo. Simplemente, con los recursos disponibles, destinarlos a otros productos genera más ganancia total.',
+         react:{c:'camilo',t:'El costo no es el problema. Es la asignación óptima de recursos.'},nx:'q_improve'},
+      ],
+    },
+    q_improve: {
+      ch:'Capítulo 4', title:'Mejorar el Plan', icon:'📈',
+      narr:`Don Hernando quiere saber cómo ganar MÁS. La clave está en las restricciones activas.`,
+      dial:[{c:'hernando',t:'Si pudiera conseguir más de UN recurso, ¿cuál me conviene más?'}],
+      choices:[
+        {l:'A',t:`Más ${RES[bindingIdx]} — es la restricción activa (se agota)`,ok:true,$:9e6,
+         fb:`¡Exacto! Al ser la restricción activa, ampliar ${RES[bindingIdx]} permite producir más y ganar más. Es donde el precio sombra es más valioso.`,
+         react:{c:'hernando',t:'¡A negociar con el proveedor de ' + RES[bindingIdx].toLowerCase() + '!'},nx:'crisis_call'},
+        {l:'B',t:`Más ${RES[slackIdx]} — siempre es bueno tener más de todo`,$:-6e6,
+         fb:`${RES[slackIdx]} ya tiene holgura — sobra. Agregar más de un recurso que ya sobra no mejora nada. Hay que mejorar lo que se agota.`,
+         react:{c:'camilo',t:'Ese recurso ya sobra. No vale la pena invertir ahí.'},nx:'crisis_call'},
+        {l:'C',t:'No importa cuál, cualquier recurso extra ayuda igual',$:-4e6,
+         fb:'No es cierto. Solo los recursos que son restricciones activas (binding) impactan la función objetivo al relajarse.',
+         react:{c:'marcela',t:'Los recursos con holgura no cambian nada si los aumentas.'},nx:'crisis_call'},
+      ],
+    },
+
+    /* ═══════ PATH C: SUPERVIVENCIA ═══════ */
+    path_c_intro: {
+      ch:'Capítulo 4 — Crisis', title:'Alerta Financiera', icon:'🔴',
+      narr:`Las cosas no van bien. Los errores en el análisis inicial preocupan a los inversionistas.`,
+      dial:[
+        {c:'camilo',t:'Los inversionistas quieren que <strong>minimicemos costos</strong> en vez de maximizar ganancias. Hay que cambiar el enfoque.'},
+        {c:'hernando',t:'Es duro, pero toca adaptarse. ¿Sabes cómo cambia el modelo?'},
+      ],
+      next:'q_min_max',
+    },
+    q_min_max: {
+      ch:'Capítulo 4', title:'¿Maximizar o Minimizar?', icon:'⚖️',
+      narr:`La situación cambió. Ya no se trata de ganar más, sino de <strong>gastar menos</strong> cumpliendo con los compromisos.`,
+      dial:[{c:'camilo',t:'Si tenemos que cumplir una demanda mínima de cada producto, ¿qué tipo de modelo es?'}],
+      choices:[
+        {l:'A',t:'Minimizar costo total, sujeto a restricciones de demanda mínima (≥)',ok:true,$:9e6,
+         fb:'¡Correcto! Cuando el objetivo es eficiencia de costos con demanda obligatoria, se minimiza con restricciones ≥.',
+         react:{c:'camilo',t:'¡Exacto! Es el modelo dual: minimizar en vez de maximizar.'},nx:'q_geq'},
+        {l:'B',t:'Maximizar ganancia pero con menos recursos (≤)',$:-5e6,
+         fb:'No. El cambio es de OBJETIVO: pasamos de Max a Min. Las restricciones de demanda usan ≥, no ≤.',
+         react:{c:'hernando',t:'No, no. Es MINIMIZAR costos, no maximizar con menos.'},nx:'q_geq'},
+        {l:'C',t:'Da igual, Max o Min dan el mismo resultado',$:-8e6,
+         fb:'Absolutamente no. Max y Min son problemas fundamentalmente diferentes. Max busca el punto más alto, Min el más bajo de la región factible.',
+         react:{c:'camilo',t:'Son problemas opuestos. Dan soluciones completamente distintas.'},nx:'q_geq'},
+      ],
+    },
+    q_geq: {
+      ch:'Capítulo 4', title:'Restricciones de Demanda', icon:'📋',
+      narr:`El restaurante principal pide mínimo 20 lotes de pandebonos y 15 de empanadas por semana. Son contratos fijos.`,
+      dial:[{c:'marcela',t:'¿Cómo escribirías la restricción "mínimo 20 lotes de pandebonos"?'}],
+      choices:[
+        {l:'A',t:'x₁ ≥ 20',ok:true,$:8e6,
+         fb:'¡Correcto! El signo ≥ indica "como mínimo". Debemos producir AL MENOS 20 lotes.',
+         react:{c:'marcela',t:'¡Perfecto! ≥ para demanda mínima, ≤ para recursos máximos.'},nx:'crisis_call'},
+        {l:'B',t:'x₁ ≤ 20',$:-7e6,
+         fb:'Al revés. x₁ ≤ 20 significaría "máximo 20", pero necesitamos MÍNIMO 20. Usamos ≥.',
+         react:{c:'camilo',t:'≤ es para límites superiores. Aquí necesitamos un piso mínimo.'},nx:'crisis_call'},
+        {l:'C',t:'x₁ = 20',$:-3e6,
+         fb:'Parcialmente. Con = obligas a producir EXACTAMENTE 20, sin flexibilidad. ≥ permite producir 20 o más.',
+         react:{c:'marcela',t:'Con = no hay flexibilidad. ≥ da más espacio.'},nx:'crisis_call'},
+      ],
+    },
+
+    /* ═══════ CONVERGENCIA: CRISIS DEL PROVEEDOR ═══════ */
+    crisis_call: {
+      ch:'Capítulo 5 — Giro Inesperado', title:'La Llamada', icon:'📞',
+      narr:`<strong>*RING RING*</strong> — El teléfono de Don Hernando suena. Su cara cambia de expresión.`,
+      dial:[
+        {c:'hernando',t:'¿Aló? ... ¿QUÉ? ¿Don Alfonso solo puede entregar la <strong>mitad del queso</strong>? ¿Es en serio?'},
+        {c:'marcela',t:'Esto cambia TODO el modelo. El queso pasa de ${b[1]} kg a <strong>${Math.floor(b[1]/2)} kg</strong>.'},
+        {c:'hernando',t:'Necesito que analices el impacto. ¿Qué nos dice el modelo sobre esta situación?'},
+      ],
+      next:'q_shadow',
+    },
+    q_shadow: {
+      ch:'Capítulo 5', title:'El Precio Sombra', icon:'👻',
+      narr:`El <strong>precio sombra</strong> (shadow price) del queso nos dice cuánto vale cada kg adicional en términos de ganancia.`,
+      dial:[{c:'camilo',t:'Si el precio sombra del queso es $${shadowApprox.toLocaleString('es-CO')}/kg, y perdemos ${Math.floor(b[1]/2)} kg... ¿qué significa?'}],
+      choices:[
+        {l:'A',t:`Que cada kg de queso que perdemos nos cuesta ~$${shadowApprox.toLocaleString('es-CO')} en ganancia no obtenida`,ok:true,$:10e6,
+         fb:'¡Correcto! El precio sombra indica cuánto cambia Z por cada unidad adicional del recurso. Perder queso = perder ganancia.',
+         react:{c:'camilo',t:'¡Exacto! El precio sombra cuantifica el costo de la escasez.'},nx:'q_whatif'},
+        {l:'B',t:'Que debemos vender el queso a $' + shadowApprox.toLocaleString('es-CO') + '/kg para no perder',$:-6e6,
+         fb:'No. El precio sombra no es un precio de mercado. Es el valor marginal del recurso DENTRO del modelo de optimización.',
+         react:{c:'camilo',t:'El precio sombra es interno al modelo, no es un precio de venta.'},nx:'q_whatif'},
+        {l:'C',t:'Nada, el precio sombra solo aplica si GANAMOS recurso, no si perdemos',$:-5e6,
+         fb:'Aplica en ambas direcciones (dentro del rango de sensibilidad). Perder recurso = perder ganancia proporcional al precio sombra.',
+         react:{c:'marcela',t:'Aplica para aumentos Y disminuciones del recurso.'},nx:'q_whatif'},
+      ],
+    },
+    q_whatif: {
+      ch:'Capítulo 5', title:'Análisis ¿Qué Pasa Si...?', icon:'🔮',
+      narr:`Un proveedor alternativo ofrece 100 kg extra de ${RES[bindingIdx].toLowerCase()} por ${fmt$(3_500_000)}.`,
+      dial:[{c:'hernando',t:`¿Nos conviene comprar esos 100 kg adicionales?`}],
+      choices:[
+        {l:'A',t:'Sí, si el precio sombra × 100 kg es MAYOR que $3,500,000',ok:true,$:10e6,
+         fb:'¡Excelente! La decisión se basa en comparar el beneficio marginal (precio sombra × cantidad) contra el costo. Si el beneficio supera el costo, conviene.',
+         react:{c:'hernando',t:'¡Así se toman decisiones con datos! Nada de instinto, puro análisis.'},nx:'branch2'},
+        {l:'B',t:'Siempre conviene tener más recursos, compremos sin dudar',$:-7e6,
+         fb:'No. Hay que comparar costo vs beneficio. Si el recurso ya tiene holgura, comprarlo no sirve. Y si el costo supera el beneficio marginal, tampoco.',
+         react:{c:'camilo',t:'Sin análisis de costo-beneficio, podríamos perder plata.'},nx:'branch2'},
+        {l:'C',t:'No, comprar recursos extra nunca cambia la solución óptima',$:-6e6,
+         fb:'Sí la cambia — pero solo si el recurso es una restricción activa. Al relajar una restricción binding, la solución mejora.',
+         react:{c:'camilo',t:'Relajar una restricción activa SÍ mejora Z.'},nx:'branch2'},
+      ],
+    },
+
+    /* ────── BRANCH 2 ────── */
+    branch2: {
+      branch: (st) => st.money >= 130e6 ? 'opp_intro' : 'emergency_intro',
+    },
+
+    /* ═══════ PATH: OPORTUNIDAD ═══════ */
+    opp_intro: {
+      ch:'Capítulo 6 — La Oportunidad', title:'El Cliente de Manizales', icon:'🌟',
+      narr:`Tu buen análisis atrajo la atención de un restaurante grande en Manizales. Quieren arepas y empanadas.`,
+      dial:[{c:'hernando',t:'¡Nos buscan para un contrato nuevo! Pero necesitamos analizar si nos conviene con los recursos que tenemos.'}],
+      next:'q_solve2',
+    },
+
+    /* ═══════ PATH: EMERGENCIA ═══════ */
+    emergency_intro: {
+      ch:'Capítulo 6 — Emergencia', title:'Decisiones Difíciles', icon:'🆘',
+      narr:`La crisis del queso golpeó fuerte. Don Hernando necesita un plan de contingencia rápido.`,
+      dial:[{c:'marcela',t:'Con menos queso, ¿el modelo actual sigue siendo <strong>factible</strong>? Porque si no, estamos en problemas serios.'}],
+      next:'q_feasible',
+    },
+    q_feasible: {
+      ch:'Capítulo 6', title:'¿Es Factible?', icon:'❓',
+      narr:`Si reducimos el queso a la mitad (${Math.floor(b[1]/2)} kg), ¿el modelo sigue teniendo solución?`,
+      dial:[{c:'camilo',t:'Un modelo es <strong>infactible</strong> cuando ninguna combinación de variables cumple TODAS las restricciones simultáneamente.'}],
+      choices:[
+        {l:'A',t:'Sí, sigue siendo factible — x₁=x₂=x₃=0 siempre cumple todas las restricciones ≤',ok:true,$:9e6,
+         fb:'¡Correcto! Con restricciones ≤ y no negatividad, la solución x=0 SIEMPRE es factible (producir nada). El problema es que la ganancia sería 0.',
+         react:{c:'camilo',t:'Exacto. Factible sí, pero la solución óptima será peor que antes.'},nx:'q_solve2'},
+        {l:'B',t:'No, si cortamos recursos siempre se vuelve infactible',$:-7e6,
+         fb:'No. Un modelo con solo restricciones ≤ y no negatividad siempre es factible (x=0 cumple todo). Sería infactible si tuviéramos restricciones ≥ que no se pueden cumplir.',
+         react:{c:'camilo',t:'x=0 siempre cumple restricciones ≤. Factible pero malo.'},nx:'q_solve2'},
+        {l:'C',t:'Depende: hay que resolver el Simplex para saber',$:-3e6,
+         fb:'En general sí hay que verificar, pero con restricciones ≤ y variables ≥ 0, x=0 siempre es factible. Se sabe sin resolver.',
+         react:{c:'marcela',t:'En este caso es fácil: x=0 siempre funciona para restricciones ≤.'},nx:'q_solve2'},
+      ],
+    },
+
+    /* ═══════ CONVERGENCIA FINAL: RESOLVER PROBLEMA 2 ═══════ */
+    q_solve2: {
+      ch:'Capítulo 7 — Ronda Final', title:'Último Modelo', icon:'⚡',
+      narr:`Nuevo encargo: optimizar la producción de <strong>Arepas</strong> y <strong>Empanadas</strong> para el cliente de Manizales.<br><br>
+Max Z = ${c2[0]}x₁ + ${c2[1]}x₂<br>
+${['Maíz','Carne','M. Obra'].map((r,i) => `${A2[i][0]}x₁ + ${A2[i][1]}x₂ ≤ ${b2[i]} <em>(${r})</em>`).join('<br>')}<br>
+x₁, x₂ ≥ 0<br><br><em>💡 Último modelo. Resuélvelo en Excel Solver.</em>`,
+      dial:[{c:'hernando',t:'Es la prueba de fuego. ¿Cuánto podemos ganar con este contrato?'}],
+      choices:(function(){
+        if(!res2)return[{l:'A',t:'Error',$:0,ok:true,fb:'Error',nx:'q_final_decision'}];
+        const opts=[
+          {t:`x₁=${res2.sol[0].toFixed(1)}, x₂=${res2.sol[1].toFixed(1)} → Z = ${fmtK(res2.Z)}`,ok:true,$:12e6,
+           fb:`¡Perfecto! La solución óptima genera ${fmtK(res2.Z)} de ganancia.`,react:{c:'hernando',t:'¡Brillante! Ese contrato es nuestro.'}},
+          {t:`x₁=${Math.round(res2.sol[0]*0.6)}, x₂=${Math.round(res2.sol[1]*1.4)} → Z = ${fmtK(Math.round(c2[0]*res2.sol[0]*0.6+c2[1]*res2.sol[1]*1.4))}`,$:-7e6,
+           fb:`No es la solución óptima. La correcta es x₁=${res2.sol[0].toFixed(1)}, x₂=${res2.sol[1].toFixed(1)} con Z=${fmtK(res2.Z)}.`,react:{c:'marcela',t:'Revisa en Excel.'}},
+          {t:`x₁=${Math.round(b2[0]/A2[0][0])}, x₂=0 → Z = ${fmtK(Math.round(c2[0]*b2[0]/A2[0][0]))}`,$:-5e6,
+           fb:`Producir solo un producto rara vez es óptimo. La solución correcta usa ambos: Z=${fmtK(res2.Z)}.`,react:{c:'camilo',t:'Diversificar suele ser mejor.'}},
+        ];
+        const sh=shuffle(opts,d.rng);['A','B','C'].forEach((l,i)=>{sh[i].l=l;sh[i].nx='q_final_decision'});
+        return sh;
+      })(),
+    },
+
+    /* ────── DECISIÓN FINAL ────── */
+    q_final_decision: {
+      ch:'Capítulo 7', title:'La Gran Decisión', icon:'🏆',
+      narr:`Ha sido una semana intensa. Don Hernando te pide una última recomendación estratégica para el futuro de la empresa.`,
+      dial:[{c:'hernando',t:'Con todo lo que aprendimos esta semana, ¿cuál debería ser nuestra prioridad estratégica?'}],
+      choices:[
+        {l:'A',t:'Invertir en ampliar el recurso cuello de botella (restricción activa) — es lo que más impacta la ganancia',ok:true,$:12e6,
+         fb:'¡Excelente visión! La PL nos enseña que los recursos binding son donde la inversión tiene mayor retorno marginal.',
+         react:{c:'hernando',t:'¡Así se habla! Inversión inteligente basada en datos.'},nx:'epilogue'},
+        {l:'B',t:'Reducir costos recortando personal y recursos por igual en todas las áreas',$:-5e6,
+         fb:'Recortar parejo ignora que algunos recursos son más valiosos que otros. El análisis de PL muestra dónde está el valor.',
+         react:{c:'marcela',t:'Recortar donde hay holgura sí, pero no donde hay restricciones activas.'},nx:'epilogue'},
+        {l:'C',t:'Agregar muchos productos nuevos sin importar los recursos — entre más variedad, mejor',$:-8e6,
+         fb:'Más productos sin recursos para soportarlos puede empeorar las cosas. La PL nos dice que hay que respetar las restricciones.',
+         react:{c:'camilo',t:'Diversificar sin recursos es receta para el desastre.'},nx:'epilogue'},
+        {l:'D',t:'No usar modelos matemáticos — confiar en la experiencia y el instinto',$:-10e6,
+         fb:'La experiencia es valiosa, pero los datos y la optimización dan mejores resultados. ¡Por algo existe la PL!',
+         react:{c:'hernando',t:'... Creo que necesitas repasar para qué sirve la Programación Lineal.'},nx:'epilogue'},
+      ],
+    },
+
+    /* ────── EPILOGO ────── */
+    epilogue: { epilogue: true },
+  };
+
+  return scenes;
 }
 
-function generateAct3(rng) {
-  // Ronda rápida: preguntas conceptuales + mini-problema
-  // Mini LP de 2 variables para formular rápido
-  const p = ['Arepas', 'Empanadas'];
-  const c = [randInt(rng,50,100), randInt(rng,60,110)];
-  const A = [
-    [randInt(rng,2,4), randInt(rng,3,5)],
-    [randInt(rng,3,5), randInt(rng,1,3)],
-    [randInt(rng,1,2), randInt(rng,2,3)],
-  ];
-  const b = [randInt(rng,60,100)*10, randInt(rng,40,80)*10, randInt(rng,20,40)*10];
-  const res = ['Maíz (kg)', 'Carne (kg)', 'Mano de obra (h)'];
-  const sol = solveSimplex(c, A, b);
-  return { products: p, c, A, b, resources: res, sol };
-}
-
-/* ═══════════════════════════════════════════════════
-   ESTADO DE LA APLICACIÓN
-   ═══════════════════════════════════════════════════ */
-const state = {
-  screen: 'splash',
-  nombre: '', codigo: '',
-  nombre2: '', codigo2: '',
-  rng: null, seed: 0,
-  act1: null, act2: null, act3: null,
-  act1Answers: {}, act2Answers: {}, act3Answers: {},
-  act1Score: 0, act2Score: 0, act3Score: 0,
-  path: '', // 'A', 'B', 'C'
-  timerStarted: false,
-  remaining: TOTAL_TIME,
-  interval: null,
-  progress: 0, // 0=not started, 1=act1, 2=act1done, 3=act2, 4=act2done, 5=act3, 6=done
-  submitted: false,
-  notificationsShown: new Set(),
+/* ═══════════════════════════════════════════
+   GAME STATE
+   ═══════════════════════════════════════════ */
+const G = {
+  nombre:'', codigo:'', nombre2:'', codigo2:'',
+  seed:0, money:START_MONEY, scene:'splash',
+  history:[], // {sceneId, choiceIdx, money, correct}
+  data:null, scenes:null,
+  remaining:TOTAL_TIME, interval:null, timerStarted:false,
+  notifs:new Set(), submitted:false,
 };
 
-/* ═══════════════════════════════════════════════════
-   TOASTS / NOTIFICACIONES
-   ═══════════════════════════════════════════════════ */
-function toast(msg, type = 'info', duration = 5000) {
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = msg;
+/* ═══════════════════════════════════════════
+   TOAST + MONEY FLOAT
+   ═══════════════════════════════════════════ */
+function toast(msg,type='info',dur=5000){
+  const el=document.createElement('div');el.className='toast '+type;el.innerHTML=msg;
   document.getElementById('toasts').appendChild(el);
-  requestAnimationFrame(() => el.classList.add('show'));
-  setTimeout(() => {
-    el.classList.remove('show');
-    setTimeout(() => el.remove(), 400);
-  }, duration);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),400)},dur);
+}
+function showMoneyFloat(amount){
+  const el=document.createElement('div');
+  el.className='money-float '+(amount>=0?'pos':'neg');
+  el.textContent=(amount>=0?'+':'')+fmt$(amount);
+  document.getElementById('moneyFloats').appendChild(el);
+  setTimeout(()=>el.remove(),2000);
 }
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    TIMER
-   ═══════════════════════════════════════════════════ */
-function startTimer() {
-  state.timerStarted = true;
-  document.getElementById('timerBar').classList.add('active');
-  state.interval = setInterval(timerTick, 1000);
+   ═══════════════════════════════════════════ */
+function startTimer(){
+  G.timerStarted=true;
+  document.getElementById('hud').classList.add('active');
+  G.interval=setInterval(()=>{
+    G.remaining--;
+    if(G.remaining<=0){G.remaining=0;clearInterval(G.interval);toast('⏰ ¡Tiempo! Enviando resultados...','danger',8000);setTimeout(()=>showEpilogue(),2000)}
+    updateHUD();checkNotifs();
+  },1000);
+}
+function updateHUD(){
+  const el=document.getElementById('hudTimer');
+  el.textContent=fmtTime(G.remaining);
+  const pct=G.remaining/TOTAL_TIME;
+  el.className='hud-timer '+(pct>.35?'ok':pct>.12?'warn':'danger');
+  document.getElementById('hudMoney').textContent=G.money.toLocaleString('es-CO');
+}
+function checkNotifs(){
+  const m=Math.floor(G.remaining/60),ns=G.notifs;
+  if(m===60&&!ns.has('60')){ns.add('60');toast('☕ Don Hernando te manda un tinto. Llevas 25 minutos.','info')}
+  if(m===42&&!ns.has('42')){ns.add('42');toast('⏱️ Mitad del tiempo. ¿Cómo va la empresa?','warning')}
+  if(m===15&&!ns.has('15')){ns.add('15');toast('⚡ ¡15 minutos! Don Hernando está nervioso.','danger',7000)}
+  if(m===5&&!ns.has('5')){ns.add('5');toast('🔥 ¡5 MINUTOS! El directorio espera resultados.','danger',10000)}
 }
 
-function timerTick() {
-  state.remaining--;
-  if (state.remaining <= 0) {
-    state.remaining = 0;
-    clearInterval(state.interval);
-    toast('&#9200; &#161;Se acabó el tiempo! Enviando tus respuestas...', 'danger', 8000);
-    setTimeout(() => finishExam(), 2000);
-  }
-  updateTimerUI();
-  checkTimerNotifications();
-}
+/* ═══════════════════════════════════════════
+   RENDER ENGINE
+   ═══════════════════════════════════════════ */
+const app=document.getElementById('app');
 
-function updateTimerUI() {
-  const clock = document.getElementById('timerClock');
-  const fill = document.getElementById('timerFill');
-  const prog = document.getElementById('timerProgress');
-  clock.textContent = fmtTime(state.remaining);
-  const pct = (state.remaining / TOTAL_TIME) * 100;
-  fill.style.width = pct + '%';
-  clock.className = 'timer-clock ' + (pct > 40 ? 'ok' : pct > 15 ? 'warning' : 'danger');
+function renderScene(id){
+  G.scene=id;
+  const sc=G.scenes[id];
+  if(!sc){showEpilogue();return}
+  if(sc.branch){const next=sc.branch(G);renderScene(next);return}
+  if(sc.epilogue){showEpilogue();return}
 
-  const screens = ['','Capítulo 1','','Capítulo 2','','Capítulo 3','Finalizado'];
-  prog.textContent = screens[state.progress] || '';
-}
-
-function checkTimerNotifications() {
-  const mins = Math.floor(state.remaining / 60);
-  const pct = state.remaining / TOTAL_TIME;
-  const ns = state.notificationsShown;
-
-  // Time-based
-  if (mins === 60 && !ns.has('60m')) { ns.add('60m'); toast('&#9203; Llevas 25 minutos. ¡Buen arranque!', 'info'); }
-  if (mins === 42 && !ns.has('half')) {
-    ns.add('half');
-    toast('&#9201; ¡Mitad del tiempo! Quedan ~42 minutos', 'warning');
-  }
-  if (mins === 15 && !ns.has('15m')) { ns.add('15m'); toast('&#9889; &#161;15 minutos! Asegúrate de enviar algo', 'danger', 7000); }
-  if (mins === 5 && !ns.has('5m')) { ns.add('5m'); toast('&#128293; &#161;ÚLTIMOS 5 MINUTOS! Envía lo que tengas', 'danger', 10000); }
-
-  // Progress-based
-  const elapsed = TOTAL_TIME - state.remaining;
-  const elapsedMin = elapsed / 60;
-  if (elapsedMin >= 35 && state.progress <= 1 && !ns.has('slow1')) {
-    ns.add('slow1');
-    toast('&#9888;&#65039; Llevas 35 min en el Cap. 1. &#161;Intenta avanzar!', 'warning');
-  }
-  if (elapsedMin >= 25 && state.progress >= 2 && !ns.has('fast1')) {
-    ns.add('fast1');
-    toast('&#128640; &#161;Excelente ritmo! Terminaste el Cap. 1 a tiempo', 'success');
-  }
-  if (elapsedMin >= 60 && state.progress <= 3 && !ns.has('slow2')) {
-    ns.add('slow2');
-    toast('&#9889; Llevas 1 hora y sigues en Cap. 2. &#161;Acelera!', 'danger');
-  }
-}
-
-/* ═══════════════════════════════════════════════════
-   SCORING
-   ═══════════════════════════════════════════════════ */
-function scoreAct1() {
-  const ans = state.act1Answers;
-  const prob = state.act1;
-  const sol = prob.sol;
-  let score = 0;
-
-  // Q1: Variables (10 pts)
-  if (ans.q1 === 'correct') score += 10;
-
-  // Q2: Función objetivo (15 pts) - direction + coefficients
-  if (ans.q2dir === 'max') score += 3;
-  for (let i = 0; i < 3; i++) {
-    if (Math.abs((parseFloat(ans['q2c' + i]) || 0) - prob.c[i]) < 0.5) score += 4;
-  }
-
-  // Q3: Restricciones (25 pts) - 4 restricciones × ~6.25 pts
-  for (let i = 0; i < 4; i++) {
-    let rScore = 0;
-    for (let j = 0; j < 3; j++) {
-      if (Math.abs((parseFloat(ans[`q3a${i}${j}`]) || 0) - prob.A[i][j]) < 0.5) rScore++;
-    }
-    if (Math.abs((parseFloat(ans[`q3b${i}`]) || 0) - prob.b[i]) < 1) rScore++;
-    score += (rScore / 4) * 6.25;
-  }
-
-  // Q4: Solución óptima (20 pts)
-  if (sol) {
-    for (let i = 0; i < 3; i++) {
-      const studentVal = parseFloat(ans['q4x' + i]) || 0;
-      const correctVal = sol.solution[i];
-      const tol = Math.max(correctVal * 0.08, 1);
-      if (Math.abs(studentVal - correctVal) <= tol) score += 6.67;
-    }
-  }
-
-  // Q5: Z* (10 pts)
-  if (sol) {
-    const studentZ = parseFloat(ans.q5z) || 0;
-    const tol = Math.max(sol.Z * 0.08, 5);
-    if (Math.abs(studentZ - sol.Z) <= tol) score += 10;
-  }
-
-  // Q6: Interpretación (20 pts)
-  if (sol) {
-    // Recurso más limitante (se agota = slack ≈ 0)
-    const bindingIdx = sol.slacks.indexOf(Math.min(...sol.slacks));
-    if (parseInt(ans.q6binding) === bindingIdx) score += 8;
-    // Recurso con más holgura
-    const slackIdx = sol.slacks.indexOf(Math.max(...sol.slacks));
-    if (parseInt(ans.q6slack) === slackIdx) score += 7;
-    // Recomendación (texto)
-    const rec = (ans.q6rec || '').toLowerCase();
-    if (rec.length > 15) score += 2;
-    const keywords = ['producir','recurso','aumentar','invertir','queso','harina','capacidad','lote','ganancia','holgura','restricción','cuello','botella','más','óptim'];
-    const matched = keywords.filter(k => rec.includes(k)).length;
-    score += Math.min(3, matched);
-  }
-
-  state.act1Score = Math.min(100, Math.round(score));
-  return state.act1Score;
-}
-
-function scoreAct2() {
-  const ans = state.act2Answers;
-  const prob = state.act2;
-  let score = 0;
-  const path = state.path;
-
-  if (path === 'A') {
-    // Expansion: 4 variables
-    const sol = prob.sol;
-    // Q1: Función objetivo (20 pts)
-    if (ans.q1dir === 'max') score += 4;
-    for (let i = 0; i < 4; i++) {
-      if (Math.abs((parseFloat(ans['q1c' + i]) || 0) - prob.c[i]) < 0.5) score += 4;
-    }
-    // Q2: Restricciones (25 pts)
-    for (let i = 0; i < 4; i++) {
-      let rS = 0;
-      for (let j = 0; j < 4; j++) {
-        if (Math.abs((parseFloat(ans[`q2a${i}${j}`]) || 0) - prob.A[i][j]) < 0.5) rS++;
-      }
-      if (Math.abs((parseFloat(ans[`q2b${i}`]) || 0) - prob.b[i]) < 1) rS++;
-      score += (rS / 5) * 6.25;
-    }
-    // Q3: Solución (25 pts)
-    if (sol) {
-      for (let i = 0; i < 4; i++) {
-        const sv = parseFloat(ans['q3x' + i]) || 0;
-        const cv = sol.solution[i];
-        const tol = Math.max(cv * 0.08, 1);
-        if (Math.abs(sv - cv) <= tol) score += 5;
-      }
-      const sz = parseFloat(ans.q3z) || 0;
-      const tz = Math.max(sol.Z * 0.08, 5);
-      if (Math.abs(sz - sol.Z) <= tz) score += 5;
-    }
-    // Q4: Interpretación (30 pts)
-    const interp = (ans.q4text || '').toLowerCase();
-    if (interp.length > 20) score += 10;
-    const kw = ['chorizo','nuevo','producto','expand','ganar','profit','recurso','invertir','más','crecer','lote','producir','ampliar'];
-    score += Math.min(20, kw.filter(k => interp.includes(k)).length * 4);
-  } else if (path === 'B') {
-    // Crisis: restricción modificada
-    const sol = prob.sol;
-    // Q1: Identificar cambio (15 pts)
-    if (ans.q1change === '1') score += 15; // queso = recurso 1
-    // Q2: Nueva solución (30 pts)
-    if (sol) {
-      for (let i = 0; i < 3; i++) {
-        const sv = parseFloat(ans['q2x' + i]) || 0;
-        const cv = sol.solution[i];
-        const tol = Math.max(cv * 0.08, 1);
-        if (Math.abs(sv - cv) <= tol) score += 8;
-      }
-      const sz = parseFloat(ans.q2z) || 0;
-      const tz = Math.max(sol.Z * 0.08, 5);
-      if (Math.abs(sz - sol.Z) <= tz) score += 6;
-    }
-    // Q3: Comparación (25 pts)
-    const comp = (ans.q3comp || '').toLowerCase();
-    if (comp.length > 15) score += 8;
-    const kw2 = ['disminuy','baj','menos','perd','reduc','queso','proveedor','afect','cambiar','restric','impact','menor'];
-    score += Math.min(17, kw2.filter(k => comp.includes(k)).length * 4);
-    // Q4: Recomendación (30 pts)
-    const rec = (ans.q4rec || '').toLowerCase();
-    if (rec.length > 20) score += 10;
-    const kw3 = ['proveedor','alternativ','negociar','buscar','sustituir','receta','queso','adaptar','plan','contingencia','diversificar'];
-    score += Math.min(20, kw3.filter(k => rec.includes(k)).length * 5);
-  } else {
-    // Cost minimization
-    const sol = prob.sol;
-    // Q1: Tipo de objetivo (10 pts)
-    if (ans.q1type === 'min') score += 10;
-    // Q2: Función objetivo (15 pts)
-    for (let i = 0; i < 3; i++) {
-      if (Math.abs((parseFloat(ans['q2c' + i]) || 0) - prob.costs[i]) < 0.5) score += 5;
-    }
-    // Q3: Restricciones de demanda (20 pts)
-    for (let i = 0; i < 3; i++) {
-      if (Math.abs((parseFloat(ans['q3d' + i]) || 0) - prob.demand[i]) < 0.5) score += 5;
-      if (ans['q3sign' + i] === 'gte') score += 1.67;
-    }
-    // Q4: Solución (25 pts)
-    if (sol) {
-      for (let i = 0; i < 3; i++) {
-        const sv = parseFloat(ans['q4x' + i]) || 0;
-        const cv = sol.solution[i];
-        const tol = Math.max(cv * 0.08, 1);
-        if (Math.abs(sv - cv) <= tol) score += 6.67;
-      }
-      const sz = parseFloat(ans.q4z) || 0;
-      const tz = Math.max(Math.abs(sol.Z) * 0.08, 5);
-      if (Math.abs(sz - sol.Z) <= tz) score += 5;
-    }
-    // Q5: Interpretación (30 pts)
-    const interp = (ans.q5text || '').toLowerCase();
-    if (interp.length > 20) score += 10;
-    const kw4 = ['costo','minim','demand','cumplir','gasto','eficien','ahorro','presupuesto','recurso','reduci','product'];
-    score += Math.min(20, kw4.filter(k => interp.includes(k)).length * 5);
-  }
-
-  state.act2Score = Math.min(100, Math.round(score));
-  return state.act2Score;
-}
-
-function scoreAct3() {
-  const ans = state.act3Answers;
-  const prob = state.act3;
-  const sol = prob.sol;
-  let score = 0;
-
-  // Q1: Formular LP rápido - función objetivo (20pts)
-  if (ans.q1dir === 'max') score += 4;
-  for (let i = 0; i < 2; i++) {
-    if (Math.abs((parseFloat(ans['q1c' + i]) || 0) - prob.c[i]) < 0.5) score += 8;
-  }
-
-  // Q2: Restricciones (25pts)
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 2; j++) {
-      if (Math.abs((parseFloat(ans[`q2a${i}${j}`]) || 0) - prob.A[i][j]) < 0.5) score += 3;
-    }
-    if (Math.abs((parseFloat(ans[`q2b${i}`]) || 0) - prob.b[i]) < 1) score += 2.33;
-  }
-
-  // Q3: Solución (25pts)
-  if (sol) {
-    for (let i = 0; i < 2; i++) {
-      const sv = parseFloat(ans['q3x' + i]) || 0;
-      const cv = sol.solution[i];
-      const tol = Math.max(cv * 0.08, 1);
-      if (Math.abs(sv - cv) <= tol) score += 8;
-    }
-    const sz = parseFloat(ans.q3z) || 0;
-    const tz = Math.max(sol.Z * 0.08, 5);
-    if (Math.abs(sz - sol.Z) <= tz) score += 9;
-  }
-
-  // Q4: Decisión estratégica (30pts)
-  const dec = (ans.q4text || '').toLowerCase();
-  if (dec.length > 20) score += 10;
-  const kw = ['producir','lote','ganancia','recurso','invert','ampliar','óptim','restricción','capacidad','crecer','rentab','maíz','carne','mano','obra'];
-  score += Math.min(20, kw.filter(k => dec.includes(k)).length * 4);
-
-  state.act3Score = Math.min(100, Math.round(score));
-  return state.act3Score;
-}
-
-function calcFinalGrade() {
-  return Math.round(((state.act1Score * 0.40) + (state.act2Score * 0.35) + (state.act3Score * 0.25)) / 100 * 50) / 10;
-}
-
-/* ═══════════════════════════════════════════════════
-   GOOGLE SHEETS
-   ═══════════════════════════════════════════════════ */
-async function submitToSheets() {
-  if (!SHEETS_URL) return false;
-  try {
-    const data = {
-      action: 'update',
-      codigo1: state.codigo,
-      notaCap1: (state.act1Score / 100 * 5).toFixed(1),
-      notaCap2: (state.act2Score / 100 * 5).toFixed(1),
-      notaCap3: (state.act3Score / 100 * 5).toFixed(1),
-      notaFinal: calcFinalGrade().toFixed(1),
-      tiempoUsado: Math.round((TOTAL_TIME - state.remaining) / 60),
-      ruta: state.path === 'A' ? 'Expansión' : state.path === 'B' ? 'Crisis Proveedor' : 'Reducción Costos',
-      respuestas: {
-        act1: state.act1Answers,
-        act2: state.act2Answers,
-        act3: state.act3Answers,
-      },
-    };
-    await fetch(SHEETS_URL, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: { 'Content-Type': 'text/plain' },
-      mode: 'no-cors',
+  document.getElementById('hudChapter').textContent=sc.ch||'';
+  let html=`<div class="scene" id="currentScene">`;
+  if(sc.icon) html+=`<div class="scene-illust">${sc.icon}</div>`;
+  if(sc.ch) html+=`<div class="chapter-tag">${sc.ch}</div>`;
+  if(sc.title) html+=`<h2 class="scene-title">${sc.title}</h2>`;
+  if(sc.narr) html+=`<div class="narrative">${sc.narr}</div>`;
+  if(sc.dial) sc.dial.forEach(d=>{html+=dialogue(d.c,d.t)});
+  if(sc.choices){
+    html+=`<div class="choices" id="choices">`;
+    sc.choices.forEach((ch,i)=>{
+      html+=`<button class="choice-btn" data-idx="${i}" onclick="makeChoice(${i})">
+        <span class="letter">${ch.l}</span>
+        <span class="choice-text">${ch.t}</span>
+      </button>`;
     });
-    return true;
-  } catch (e) {
-    console.error('Error enviando a Sheets:', e);
-    return false;
+    html+=`</div>`;
+  } else {
+    html+=`<button class="btn-continue primary" onclick="goNext('${sc.next}')">${sc.next==='arrive'?'Ir a la planta →':'Continuar →'}</button>`;
   }
+  html+=`</div>`;
+  app.innerHTML=html;
+  window.scrollTo({top:0,behavior:'smooth'});
+  requestAnimationFrame(()=>document.getElementById('currentScene').classList.add('visible'));
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER HELPERS
-   ═══════════════════════════════════════════════════ */
-const $ = id => document.getElementById(id);
-const app = $('app');
-
-function render(html) {
-  app.innerHTML = html;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function dialogue(char,text){
+  const avClass={hernando:'av-hernando',marcela:'av-marcela',camilo:'av-camilo'}[char]||'';
+  const nmClass={hernando:'nm-hernando',marcela:'nm-marcela',camilo:'nm-camilo'}[char]||'';
+  const emoji={hernando:'👨‍💼',marcela:'👩‍🔧',camilo:'🧑‍💻'}[char]||'';
+  const name={hernando:'Don Hernando',marcela:'Marcela',camilo:'Camilo'}[char]||'';
+  return `<div class="dialogue">
+    <span class="avatar ${avClass}">${emoji}</span>
+    <div class="bubble">
+      <div class="char-name ${nmClass}">${name}</div>
+      <div class="char-text">${text}</div>
+    </div>
+  </div>`;
 }
 
-function dialogueBox(char, text, extraClass = '') {
-  const colors = { hernando: 'var(--amber)', marcela: 'var(--teal)', camilo: 'var(--purple)' };
-  const names = { hernando: 'Don Hernando - CEO', marcela: 'Marcela - Jefa de Planta', camilo: 'Camilo - Analista Financiero' };
-  const emojis = { hernando: '👨‍💼', marcela: '👩‍🔧', camilo: '🧑‍💻' };
-  return `
-    <div class="dialogue ${extraClass}" style="border-left-color:${colors[char]}">
-      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
-        <span class="avatar ${char}">${emojis[char]}</span>
-        <span class="char-name ${char}">${names[char]}</span>
-      </div>
-      <p>${text}</p>
-    </div>`;
-}
-
-function dataTableHTML(A, b, c, products, resources, emojis) {
-  emojis = emojis || PRODUCTS_EMOJI;
-  let html = `<table class="data-table"><thead><tr><th>Recurso</th>`;
-  products.forEach((p, i) => html += `<th>${emojis[i] || ''} ${p}</th>`);
-  html += `<th>Disponible</th></tr></thead><tbody>`;
-  resources.forEach((r, i) => {
-    html += `<tr><td class="row-label">${r}</td>`;
-    A[i].forEach(v => html += `<td>${v}</td>`);
-    html += `<td><strong>${b[i].toLocaleString('es-CO')}</strong></td></tr>`;
+function makeChoice(idx){
+  const sc=G.scenes[G.scene];
+  const ch=sc.choices[idx];
+  // Disable all buttons
+  document.querySelectorAll('.choice-btn').forEach((btn,i)=>{
+    btn.classList.add('disabled');
+    if(i===idx) btn.classList.add(ch.ok?'selected-correct':'selected-wrong');
+    else if(ch.ok===true && sc.choices[i].ok) btn.classList.add('correct');
+    else if(ch.ok && !sc.choices[i].ok) btn.classList.add('wrong');
+    else if(!ch.ok && sc.choices[i].ok) btn.classList.add('correct');
+    else btn.classList.add('wrong');
   });
-  html += `<tr style="background:rgba(245,158,11,.08)"><td class="row-label" style="color:var(--amber-l)">Ganancia por lote (miles $)</td>`;
-  c.forEach(v => html += `<td style="font-weight:700;color:var(--amber-l)">${fmtK(v)}</td>`);
-  html += `<td></td></tr></tbody></table>`;
-  return html;
+  // Update money
+  G.money += ch.$;
+  showMoneyFloat(ch.$);
+  updateHUD();
+  // Record
+  G.history.push({scene:G.scene, choice:idx, money:ch.$, correct:!!ch.ok});
+  // Show feedback
+  const fbDiv=document.createElement('div');
+  fbDiv.className='feedback '+(ch.ok?'correct':'wrong');
+  fbDiv.innerHTML=`
+    <div class="fb-icon">${ch.ok?'✅':'❌'}</div>
+    <div class="fb-text">${ch.fb}</div>
+    <div class="fb-money" style="color:${ch.$>=0?'var(--green)':'var(--red)'}">${ch.$>=0?'+':''}${fmt$(ch.$)}</div>
+    ${ch.react?dialogue(ch.react.c,ch.react.t):''}
+    <button class="btn-continue ${ch.ok?'success':'danger'}" onclick="goNext('${ch.nx}')">Continuar →</button>
+  `;
+  document.getElementById('choices').after(fbDiv);
+  fbDiv.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-function lpFormRow(label, nVars, prefix, showSign = true, signPrefix = '') {
-  let html = `<div class="lp-row"><span class="lp-label">${label}:</span>`;
-  for (let i = 0; i < nVars; i++) {
-    if (i > 0) html += `<span class="operator">+</span>`;
-    html += `<input type="number" class="input input-sm" id="${prefix}${i}" step="any" placeholder="?">`;
-    html += `<span class="var-name">x<sub>${i + 1}</sub></span>`;
-  }
-  if (showSign) {
-    html += `<span class="operator">&le;</span>`;
-    html += `<input type="number" class="input input-sm" id="${signPrefix}" step="any" placeholder="?" style="width:100px">`;
-  }
-  html += `</div>`;
-  return html;
+function goNext(id){
+  // Fade out
+  const sc=document.getElementById('currentScene');
+  if(sc){sc.style.opacity='0';sc.style.transform='translateY(-10px)'}
+  setTimeout(()=>renderScene(id),350);
 }
 
-/* ═══════════════════════════════════════════════════
-   PANTALLAS
-   ═══════════════════════════════════════════════════ */
-function showSplash() {
-  render(`
-    <div class="splash">
-      <div class="splash-logo">🏭</div>
-      <h1 class="fade-in">Sabores del Eje<br>Cafetero</h1>
-      <p class="subtitle fade-in delay-1">Simulador Gerencial — Parcial de Programación Lineal</p>
-      <p class="tagline fade-in delay-2">
-        Una empresa. Recursos limitados. Decisiones que importan.<br>
-        <em>Pereira, Colombia — ${new Date().toLocaleDateString('es-CO', {year:'numeric',month:'long',day:'numeric'})}</em>
-      </p>
-      <div class="card fade-in delay-3" style="max-width:500px;width:100%">
-        <p style="color:var(--amber);font-weight:600;font-size:.85rem;margin-bottom:.8rem;text-align:center">Puede ser individual o en parejas</p>
-        <div style="display:flex;gap:1rem">
-          <div class="form-group" style="flex:2">
-            <label>Integrante 1 — Nombre</label>
-            <input class="input" id="regName" placeholder="Nombre completo..." autofocus>
-          </div>
-          <div class="form-group" style="flex:1">
-            <label>Código</label>
-            <input class="input" id="regCode" placeholder="1088...">
-          </div>
-        </div>
-        <div id="pairFields" style="display:flex;gap:1rem;opacity:.5;transition:opacity .3s">
-          <div class="form-group" style="flex:2">
-            <label>Integrante 2 — Nombre <span style="color:var(--text3)">(opcional)</span></label>
-            <input class="input" id="regName2" placeholder="Nombre del compañero/a..." onfocus="document.getElementById('pairFields').style.opacity='1'">
-          </div>
-          <div class="form-group" style="flex:1">
-            <label>Código</label>
-            <input class="input" id="regCode2" placeholder="1088...">
-          </div>
-        </div>
-        <button class="btn btn-primary btn-lg" style="width:100%;margin-top:.5rem" onclick="startExam()">
-          Comenzar Misión &#128640;
-        </button>
+/* ═══════════════════════════════════════════
+   EPILOGUE / RESULTS
+   ═══════════════════════════════════════════ */
+function showEpilogue(){
+  if(G.interval)clearInterval(G.interval);
+  const money=G.money;
+  const grade = Math.min(5.0, Math.max(0.5, Math.round(((money - 40e6) / (180e6 - 40e6)) * 45 + 5) / 10));
+  const timeUsed=Math.round((TOTAL_TIME-G.remaining)/60);
+  const correct=G.history.filter(h=>h.correct).length;
+  const total=G.history.length;
+
+  let emoji,msg,cls;
+  if(grade>=4.5){emoji='🏆';msg='¡EXCEPCIONAL! Eres un crack de la PL.';cls='high'}
+  else if(grade>=4.0){emoji='⭐';msg='¡Excelente! Dominas la programación lineal.';cls='high'}
+  else if(grade>=3.5){emoji='💪';msg='Muy bien. Sólido conocimiento de PL.';cls='high'}
+  else if(grade>=3.0){emoji='👍';msg='Aprobado. Hay margen de mejora.';cls='mid'}
+  else if(grade>=2.0){emoji='📖';msg='Necesitas reforzar los conceptos.';cls='low'}
+  else{emoji='📚';msg='A estudiar más. ¡La PL es tu amiga!';cls='low'}
+
+  app.innerHTML=`<div class="scene visible" style="padding-top:5rem">
+    <div class="scene-illust">${emoji}</div>
+    <div class="chapter-tag">Fin de la Historia</div>
+    <h2 class="scene-title">Tu Legado en Sabores del Eje</h2>
+
+    <div style="text-align:center;margin:1.5rem 0;padding:1.5rem;background:var(--card);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)">
+      <div class="result-big" style="color:${grade>=3?'var(--green)':grade>=2?'var(--amber)':'var(--red)'}">${grade.toFixed(1)}</div>
+      <div class="result-sub">de 5.0</div>
+      <p style="color:var(--text2);margin-top:.5rem">${msg}</p>
+      <div class="grade-bar" style="margin-top:.8rem"><div class="grade-fill ${cls}" style="width:${grade/5*100}%"></div></div>
+    </div>
+
+    <div style="background:var(--card);border-radius:var(--radius);padding:1.2rem;margin:1rem 0;border:1px solid rgba(255,255,255,.06)">
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-val" style="color:var(--amber)">${fmt$(money)}</div><div class="stat-lbl">Capital Final</div></div>
+        <div class="stat-item"><div class="stat-val">${correct}/${total}</div><div class="stat-lbl">Respuestas Correctas</div></div>
+        <div class="stat-item"><div class="stat-val">${timeUsed} min</div><div class="stat-lbl">Tiempo Usado</div></div>
+        <div class="stat-item"><div class="stat-val">${G.history.length}</div><div class="stat-lbl">Decisiones Tomadas</div></div>
       </div>
-      <p class="exam-footer fade-in delay-4">Administración de Operaciones 2 — Universidad Tecnológica de Pereira</p>
-    </div>
-  `);
-  setTimeout(() => {
-    const nameInput = $('regName');
-    if (nameInput) nameInput.focus();
-  }, 100);
-}
-
-function showBriefing() {
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Briefing</div>
-      <h2>Tu Misión</h2>
-      <p>Antes de entrar a la planta, lee las reglas</p>
     </div>
 
-    ${dialogueBox('hernando', `¡Hola, <strong>${state.nombre.split(' ')[0]}${state.nombre2 ? ' y ' + state.nombre2.split(' ')[0] : ''}</strong>! Bienvenido/a a <em>Sabores del Eje Cafetero</em>. Somos una empresa familiar que empezó con un puesto de pandebonos en la Plaza de Bolívar y hoy abastecemos todo el Eje Cafetero.`)}
-
-    ${dialogueBox('hernando', `Necesito que optimices nuestra producción. Vas a enfrentar <strong>3 desafíos</strong> que pondrán a prueba tu capacidad de análisis. Cada decisión que tomes cambiará el rumbo de la empresa.`)}
-
-    <div class="card slide-up delay-1">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(59,130,246,.15)">📋</div>
-        <h3>Reglas del Simulador</h3>
-      </div>
-      <ul style="list-style:none;display:flex;flex-direction:column;gap:.7rem;padding-left:.5rem">
-        <li style="display:flex;gap:.6rem;align-items:flex-start">
-          <span style="color:var(--amber)">&#9202;</span>
-          <span>Tienes <strong>1 hora y 25 minutos</strong>. El reloj corre arriba.</span>
-        </li>
-        <li style="display:flex;gap:.6rem;align-items:flex-start">
-          <span style="color:var(--green)">📊</span>
-          <span>Puedes usar <strong>Excel y Solver</strong> para resolver modelos.</span>
-        </li>
-        <li style="display:flex;gap:.6rem;align-items:flex-start">
-          <span style="color:var(--blue)">🤖</span>
-          <span>Puedes usar <strong>IA como apoyo</strong>, pero los datos son únicos para ti. Sin entender PL, no llegarás lejos.</span>
-        </li>
-        <li style="display:flex;gap:.6rem;align-items:flex-start">
-          <span style="color:var(--purple)">🔀</span>
-          <span>Tus decisiones en el <strong>Capítulo 1</strong> determinan qué problema enfrentas en el <strong>Capítulo 2</strong>.</span>
-        </li>
-        <li style="display:flex;gap:.6rem;align-items:flex-start">
-          <span style="color:var(--red)">📨</span>
-          <span>Los resultados se envían <strong>automáticamente</strong>. No hay vuelta atrás.</span>
-        </li>
-      </ul>
+    <div style="background:var(--card);border-radius:var(--radius);padding:1rem;margin:1rem 0;border:1px solid rgba(255,255,255,.06)">
+      <p><span style="color:var(--text3)">Integrante 1:</span> <strong>${G.nombre}</strong> (${G.codigo})</p>
+      ${G.nombre2?`<p><span style="color:var(--text3)">Integrante 2:</span> <strong>${G.nombre2}</strong> (${G.codigo2})</p>`:''}
     </div>
 
-    <div class="card slide-up delay-2" style="text-align:center;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.02))">
-      <p style="font-size:1.1rem;margin-bottom:.5rem">Tu código de estudiante genera <strong>datos únicos</strong> para ti.</p>
-      <p style="color:var(--text3);font-size:.9rem;margin-bottom:1rem">Semilla: <code style="color:var(--amber)">${state.seed}</code> — Tus números son distintos a los de tus compañeros.</p>
-      <p style="font-size:1.3rem;font-weight:700;color:var(--amber)">¿Listo para optimizar?</p>
-    </div>
+    ${dialogue('hernando', grade>=3
+      ? `Ha sido un placer, <strong>${G.nombre.split(' ')[0]}${G.nombre2?' y '+G.nombre2.split(' ')[0]:''}</strong>. Sabores del Eje tiene futuro gracias a personas como ustedes.`
+      : `<strong>${G.nombre.split(' ')[0]}${G.nombre2?' y '+G.nombre2.split(' ')[0]:''}</strong>, la PL es una herramienta poderosa. ¡A practicar más!`)}
 
     <div style="text-align:center;margin:1.5rem 0">
-      <button class="btn btn-primary btn-lg" onclick="beginAct1()">
-        Entrar a la Planta &#127981;
-      </button>
-    </div>
-  `);
-}
-
-function showAct1() {
-  state.progress = 1;
-  const p = state.act1;
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Capítulo 1</div>
-      <h2>El Primer Encargo</h2>
-      <p>Optimiza la producción semanal de Sabores del Eje</p>
+      ${SHEETS_URL?`<button class="btn-continue success" id="submitBtn" onclick="finalSubmit()">Enviar Resultados al Profesor 📨</button>`
+      :'<p style="color:var(--amber)">⚠️ Sin Google Sheets configurado. Toma pantallazo.</p>'}
     </div>
 
-    ${dialogueBox('marcela', `Hola, soy Marcela, la jefa de planta. Te voy a dar los datos de nuestra operación en <em>Dosquebradas</em>. Producimos tres líneas principales por lotes de 100 unidades.`)}
-
-    <div class="card slide-up delay-1">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(245,158,11,.15)">📊</div>
-        <h3>Datos de Producción Semanal</h3>
-      </div>
-      <p style="color:var(--text2);margin-bottom:.8rem">Consumo de recursos por <strong>lote</strong> (100 unidades) de cada producto:</p>
-      ${dataTableHTML(p.A, p.b, p.c, p.products, p.resources)}
-      <p style="color:var(--text2);font-size:.9rem;margin-top:.5rem">
-        &#128161; <strong>Objetivo:</strong> Maximizar la ganancia total semanal.
-      </p>
-    </div>
-
-    ${dialogueBox('hernando', `Necesito que formules esto como un <strong>modelo de Programación Lineal</strong> y lo resuelvas. ¡La empresa depende de tus cálculos!`)}
-
-    <!-- Q1: Variables de Decisión -->
-    <div class="question slide-up delay-2">
-      <div class="q-header">
-        <span class="q-num">1</span>
-        <span class="q-text">¿Cuáles son las variables de decisión del modelo?</span>
-        <span class="q-pts">10 pts</span>
-      </div>
-      <div class="options" id="q1options">
-        <label class="option" onclick="selectOption(this,'q1','wrong1')">
-          <input type="radio" name="q1"><span class="radio"></span>
-          <span>x₁ = ganancia por pandebonos, x₂ = ganancia por buñuelos, x₃ = ganancia por empanadas</span>
-        </label>
-        <label class="option" onclick="selectOption(this,'q1','correct')">
-          <input type="radio" name="q1"><span class="radio"></span>
-          <span>x₁ = lotes de pandebonos, x₂ = lotes de buñuelos, x₃ = lotes de empanadas a producir por semana</span>
-        </label>
-        <label class="option" onclick="selectOption(this,'q1','wrong2')">
-          <input type="radio" name="q1"><span class="radio"></span>
-          <span>x₁ = kg de harina, x₂ = kg de queso, x₃ = horas de mano de obra a utilizar</span>
-        </label>
-        <label class="option" onclick="selectOption(this,'q1','wrong3')">
-          <input type="radio" name="q1"><span class="radio"></span>
-          <span>x₁ = precio de pandebonos, x₂ = precio de buñuelos, x₃ = precio de empanadas</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Q2: Función Objetivo -->
-    <div class="question slide-up delay-3">
-      <div class="q-header">
-        <span class="q-num">2</span>
-        <span class="q-text">Formula la función objetivo. Completa los coeficientes:</span>
-        <span class="q-pts">15 pts</span>
-      </div>
-      <div class="lp-row" style="font-size:1.1rem">
-        <select class="input" id="q2dir" style="width:80px">
-          <option value="">?</option>
-          <option value="max">Max</option>
-          <option value="min">Min</option>
-        </select>
-        <span style="font-weight:700;color:var(--text)">Z =</span>
-        <input type="number" class="input input-sm" id="q2c0" step="any" placeholder="?">
-        <span class="var-name">x<sub>1</sub></span>
-        <span class="operator">+</span>
-        <input type="number" class="input input-sm" id="q2c1" step="any" placeholder="?">
-        <span class="var-name">x<sub>2</sub></span>
-        <span class="operator">+</span>
-        <input type="number" class="input input-sm" id="q2c2" step="any" placeholder="?">
-        <span class="var-name">x<sub>3</sub></span>
-      </div>
-      <p style="color:var(--text3);font-size:.85rem;margin-top:.3rem">&#128161; Recuerda: los coeficientes están en la tabla como "ganancia por lote (miles $)". Ingresa solo el número (ej: 120 para $120.000)</p>
-    </div>
-
-    <!-- Q3: Restricciones -->
-    <div class="question slide-up delay-4">
-      <div class="q-header">
-        <span class="q-num">3</span>
-        <span class="q-text">Escribe las restricciones del modelo. Completa los coeficientes y el lado derecho:</span>
-        <span class="q-pts">25 pts</span>
-      </div>
-      ${RESOURCES_SHORT.map((r, i) => `
-        <div class="lp-row">
-          <span class="lp-label">${r}:</span>
-          <input type="number" class="input input-sm" id="q3a${i}0" step="any" placeholder="?">
-          <span class="var-name">x<sub>1</sub></span>
-          <span class="operator">+</span>
-          <input type="number" class="input input-sm" id="q3a${i}1" step="any" placeholder="?">
-          <span class="var-name">x<sub>2</sub></span>
-          <span class="operator">+</span>
-          <input type="number" class="input input-sm" id="q3a${i}2" step="any" placeholder="?">
-          <span class="var-name">x<sub>3</sub></span>
-          <span class="operator">&le;</span>
-          <input type="number" class="input input-sm" id="q3b${i}" step="any" placeholder="?" style="width:100px">
-        </div>
-      `).join('')}
-      <p style="color:var(--text3);font-size:.85rem;margin-top:.5rem">Además: x₁, x₂, x₃ ≥ 0 (no negatividad)</p>
-    </div>
-
-    <!-- Q4: Solución -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">4</span>
-        <span class="q-text">Resuelve el modelo con Simplex (usa Excel Solver). ¿Cuál es la solución óptima?</span>
-        <span class="q-pts">20 pts</span>
-      </div>
-      <p style="color:var(--text2);font-size:.9rem;margin-bottom:.8rem">
-        &#128187; Abre Excel, introduce el modelo y usa Solver. Ingresa los valores óptimos:
-      </p>
-      <div style="display:flex;gap:1rem;flex-wrap:wrap">
-        <div class="form-group" style="flex:1;min-width:120px">
-          <label>x₁* (${PRODUCTS[0]})</label>
-          <input type="number" class="input" id="q4x0" step="any" placeholder="Lotes">
-        </div>
-        <div class="form-group" style="flex:1;min-width:120px">
-          <label>x₂* (${PRODUCTS[1]})</label>
-          <input type="number" class="input" id="q4x1" step="any" placeholder="Lotes">
-        </div>
-        <div class="form-group" style="flex:1;min-width:120px">
-          <label>x₃* (${PRODUCTS[2]})</label>
-          <input type="number" class="input" id="q4x2" step="any" placeholder="Lotes">
-        </div>
-      </div>
-    </div>
-
-    <!-- Q5: Valor Z* -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">5</span>
-        <span class="q-text">¿Cuál es el valor óptimo de Z? (ganancia máxima semanal en miles de $)</span>
-        <span class="q-pts">10 pts</span>
-      </div>
-      <div class="form-group">
-        <label>Z* (miles de pesos)</label>
-        <input type="number" class="input" id="q5z" step="any" placeholder="Ej: 15400" style="max-width:300px">
-      </div>
-    </div>
-
-    <!-- Q6: Interpretación -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">6</span>
-        <span class="q-text">Análisis e interpretación de los resultados</span>
-        <span class="q-pts">20 pts</span>
-      </div>
-      <div class="form-group">
-        <label>¿Cuál recurso se agota completamente? (restricción activa / binding)</label>
-        <select class="input" id="q6binding" style="max-width:400px">
-          <option value="">— Selecciona —</option>
-          ${RESOURCES_SHORT.map((r, i) => `<option value="${i}">${r}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>¿Cuál recurso tiene más holgura? (sobra más)</label>
-        <select class="input" id="q6slack" style="max-width:400px">
-          <option value="">— Selecciona —</option>
-          ${RESOURCES_SHORT.map((r, i) => `<option value="${i}">${r}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>¿Qué le recomendarías a Don Hernando basándote en los resultados? (mín. 20 caracteres)</label>
-        <textarea class="input" id="q6rec" placeholder="Escribe tu recomendación gerencial..."></textarea>
-      </div>
-    </div>
-
-    <div style="text-align:center;margin:2rem 0">
-      <button class="btn btn-primary btn-lg" onclick="submitAct1()">
-        Enviar Capítulo 1 &#128640;
-      </button>
-    </div>
-  `);
-}
-
-function showAct1Result() {
-  state.progress = 2;
-  const score = state.act1Score;
-  const pct = score;
-  let path, narrative;
-
-  if (pct >= 70) {
-    state.path = 'A';
-    path = 'Expansión';
-    narrative = `
-      ${dialogueBox('hernando', `<strong>¡Impresionante!</strong> Marcela, ¿viste esos números? Esto es exactamente lo que necesitábamos. Con resultados así, es hora de dar el siguiente paso.`)}
-      ${dialogueBox('marcela', `Don Hernando, con esta optimización podemos pensar en <em>expandir la línea de producción</em>. He estado mirando los números para agregar chorizos santarrosanos a nuestra oferta...`)}
-      ${dialogueBox('hernando', `¡Hagámoslo! Agreguemos un cuarto producto. Pero necesito que nuestro analista reformule todo el modelo. ¿Puedes con el reto?`)}
-      <div class="card" style="border-color:var(--green);text-align:center">
-        <span class="badge good">Ruta Desbloqueada</span>
-        <h3 style="margin-top:.5rem;color:var(--green)">&#128640; La Expansión</h3>
-        <p style="color:var(--text2)">Un nuevo producto, más variables, más complejidad. ¡Demuestra que puedes escalar!</p>
-      </div>
-    `;
-  } else if (pct >= 40) {
-    state.path = 'B';
-    path = 'Crisis del Proveedor';
-    narrative = `
-      ${dialogueBox('hernando', `Hmm... no está perfecto, pero se puede trabajar con esto.`)}
-      <div class="narrative"><em>*Suena el teléfono de Don Hernando*</em></div>
-      ${dialogueBox('hernando', `¿Aló? ... ¿QUÉ? ¿Cómo que Don Alfonso solo puede entregar la <strong>mitad del queso</strong> esta semana? ¡Pero si el queso campesino del Quindío es nuestro ingrediente estrella!`)}
-      ${dialogueBox('marcela', `Houston, tenemos un problema. Si el queso se reduce a la mitad, toda la producción se desbarajusta. Toca recalcular TODO.`)}
-      <div class="card" style="border-color:var(--amber);text-align:center">
-        <span class="badge mid">Ruta Desbloqueada</span>
-        <h3 style="margin-top:.5rem;color:var(--amber)">&#9888;&#65039; Crisis del Proveedor</h3>
-        <p style="color:var(--text2)">El queso se redujo a la mitad. ¿Cómo cambia la solución óptima? Reformula y resuelve.</p>
-      </div>
-    `;
-  } else {
-    state.path = 'C';
-    path = 'Reducción de Costos';
-    narrative = `
-      ${dialogueBox('hernando', `Bueno... la verdad esperaba más. Pero no te preocupes, todos aprendemos.`)}
-      <div class="narrative"><em>*Llega un correo urgente de los inversionistas*</em></div>
-      ${dialogueBox('camilo', `Don Hernando, malas noticias. Los inversionistas quieren que <strong>reduzcamos costos de producción</strong> al máximo. Hay que cumplir la demanda mínima pero gastando lo menos posible.`)}
-      ${dialogueBox('hernando', `Toca cambiar de enfoque. Ya no es maximizar ganancia, es <strong>minimizar costos</strong>. ¿Puedes replantear el problema?`)}
-      <div class="card" style="border-color:var(--red);text-align:center">
-        <span class="badge bad">Ruta Desbloqueada</span>
-        <h3 style="margin-top:.5rem;color:var(--red)">&#128181; Reducción de Costos</h3>
-        <p style="color:var(--text2)">Cambia el enfoque: minimizar costos cumpliendo demanda mínima. Un tipo distinto de PL.</p>
-      </div>
-    `;
-  }
-
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Resultados — Capítulo 1</div>
-      <h2>Tu Desempeño</h2>
-    </div>
-
-    <div class="score-card slide-up delay-1">
-      <div class="score-big" style="color:${pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)'}">${pct}/100</div>
-      <div class="score-label">Puntos en el Capítulo 1</div>
-      <div class="grade-bar" style="margin-top:1rem">
-        <div class="grade-bar-fill ${pct >= 70 ? 'high' : pct >= 40 ? 'mid' : 'low'}" style="width:${pct}%"></div>
-      </div>
-    </div>
-
-    ${narrative}
-
-    <div style="text-align:center;margin:2rem 0">
-      <button class="btn btn-primary btn-lg" onclick="beginAct2()">
-        Continuar al Capítulo 2 &#10132;
-      </button>
-    </div>
-  `);
-  // Trigger grade bar animation
-  setTimeout(() => {
-    const bar = document.querySelector('.grade-bar-fill');
-    if (bar) bar.style.width = pct + '%';
-  }, 100);
-}
-
-function showAct2() {
-  state.progress = 3;
-  const path = state.path;
-
-  if (path === 'A') renderAct2A();
-  else if (path === 'B') renderAct2B();
-  else renderAct2C();
-}
-
-function renderAct2A() {
-  const p = state.act2;
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Capítulo 2 — La Expansión</div>
-      <h2>Nuevos Horizontes</h2>
-      <p>La empresa crece: un nuevo producto entra a la línea</p>
-    </div>
-
-    ${dialogueBox('marcela', `Con el éxito de la optimización anterior, Don Hernando decidió agregar <strong>chorizos santarrosanos</strong> a la producción. Aquí están los nuevos datos con 4 productos.`)}
-
-    <div class="card slide-up delay-1">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(16,185,129,.15)">📊</div>
-        <h3>Datos de Producción Expandida</h3>
-      </div>
-      ${dataTableHTML(p.A, p.b, p.c, p.products, p.resources, p.emojis)}
-    </div>
-
-    ${dialogueBox('hernando', `Ahora el modelo tiene <strong>4 variables</strong>. Más complejidad, más ganancia potencial. ¡Demuéstrame que puedes!`)}
-
-    <!-- Q1: FO con 4 variables -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">1</span>
-        <span class="q-text">Formula la función objetivo para el modelo expandido:</span>
-        <span class="q-pts">20 pts</span>
-      </div>
-      <div class="lp-row" style="font-size:1.05rem">
-        <select class="input" id="q1dir" style="width:80px">
-          <option value="">?</option><option value="max">Max</option><option value="min">Min</option>
-        </select>
-        <span style="font-weight:700">Z =</span>
-        ${[0,1,2,3].map(i => `
-          ${i > 0 ? '<span class="operator">+</span>' : ''}
-          <input type="number" class="input input-sm" id="q1c${i}" step="any" placeholder="?">
-          <span class="var-name">x<sub>${i+1}</sub></span>
-        `).join('')}
-      </div>
-    </div>
-
-    <!-- Q2: Restricciones 4x4 -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">2</span>
-        <span class="q-text">Escribe las restricciones (ahora con 4 variables):</span>
-        <span class="q-pts">25 pts</span>
-      </div>
-      ${RESOURCES_SHORT.map((r, i) => `
-        <div class="lp-row">
-          <span class="lp-label">${r}:</span>
-          ${[0,1,2,3].map(j => `
-            ${j > 0 ? '<span class="operator">+</span>' : ''}
-            <input type="number" class="input input-sm" id="q2a${i}${j}" step="any" placeholder="?">
-            <span class="var-name">x<sub>${j+1}</sub></span>
-          `).join('')}
-          <span class="operator">&le;</span>
-          <input type="number" class="input input-sm" id="q2b${i}" step="any" placeholder="?" style="width:100px">
-        </div>
-      `).join('')}
-    </div>
-
-    <!-- Q3: Solución -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">3</span>
-        <span class="q-text">Resuelve con Solver. Solución óptima:</span>
-        <span class="q-pts">25 pts</span>
-      </div>
-      <div style="display:flex;gap:1rem;flex-wrap:wrap">
-        ${p.products.map((prod, i) => `
-          <div class="form-group" style="flex:1;min-width:100px">
-            <label>x${i+1}* (${prod})</label>
-            <input type="number" class="input" id="q3x${i}" step="any" placeholder="Lotes">
-          </div>
-        `).join('')}
-        <div class="form-group" style="flex:1;min-width:100px">
-          <label>Z* (miles $)</label>
-          <input type="number" class="input" id="q3z" step="any" placeholder="Ganancia">
-        </div>
-      </div>
-    </div>
-
-    <!-- Q4: Interpretación -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">4</span>
-        <span class="q-text">¿Valió la pena agregar el chorizo? ¿Qué le recomiendas a Don Hernando sobre la expansión?</span>
-        <span class="q-pts">30 pts</span>
-      </div>
-      <textarea class="input" id="q4text" placeholder="Analiza si la expansión es conveniente. Compara con el escenario anterior. ¿Qué recursos se vuelven más críticos? (mín. 30 caracteres)"></textarea>
-    </div>
-
-    <div style="text-align:center;margin:2rem 0">
-      <button class="btn btn-primary btn-lg" onclick="submitAct2()">Enviar Capítulo 2 &#128640;</button>
-    </div>
-  `);
-}
-
-function renderAct2B() {
-  const p = state.act2;
-  const act1 = state.act1;
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Capítulo 2 — Crisis del Proveedor</div>
-      <h2>Queso a la Mitad</h2>
-      <p>El proveedor de queso solo puede entregar el 50%</p>
-    </div>
-
-    ${dialogueBox('marcela', `Don Alfonso de <em>Lácteos Santa Rosa</em> llamó: por un problema logístico, solo puede entregar <strong>${p.b[1]} kg</strong> de queso esta semana, en vez de los ${p.originalB1} kg habituales.`)}
-
-    <div class="card slide-up delay-1">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(245,158,11,.15)">&#9888;&#65039;</div>
-        <h3>Datos Modificados</h3>
-      </div>
-      <p style="color:var(--text2);margin-bottom:.5rem">Los datos son los mismos del Capítulo 1, <strong>excepto el queso</strong>:</p>
-      ${dataTableHTML(p.A, p.b, p.c, p.products, p.resources)}
-    </div>
-
-    <!-- Q1: Identificar cambio -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">1</span>
-        <span class="q-text">¿Cuál restricción del modelo cambió?</span>
-        <span class="q-pts">15 pts</span>
-      </div>
-      <select class="input" id="q1change" style="max-width:400px">
-        <option value="">— Selecciona —</option>
-        ${RESOURCES_SHORT.map((r, i) => `<option value="${i}">${r}</option>`).join('')}
-      </select>
-    </div>
-
-    <!-- Q2: Nueva solución -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">2</span>
-        <span class="q-text">Resuelve el modelo con la restricción modificada. Nueva solución óptima:</span>
-        <span class="q-pts">30 pts</span>
-      </div>
-      <div style="display:flex;gap:1rem;flex-wrap:wrap">
-        ${PRODUCTS.map((prod, i) => `
-          <div class="form-group" style="flex:1;min-width:100px">
-            <label>x${i+1}* (${prod})</label>
-            <input type="number" class="input" id="q2x${i}" step="any" placeholder="Lotes">
-          </div>
-        `).join('')}
-        <div class="form-group" style="flex:1;min-width:100px">
-          <label>Z* (miles $)</label>
-          <input type="number" class="input" id="q2z" step="any" placeholder="Ganancia">
-        </div>
-      </div>
-    </div>
-
-    <!-- Q3: Comparación -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">3</span>
-        <span class="q-text">Compara la solución actual con la del Capítulo 1. ¿Cuánto se pierde? ¿Qué productos se ven más afectados?</span>
-        <span class="q-pts">25 pts</span>
-      </div>
-      <textarea class="input" id="q3comp" placeholder="Analiza el impacto del cambio en el queso sobre la producción y ganancia. (mín. 20 caracteres)"></textarea>
-    </div>
-
-    <!-- Q4: Recomendación -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">4</span>
-        <span class="q-text">¿Qué estrategia le recomiendas a Don Hernando para manejar esta crisis?</span>
-        <span class="q-pts">30 pts</span>
-      </div>
-      <textarea class="input" id="q4rec" placeholder="Propón alternativas: ¿buscar otro proveedor? ¿Cambiar recetas? ¿Negociar plazos? (mín. 25 caracteres)"></textarea>
-    </div>
-
-    <div style="text-align:center;margin:2rem 0">
-      <button class="btn btn-primary btn-lg" onclick="submitAct2()">Enviar Capítulo 2 &#128640;</button>
-    </div>
-  `);
-}
-
-function renderAct2C() {
-  const p = state.act2;
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Capítulo 2 — Reducción de Costos</div>
-      <h2>Minimizar para Sobrevivir</h2>
-      <p>Los inversionistas exigen eficiencia: producir lo necesario al menor costo</p>
-    </div>
-
-    ${dialogueBox('camilo', `Los inversionistas quieren que cumplamos con la <strong>demanda mínima semanal</strong> de cada producto, pero gastando lo <strong>menos posible</strong>. Cambió el juego: ahora es minimización.`)}
-
-    <div class="card slide-up delay-1">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(244,63,94,.15)">&#128181;</div>
-        <h3>Datos de Costos y Demanda</h3>
-      </div>
-      <table class="data-table">
-        <thead>
-          <tr><th>Producto</th><th>Costo por lote (miles $)</th><th>Demanda mínima (lotes)</th></tr>
-        </thead>
-        <tbody>
-          ${p.products.map((prod, i) => `
-            <tr>
-              <td class="row-label">${PRODUCTS_EMOJI[i]} ${prod}</td>
-              <td>${fmtK(p.costs[i])}</td>
-              <td><strong>${p.demand[i]}</strong></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-      <table class="data-table" style="margin-top:1rem">
-        <thead>
-          <tr><th>Recurso</th>${p.products.map((pr,i) => `<th>${PRODUCTS_EMOJI[i]} ${pr}</th>`).join('')}<th>Disponible</th></tr>
-        </thead>
-        <tbody>
-          <tr><td class="row-label">Harina (kg/lote)</td>${p.harinaPerUnit.map(v => `<td>${v}</td>`).join('')}<td><strong>${p.maxHarina}</strong></td></tr>
-          <tr><td class="row-label">Mano de obra (h/lote)</td>${p.moPerUnit.map(v => `<td>${v}</td>`).join('')}<td><strong>${p.maxMO}</strong></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Q1: Tipo de objetivo -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">1</span>
-        <span class="q-text">¿Qué tipo de función objetivo necesitas en este caso?</span>
-        <span class="q-pts">10 pts</span>
-      </div>
-      <div class="options" id="q1opts">
-        <label class="option" onclick="selectOption(this,'q1type','max')">
-          <input type="radio" name="q1t"><span class="radio"></span>
-          <span>Maximizar</span>
-        </label>
-        <label class="option" onclick="selectOption(this,'q1type','min')">
-          <input type="radio" name="q1t"><span class="radio"></span>
-          <span>Minimizar</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Q2: FO -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">2</span>
-        <span class="q-text">Escribe los coeficientes de la función objetivo (costos):</span>
-        <span class="q-pts">15 pts</span>
-      </div>
-      <div class="lp-row">
-        <span style="font-weight:700">Min Z =</span>
-        ${[0,1,2].map(i => `
-          ${i > 0 ? '<span class="operator">+</span>' : ''}
-          <input type="number" class="input input-sm" id="q2c${i}" step="any" placeholder="?">
-          <span class="var-name">x<sub>${i+1}</sub></span>
-        `).join('')}
-      </div>
-    </div>
-
-    <!-- Q3: Restricciones de demanda -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">3</span>
-        <span class="q-text">Escribe las restricciones de demanda mínima:</span>
-        <span class="q-pts">20 pts</span>
-      </div>
-      ${p.products.map((prod, i) => `
-        <div class="lp-row">
-          <span class="lp-label">${prod}:</span>
-          <span class="var-name">x<sub>${i+1}</sub></span>
-          <select class="input" id="q3sign${i}" style="width:60px">
-            <option value="">?</option>
-            <option value="lte">≤</option>
-            <option value="gte">≥</option>
-            <option value="eq">=</option>
-          </select>
-          <input type="number" class="input input-sm" id="q3d${i}" step="any" placeholder="?">
-        </div>
-      `).join('')}
-      <p style="color:var(--text3);font-size:.85rem;margin-top:.3rem">Además: restricciones de harina y mano de obra (como en la tabla)</p>
-    </div>
-
-    <!-- Q4: Solución -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">4</span>
-        <span class="q-text">Resuelve el modelo de minimización. Solución óptima:</span>
-        <span class="q-pts">25 pts</span>
-      </div>
-      <div style="display:flex;gap:1rem;flex-wrap:wrap">
-        ${p.products.map((prod, i) => `
-          <div class="form-group" style="flex:1;min-width:100px">
-            <label>x${i+1}* (${prod})</label>
-            <input type="number" class="input" id="q4x${i}" step="any" placeholder="Lotes">
-          </div>
-        `).join('')}
-        <div class="form-group" style="flex:1;min-width:100px">
-          <label>Z* (costo mínimo, miles $)</label>
-          <input type="number" class="input" id="q4z" step="any" placeholder="Costo">
-        </div>
-      </div>
-    </div>
-
-    <!-- Q5: Interpretación -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">5</span>
-        <span class="q-text">¿Qué aprendizaje gerencial deja este ejercicio? ¿Cuándo conviene minimizar vs maximizar?</span>
-        <span class="q-pts">30 pts</span>
-      </div>
-      <textarea class="input" id="q5text" placeholder="Reflexiona sobre cuándo una empresa debe enfocarse en minimizar costos vs maximizar ganancias. (mín. 25 caracteres)"></textarea>
-    </div>
-
-    <div style="text-align:center;margin:2rem 0">
-      <button class="btn btn-primary btn-lg" onclick="submitAct2()">Enviar Capítulo 2 &#128640;</button>
-    </div>
-  `);
-}
-
-function showAct2Result() {
-  state.progress = 4;
-  const score = state.act2Score;
-  const pathNames = { A: 'Expansión', B: 'Crisis del Proveedor', C: 'Reducción de Costos' };
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Resultados — Capítulo 2</div>
-      <h2>${pathNames[state.path]}</h2>
-    </div>
-
-    <div class="score-card slide-up delay-1">
-      <div class="score-big" style="color:${score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--amber)' : 'var(--red)'}">${score}/100</div>
-      <div class="score-label">Puntos en el Capítulo 2</div>
-      <div class="grade-bar" style="margin-top:1rem">
-        <div class="grade-bar-fill ${score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low'}" style="width:${score}%"></div>
-      </div>
-    </div>
-
-    ${dialogueBox('hernando', score >= 60
-      ? `¡Bien hecho! Has demostrado que puedes adaptarte a los cambios. Pero queda un <strong>último desafío</strong>...`
-      : `No estuvo fácil, ¿verdad? Pero así es el mundo real de las operaciones. Aún queda una oportunidad de sumar puntos en el <strong>desafío final</strong>.`
-    )}
-
-    ${dialogueBox('marcela', `Don Hernando acaba de recibir una propuesta de un nuevo cliente en <em>Manizales</em>. Necesitamos analizar rápido si nos conviene. ¡Es tu prueba de fuego!`)}
-
-    <div style="text-align:center;margin:2rem 0">
-      <button class="btn btn-primary btn-lg" onclick="beginAct3()">
-        Desafío Final &#9889;
-      </button>
-    </div>
-  `);
-}
-
-function showAct3() {
-  state.progress = 5;
-  const p = state.act3;
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Capítulo 3 — Desafío Final</div>
-      <h2>El Cliente de Manizales</h2>
-      <p>Ronda relámpago: formula, resuelve y decide</p>
-    </div>
-
-    ${dialogueBox('hernando', `Un restaurante grande en Manizales quiere que les proveamos <strong>arepas</strong> y <strong>empanadas</strong> semanalmente. Necesito que analices si nos conviene y cuánto producir. ¡Rapidito!`)}
-
-    <div class="card slide-up delay-1">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(139,92,246,.15)">&#9889;</div>
-        <h3>Datos del Nuevo Pedido</h3>
-      </div>
-      <p style="color:var(--text2);margin-bottom:.5rem">Producción por lotes de 100 unidades para el cliente de Manizales:</p>
-      <table class="data-table">
-        <thead>
-          <tr><th>Recurso</th>${p.products.map((pr,i) => `<th>${['🫓','🥟'][i] || ''} ${pr}</th>`).join('')}<th>Disponible</th></tr>
-        </thead>
-        <tbody>
-          ${p.resources.map((r, i) => `
-            <tr>
-              <td class="row-label">${r}</td>
-              ${p.A[i].map(v => `<td>${v}</td>`).join('')}
-              <td><strong>${p.b[i]}</strong></td>
-            </tr>
-          `).join('')}
-          <tr style="background:rgba(245,158,11,.08)">
-            <td class="row-label" style="color:var(--amber-l)">Ganancia por lote (miles $)</td>
-            ${p.c.map(v => `<td style="font-weight:700;color:var(--amber-l)">${fmtK(v)}</td>`).join('')}
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Q1: FO -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">1</span>
-        <span class="q-text">Función objetivo (2 variables):</span>
-        <span class="q-pts">20 pts</span>
-      </div>
-      <div class="lp-row">
-        <select class="input" id="q1dir" style="width:80px">
-          <option value="">?</option><option value="max">Max</option><option value="min">Min</option>
-        </select>
-        <span style="font-weight:700">Z =</span>
-        <input type="number" class="input input-sm" id="q1c0" step="any" placeholder="?">
-        <span class="var-name">x<sub>1</sub></span>
-        <span class="operator">+</span>
-        <input type="number" class="input input-sm" id="q1c1" step="any" placeholder="?">
-        <span class="var-name">x<sub>2</sub></span>
-      </div>
-    </div>
-
-    <!-- Q2: Restricciones -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">2</span>
-        <span class="q-text">Restricciones:</span>
-        <span class="q-pts">25 pts</span>
-      </div>
-      ${p.resources.map((r, i) => `
-        <div class="lp-row">
-          <span class="lp-label">${r.split('(')[0].trim()}:</span>
-          <input type="number" class="input input-sm" id="q2a${i}0" step="any" placeholder="?">
-          <span class="var-name">x<sub>1</sub></span>
-          <span class="operator">+</span>
-          <input type="number" class="input input-sm" id="q2a${i}1" step="any" placeholder="?">
-          <span class="var-name">x<sub>2</sub></span>
-          <span class="operator">&le;</span>
-          <input type="number" class="input input-sm" id="q2b${i}" step="any" placeholder="?" style="width:100px">
-        </div>
-      `).join('')}
-    </div>
-
-    <!-- Q3: Solución -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">3</span>
-        <span class="q-text">Solución óptima:</span>
-        <span class="q-pts">25 pts</span>
-      </div>
-      <div style="display:flex;gap:1rem;flex-wrap:wrap">
-        ${p.products.map((prod, i) => `
-          <div class="form-group" style="flex:1;min-width:120px">
-            <label>x${i+1}* (${prod})</label>
-            <input type="number" class="input" id="q3x${i}" step="any" placeholder="Lotes">
-          </div>
-        `).join('')}
-        <div class="form-group" style="flex:1;min-width:120px">
-          <label>Z* (miles $)</label>
-          <input type="number" class="input" id="q3z" step="any" placeholder="Ganancia">
-        </div>
-      </div>
-    </div>
-
-    <!-- Q4: Decisión -->
-    <div class="question">
-      <div class="q-header">
-        <span class="q-num">4</span>
-        <span class="q-text">Decisión gerencial: ¿Debería Sabores del Eje aceptar el contrato con el restaurante de Manizales? Justifica con los resultados del modelo.</span>
-        <span class="q-pts">30 pts</span>
-      </div>
-      <textarea class="input" id="q4text" placeholder="Usa los resultados de tu modelo para justificar tu recomendación. Menciona la ganancia esperada, los recursos necesarios y los riesgos. (mín. 30 caracteres)" style="min-height:120px"></textarea>
-    </div>
-
-    <div style="text-align:center;margin:2rem 0">
-      <button class="btn btn-danger btn-lg" onclick="submitAct3()">
-        Finalizar Examen &#128203;
-      </button>
-    </div>
-  `);
-}
-
-function showResults() {
-  state.progress = 6;
-  if (state.interval) clearInterval(state.interval);
-
-  const grade = calcFinalGrade();
-  const timeUsed = Math.round((TOTAL_TIME - state.remaining) / 60);
-  const pathNames = { A: 'Expansión &#128640;', B: 'Crisis del Proveedor &#9888;&#65039;', C: 'Reducción de Costos &#128181;' };
-
-  let emoji, message, gradeClass;
-  if (grade >= 4.5) { emoji = '&#127942;'; message = '¡EXCEPCIONAL! Eres un crack de las operaciones.'; gradeClass = 'high'; }
-  else if (grade >= 4.0) { emoji = '&#11088;'; message = '¡Excelente trabajo! Dominas la programación lineal.'; gradeClass = 'high'; }
-  else if (grade >= 3.5) { emoji = '&#128170;'; message = 'Muy bien. Sólido conocimiento de PL.'; gradeClass = 'high'; }
-  else if (grade >= 3.0) { emoji = '&#128077;'; message = 'Aprobado. Hay margen de mejora, pero vas bien.'; gradeClass = 'mid'; }
-  else if (grade >= 2.0) { emoji = '&#128172;'; message = 'Necesitas reforzar los conceptos de PL.'; gradeClass = 'low'; }
-  else { emoji = '&#128218;'; message = 'A estudiar más. La PL es tu amiga, dale otra oportunidad.'; gradeClass = 'low'; }
-
-  render(`
-    <div class="scene-header slide-up">
-      <div class="chapter">Resultados Finales</div>
-      <h2>Tu Legado en Sabores del Eje</h2>
-    </div>
-
-    <div class="score-card slide-up delay-1" style="padding:2.5rem">
-      <div style="font-size:3rem;margin-bottom:.5rem">${emoji}</div>
-      <div class="score-big" style="font-size:5rem;color:${grade >= 3.0 ? 'var(--green)' : grade >= 2.0 ? 'var(--amber)' : 'var(--red)'}">${grade.toFixed(1)}</div>
-      <div class="score-label" style="font-size:1.2rem">de 5.0</div>
-      <p style="margin-top:1rem;color:var(--text2);font-size:1.1rem">${message}</p>
-    </div>
-
-    <div class="card slide-up delay-2">
-      <h3 style="margin-bottom:1rem">Desglose por Capítulo</h3>
-      <div style="display:flex;flex-direction:column;gap:1rem">
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
-            <span>Cap. 1 — El Primer Encargo (40%)</span>
-            <strong>${state.act1Score}/100</strong>
-          </div>
-          <div class="grade-bar"><div class="grade-bar-fill ${state.act1Score >= 70 ? 'high' : state.act1Score >= 40 ? 'mid' : 'low'}" style="width:${state.act1Score}%"></div></div>
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
-            <span>Cap. 2 — ${pathNames[state.path]} (35%)</span>
-            <strong>${state.act2Score}/100</strong>
-          </div>
-          <div class="grade-bar"><div class="grade-bar-fill ${state.act2Score >= 70 ? 'high' : state.act2Score >= 40 ? 'mid' : 'low'}" style="width:${state.act2Score}%"></div></div>
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
-            <span>Cap. 3 — Desafío Final (25%)</span>
-            <strong>${state.act3Score}/100</strong>
-          </div>
-          <div class="grade-bar"><div class="grade-bar-fill ${state.act3Score >= 70 ? 'high' : state.act3Score >= 40 ? 'mid' : 'low'}" style="width:${state.act3Score}%"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card slide-up delay-3">
-      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
-        <div><span style="color:var(--text3)">Integrante 1:</span> <strong>${state.nombre}</strong> (${state.codigo})</div>
-        ${state.nombre2 ? `<div><span style="color:var(--text3)">Integrante 2:</span> <strong>${state.nombre2}</strong> (${state.codigo2})</div>` : ''}
-        <div><span style="color:var(--text3)">Tiempo:</span> <strong>${timeUsed} min</strong></div>
-        <div><span style="color:var(--text3)">Ruta:</span> <strong>${state.path === 'A' ? 'Expansión' : state.path === 'B' ? 'Crisis Proveedor' : 'Red. Costos'}</strong></div>
-      </div>
-    </div>
-
-    ${dialogueBox('hernando', grade >= 3.0
-      ? `Ha sido un placer tenerlos en el equipo, <strong>${state.nombre.split(' ')[0]}${state.nombre2 ? ' y ' + state.nombre2.split(' ')[0] : ''}</strong>. Sabores del Eje tiene futuro gracias a personas como ustedes. ¡Éxitos!`
-      : `<strong>${state.nombre.split(' ')[0]}${state.nombre2 ? ' y ' + state.nombre2.split(' ')[0] : ''}</strong>, la programación lineal es una herramienta poderosa. Los invito a practicar más — la próxima vez lo van a dominar. ¡Ánimo!`
-    )}
-
-    <div id="submitSection" style="text-align:center;margin:2rem 0">
-      ${SHEETS_URL
-        ? `<button class="btn btn-success btn-lg" id="submitBtn" onclick="finalSubmit()">
-            Enviar Resultados al Profesor &#128232;
-          </button>
-          <p style="color:var(--text3);font-size:.85rem;margin-top:.5rem">Haz clic para enviar tu nota a la hoja de cálculo del curso.</p>`
-        : `<div class="card" style="border-color:var(--amber)">
-            <p style="color:var(--amber)">&#9888;&#65039; No hay URL de Google Sheets configurada. Toma un pantallazo de esta pantalla como evidencia.</p>
-          </div>`
-      }
-    </div>
-
-    <div class="exam-footer">
+    <p style="text-align:center;color:var(--text3);font-size:.8rem;margin-top:2rem">
       Administración de Operaciones 2 — UTP — ${new Date().toLocaleDateString('es-CO')}<br>
-      <span style="font-size:.75rem">Simulador Gerencial v1.0</span>
+      Novela Gerencial Interactiva v2.0
+    </p>
+  </div>`;
+
+  if(grade>=4.0) launchConfetti();
+}
+
+function launchConfetti(){
+  const colors=['#f59e0b','#10b981','#3b82f6','#8b5cf6','#f43f5e','#14b8a6'];
+  for(let i=0;i<40;i++){
+    const p=document.createElement('div');p.className='confetti';
+    p.style.left=Math.random()*100+'vw';p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration=(2+Math.random()*2)+'s';p.style.animationDelay=Math.random()*1.5+'s';
+    p.style.width=(6+Math.random()*8)+'px';p.style.height=p.style.width;
+    p.style.borderRadius=Math.random()>.5?'50%':'2px';
+    document.body.appendChild(p);setTimeout(()=>p.remove(),5000);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   GOOGLE SHEETS
+   ═══════════════════════════════════════════ */
+async function registerSheets(){
+  if(!SHEETS_URL)return;
+  try{await fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({action:'register',nombre1:G.nombre,codigo1:G.codigo,nombre2:G.nombre2,codigo2:G.codigo2}),headers:{'Content-Type':'text/plain'},mode:'no-cors'})}catch(e){}
+}
+async function finalSubmit(){
+  if(G.submitted)return;
+  const btn=document.getElementById('submitBtn');
+  if(btn){btn.disabled=true;btn.textContent='Enviando...'}
+  const grade=Math.min(5.0,Math.max(0.5,Math.round(((G.money-40e6)/(180e6-40e6))*45+5)/10));
+  try{
+    await fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({
+      action:'update',codigo1:G.codigo,
+      notaCap1:'-',notaCap2:'-',notaCap3:'-',
+      notaFinal:grade.toFixed(1),
+      tiempoUsado:Math.round((TOTAL_TIME-G.remaining)/60),
+      ruta:`${G.history.filter(h=>h.correct).length}/${G.history.length} correctas`,
+      respuestas:G.history,
+    }),headers:{'Content-Type':'text/plain'},mode:'no-cors'});
+    G.submitted=true;
+    toast('✅ ¡Resultados enviados!','success',8000);
+    if(btn)btn.textContent='✅ Enviado';
+  }catch(e){
+    toast('Error al enviar. Toma pantallazo.','danger',8000);
+    if(btn){btn.disabled=false;btn.textContent='Reintentar'}
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SPLASH / REGISTRATION
+   ═══════════════════════════════════════════ */
+function showSplash(){
+  app.innerHTML=`<div class="scene splash visible">
+    <div class="splash-icon">🏭</div>
+    <h1>Sabores del Eje<br>Cafetero</h1>
+    <p class="sub">Novela Gerencial Interactiva — Parcial de PL</p>
+    <div class="reg-card">
+      <div class="pair-label">Individual o en parejas</div>
+      <div class="form-row">
+        <div class="fg" style="flex:2"><label>Integrante 1 — Nombre</label><input class="input" id="rn1" placeholder="Nombre completo..." autofocus></div>
+        <div class="fg"><label>Código</label><input class="input" id="rc1" placeholder="1088..."></div>
+      </div>
+      <div class="form-row" style="opacity:.5;transition:opacity .3s" id="pair" onfocusin="this.style.opacity='1'">
+        <div class="fg" style="flex:2"><label>Integrante 2 <span style="color:var(--text3)">(opcional)</span></label><input class="input" id="rn2" placeholder="Compañero/a..."></div>
+        <div class="fg"><label>Código</label><input class="input" id="rc2" placeholder="1088..."></div>
+      </div>
+      <button class="btn-continue primary" onclick="startGame()">Comenzar la Historia 🚀</button>
     </div>
-  `);
-
-  // Confetti for high grades
-  if (grade >= 4.0) launchConfetti();
+    <p style="color:var(--text3);font-size:.8rem;margin-top:2rem">Administración de Operaciones 2 — UTP</p>
+  </div>`;
 }
 
-function launchConfetti() {
-  const colors = ['#f59e0b','#10b981','#3b82f6','#8b5cf6','#f43f5e','#14b8a6'];
-  for (let i = 0; i < 50; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'confetti-piece';
-    piece.style.left = Math.random() * 100 + 'vw';
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.animationDuration = (2 + Math.random() * 2) + 's';
-    piece.style.animationDelay = Math.random() * 1.5 + 's';
-    piece.style.width = (6 + Math.random() * 8) + 'px';
-    piece.style.height = (6 + Math.random() * 8) + 'px';
-    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-    document.body.appendChild(piece);
-    setTimeout(() => piece.remove(), 5000);
-  }
-}
-
-/* ═══════════════════════════════════════════════════
-   ACCIONES / EVENT HANDLERS
-   ═══════════════════════════════════════════════════ */
-function selectOption(el, key, value) {
-  const parent = el.closest('.options') || el.closest('.question');
-  parent.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  if (state.progress === 1) state.act1Answers[key] = value;
-  else if (state.progress === 3) state.act2Answers[key] = value;
-  else if (state.progress === 5) state.act3Answers[key] = value;
-}
-
-function collectInputs(prefix, answers) {
-  document.querySelectorAll(`[id^="${prefix}"], select[id^="${prefix}"], textarea[id^="${prefix}"]`).forEach(el => {
-    answers[el.id] = el.value;
-  });
-}
-
-function startExam() {
-  const name = ($('regName') || {}).value?.trim();
-  const code = ($('regCode') || {}).value?.trim();
-  if (!name || !code) {
-    toast('Completa el nombre y código del integrante 1', 'warning');
-    return;
-  }
-  state.nombre = name;
-  state.codigo = code;
-  state.nombre2 = ($('regName2') || {}).value?.trim() || '';
-  state.codigo2 = ($('regCode2') || {}).value?.trim() || '';
-  state.seed = seedFromString(code);
-  state.rng = mulberry32(state.seed);
-
-  // Generate all problems
-  state.act1 = generateAct1(state.rng);
-  state.act3 = generateAct3(state.rng);
-
-  // Registrar en Google Sheets inmediatamente (fila con nombres, sin notas)
-  registerInSheets();
-
-  showBriefing();
-}
-
-async function registerInSheets() {
-  if (!SHEETS_URL) return;
-  try {
-    await fetch(SHEETS_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'register',
-        nombre1: state.nombre,
-        codigo1: state.codigo,
-        nombre2: state.nombre2,
-        codigo2: state.codigo2,
-      }),
-      headers: { 'Content-Type': 'text/plain' },
-      mode: 'no-cors',
-    });
-  } catch (e) {
-    console.error('Error registrando en Sheets:', e);
-  }
-}
-
-function beginAct1() {
+function startGame(){
+  const n1=(document.getElementById('rn1')||{}).value?.trim();
+  const c1=(document.getElementById('rc1')||{}).value?.trim();
+  if(!n1||!c1){toast('Completa nombre y código del integrante 1','warning');return}
+  G.nombre=n1;G.codigo=c1;
+  G.nombre2=(document.getElementById('rn2')||{}).value?.trim()||'';
+  G.codigo2=(document.getElementById('rc2')||{}).value?.trim()||'';
+  G.seed=seedFromStr(c1);
+  const rng=mulberry32(G.seed);
+  G.data=genData(rng);
+  G.scenes=buildScenes(G.data);
+  registerSheets();
   startTimer();
-  showAct1();
+  renderScene('intro');
 }
 
-function submitAct1() {
-  // Collect all answers from inputs
-  collectInputs('q', state.act1Answers);
-  const score = scoreAct1();
-  toast(`Capítulo 1 completado: ${score}/100`, score >= 70 ? 'success' : score >= 40 ? 'warning' : 'danger');
-
-  // Generate Act 2 based on path
-  const rng2 = mulberry32(state.seed + 1000);
-  if (state.act1Score >= 70) {
-    state.path = 'A';
-    state.act2 = generateAct2A(rng2);
-  } else if (state.act1Score >= 40) {
-    state.path = 'B';
-    state.act2 = generateAct2B(rng2, state.act1);
-  } else {
-    state.path = 'C';
-    state.act2 = generateAct2C(rng2);
-  }
-
-  setTimeout(() => showAct1Result(), 300);
-}
-
-function beginAct2() {
-  showAct2();
-}
-
-function submitAct2() {
-  collectInputs('q', state.act2Answers);
-  const score = scoreAct2();
-  toast(`Capítulo 2 completado: ${score}/100`, score >= 70 ? 'success' : score >= 40 ? 'warning' : 'danger');
-  setTimeout(() => showAct2Result(), 300);
-}
-
-function beginAct3() {
-  showAct3();
-}
-
-function submitAct3() {
-  collectInputs('q', state.act3Answers);
-  const score = scoreAct3();
-  toast(`Capítulo 3 completado: ${score}/100`, score >= 70 ? 'success' : score >= 40 ? 'warning' : 'danger');
-  setTimeout(() => showResults(), 300);
-}
-
-function finishExam() {
-  // Time's up: score whatever is available
-  if (state.progress <= 1) {
-    collectInputs('q', state.act1Answers);
-    scoreAct1();
-    const rng2 = mulberry32(state.seed + 1000);
-    if (state.act1Score >= 70) { state.path = 'A'; state.act2 = generateAct2A(rng2); }
-    else if (state.act1Score >= 40) { state.path = 'B'; state.act2 = generateAct2B(rng2, state.act1); }
-    else { state.path = 'C'; state.act2 = generateAct2C(rng2); }
-  }
-  if (state.progress <= 3) {
-    collectInputs('q', state.act2Answers);
-    scoreAct2();
-  }
-  if (state.progress <= 5) {
-    collectInputs('q', state.act3Answers);
-    scoreAct3();
-  }
-  showResults();
-}
-
-async function finalSubmit() {
-  if (state.submitted) return;
-  const btn = $('submitBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = 'Enviando... &#9203;'; }
-
-  const ok = await submitToSheets();
-  state.submitted = true;
-
-  if (ok || !SHEETS_URL) {
-    toast('&#9989; ¡Resultados enviados correctamente!', 'success', 8000);
-    if (btn) btn.innerHTML = '&#9989; Enviado';
-  } else {
-    toast('Error al enviar. Toma pantallazo como respaldo.', 'danger', 10000);
-    if (btn) { btn.innerHTML = 'Reintentar'; btn.disabled = false; state.submitted = false; }
-  }
-}
-
-/* ═══════════════════════════════════════════════════
-   MODO PROFESOR (teacher mode)
-   ═══════════════════════════════════════════════════ */
-function checkTeacherMode() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('mode') === 'teacher') {
-    const pwd = prompt('Contraseña de profesor:');
-    if (pwd === TEACHER_KEY) {
-      showTeacherMode(params.get('code') || '');
-      return true;
-    }
+/* ═══════════════════════════════════════════
+   TEACHER MODE
+   ═══════════════════════════════════════════ */
+function checkTeacher(){
+  const p=new URLSearchParams(location.search);
+  if(p.get('mode')==='teacher'){
+    const pwd=prompt('Contraseña:');
+    if(pwd===TEACHER_KEY){showTeacher();return true}
   }
   return false;
 }
-
-function showTeacherMode(code) {
-  if (!code) {
-    render(`
-      <div class="splash" style="padding-top:2rem">
-        <h1 style="font-size:2rem;-webkit-text-fill-color:var(--text)">&#128218; Modo Profesor</h1>
-        <p style="color:var(--text2);margin:1rem 0">Ingresa el código de un estudiante para ver sus respuestas correctas:</p>
-        <div class="form-group" style="max-width:300px;width:100%">
-          <input class="input" id="teacherCode" placeholder="Código del estudiante">
-        </div>
-        <button class="btn btn-primary" onclick="viewStudentAnswers()">Ver Solución</button>
-      </div>
-    `);
-    return;
-  }
-  viewStudentSolution(code);
+function showTeacher(){
+  app.innerHTML=`<div class="scene visible" style="padding-top:2rem;text-align:center">
+    <h1 style="color:var(--amber);font-size:2rem;-webkit-text-fill-color:var(--amber)">📋 Modo Profesor</h1>
+    <p style="color:var(--text2);margin:1rem 0">Ingresa código de estudiante para ver datos del modelo:</p>
+    <input class="input" id="tc" placeholder="Código" style="max-width:300px;margin:0 auto">
+    <button class="btn-continue primary" style="max-width:300px;margin:1rem auto" onclick="showTeacherData()">Ver Datos</button>
+    <div id="teacherOut"></div>
+  </div>`;
+}
+function showTeacherData(){
+  const code=(document.getElementById('tc')||{}).value?.trim();if(!code)return;
+  const seed=seedFromStr(code);const rng=mulberry32(seed);const d=genData(rng);
+  const {c,A,b,res,c2,A2,b2,res2,c4,res4}=d;
+  document.getElementById('teacherOut').innerHTML=`
+    <div style="text-align:left;margin-top:1rem;background:var(--card);padding:1.2rem;border-radius:var(--radius)">
+      <h3 style="color:var(--amber)">Seed: ${seed}</h3>
+      <p><strong>FO:</strong> Max Z = ${c.join('x + ')}x</p>
+      <p><strong>Restricciones:</strong></p>
+      ${A.map((r,i)=>`<p>${RES[i]}: ${r.join(', ')} ≤ ${b[i]}</p>`).join('')}
+      ${res?`<p><strong>Solución:</strong> ${res.sol.map((v,i)=>`x${i+1}=${v.toFixed(2)}`).join(', ')} | Z=${res.Z.toFixed(2)}</p>
+      <p><strong>Holguras:</strong> ${res.sl.map((v,i)=>`${RES[i]}:${v.toFixed(1)}`).join(', ')}</p>`:''}
+      <hr style="border-color:rgba(255,255,255,.1);margin:.8rem 0">
+      <p><strong>Prob 2 (2var):</strong> Max ${c2[0]}x₁+${c2[1]}x₂</p>
+      ${res2?`<p>Sol: x₁=${res2.sol[0].toFixed(2)}, x₂=${res2.sol[1].toFixed(2)} | Z=${res2.Z.toFixed(2)}</p>`:''}
+      <hr style="border-color:rgba(255,255,255,.1);margin:.8rem 0">
+      <p><strong>Expansión (4var):</strong> Z*=${res4?res4.Z.toFixed(2):'?'}</p>
+    </div>`;
 }
 
-function viewStudentAnswers() {
-  const code = ($('teacherCode') || {}).value?.trim();
-  if (!code) return;
-  viewStudentSolution(code);
-}
-
-function viewStudentSolution(code) {
-  const seed = seedFromString(code);
-  const rng = mulberry32(seed);
-  const act1 = generateAct1(rng);
-  const act3 = generateAct3(rng);
-
-  let act2Info = '';
-  // Show all 3 possible paths
-  const rng2a = mulberry32(seed + 1000);
-  const a2a = generateAct2A(rng2a);
-  const rng2b = mulberry32(seed + 1000);
-  const a2b = generateAct2B(rng2b, act1);
-  const rng2c = mulberry32(seed + 1000);
-  const a2c = generateAct2C(rng2c);
-
-  render(`
-    <div style="padding-top:1rem">
-      <h2 style="color:var(--amber);margin-bottom:1rem">&#128218; Soluciones — Código: ${code} (Seed: ${seed})</h2>
-
-      <div class="card">
-        <h3>Capítulo 1 — El Primer Encargo</h3>
-        <p><strong>FO:</strong> Max Z = ${act1.c.map((c,i) => `${c}x${i+1}`).join(' + ')}</p>
-        <p><strong>Restricciones:</strong></p>
-        ${act1.A.map((row, i) => `<p style="color:var(--text2)">${RESOURCES_SHORT[i]}: ${row.map((v,j) => `${v}x${j+1}`).join(' + ')} ≤ ${act1.b[i]}</p>`).join('')}
-        ${act1.sol ? `
-          <p style="margin-top:.5rem"><strong>Solución:</strong> ${act1.sol.solution.map((v,i) => `x${i+1}* = ${v.toFixed(2)}`).join(', ')}</p>
-          <p><strong>Z* = ${act1.sol.Z.toFixed(2)}</strong> (miles $)</p>
-          <p><strong>Holguras:</strong> ${act1.sol.slacks.map((s,i) => `${RESOURCES_SHORT[i]}: ${s.toFixed(2)}`).join(', ')}</p>
-        ` : '<p style="color:var(--red)">Error al resolver</p>'}
-      </div>
-
-      <div class="card">
-        <h3>Capítulo 2A — Expansión (si Cap1 ≥ 70)</h3>
-        <p><strong>FO:</strong> Max Z = ${a2a.c.map((c,i) => `${c}x${i+1}`).join(' + ')}</p>
-        ${a2a.sol ? `<p><strong>Sol:</strong> ${a2a.sol.solution.map((v,i) => `x${i+1}*=${v.toFixed(2)}`).join(', ')} | Z*=${a2a.sol.Z.toFixed(2)}</p>` : ''}
-      </div>
-
-      <div class="card">
-        <h3>Capítulo 2B — Crisis (si Cap1 40-69)</h3>
-        <p>Queso: ${a2b.b[1]} (original: ${a2b.originalB1})</p>
-        ${a2b.sol ? `<p><strong>Sol:</strong> ${a2b.sol.solution.map((v,i) => `x${i+1}*=${v.toFixed(2)}`).join(', ')} | Z*=${a2b.sol.Z.toFixed(2)}</p>` : ''}
-      </div>
-
-      <div class="card">
-        <h3>Capítulo 2C — Minimización (si Cap1 < 40)</h3>
-        <p><strong>Costos:</strong> ${a2c.costs.map((c,i) => `${c}x${i+1}`).join(' + ')}</p>
-        <p><strong>Demanda mín:</strong> ${a2c.demand.join(', ')}</p>
-        ${a2c.sol ? `<p><strong>Sol:</strong> ${a2c.sol.solution.map((v,i) => `x${i+1}*=${v.toFixed(2)}`).join(', ')} | Z*=${a2c.sol.Z.toFixed(2)}</p>` : ''}
-      </div>
-
-      <div class="card">
-        <h3>Capítulo 3 — Desafío Final</h3>
-        <p><strong>FO:</strong> Max Z = ${act3.c.map((c,i) => `${c}x${i+1}`).join(' + ')}</p>
-        ${act3.sol ? `<p><strong>Sol:</strong> ${act3.sol.solution.map((v,i) => `x${i+1}*=${v.toFixed(2)}`).join(', ')} | Z*=${act3.sol.Z.toFixed(2)}</p>` : ''}
-      </div>
-
-      <div style="margin-top:1rem">
-        <button class="btn btn-secondary" onclick="showTeacherMode('')">&#8592; Buscar otro</button>
-      </div>
-    </div>
-  `);
-}
-
-/* ═══════════════════════════════════════════════════
-   INICIALIZACIÓN
-   ═══════════════════════════════════════════════════ */
-if (!checkTeacherMode()) {
-  showSplash();
-}
-
-// Handle Enter key on registration
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && state.screen === 'splash') {
-    startExam();
-  }
-});
+/* ═══════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════ */
+if(!checkTeacher()) showSplash();
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&G.scene==='splash')startGame()});
 </script>
 </body>
 </html>
