@@ -292,7 +292,9 @@ function simplex(c,A,b){
   const sol=new Array(n).fill(0);for(let i=0;i<m;i++)if(basis[i]<n)sol[basis[i]]=Math.round(T[i][cols-1]*100)/100;
   const Z=Math.round(T[m][cols-1]*100)/100;
   const sl=[];for(let i=0;i<m;i++){let u=0;for(let j=0;j<n;j++)u+=A[i][j]*sol[j];sl.push(Math.round((b[i]-u)*100)/100)}
-  return{sol,Z,sl};
+  // Shadow prices: dual variables from objective row at slack columns
+  const shadow=[];for(let i=0;i<m;i++)shadow.push(Math.round(T[m][n+i]*100)/100);
+  return{sol,Z,sl,shadow};
 }
 
 /* ═══════════════════════════════════════════
@@ -330,15 +332,25 @@ const RES = ['Harina de yuca','Queso campesino','Mano de obra','Horno'];
 
 function buildScenes(d) {
   const {c,A,b,res,c2,A2,b2,res2,c4,A4,b4,res4} = d;
-  const bindingIdx = res ? res.sl.indexOf(Math.min(...res.sl)) : 0;
-  const slackIdx = res ? res.sl.indexOf(Math.max(...res.sl)) : 3;
-  const shadowApprox = res ? Math.round(c[bindingIdx] / A[bindingIdx][bindingIdx]) : 500;
+  let bindingIdx = res ? res.sl.indexOf(Math.min(...res.sl)) : 0;
+  let slackIdx = res ? res.sl.indexOf(Math.max(...res.sl)) : 3;
+  // Guard: binding and slack cannot be the same resource
+  if (bindingIdx === slackIdx && res) {
+    const sorted = res.sl.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
+    slackIdx = sorted[0].i === bindingIdx ? sorted[1].i : sorted[0].i;
+  }
+  // Real shadow price of queso (constraint 1) from simplex dual variables
+  const shadowQueso = res && res.shadow ? Math.round(res.shadow[1]) : 500;
 
   function wrongSols(sol,Z,n){
     const w=[];
-    w.push({x:sol.map((v,i)=>Math.round(v*(i===0?.7:1.3))),label:'A'});
-    w.push({x:sol.map(v=>Math.round(v*0.5)),label:'B'});
-    w.push({x:sol.map((_,i)=>Math.round(b[i]/(A[i].reduce((a,b)=>a+b,0)||1))),label:'C'});
+    // Opción cercana pero con x desbalanceadas
+    w.push({x:sol.map((v,i)=>Math.round(v+(i===0?5:-3)))});
+    // Opción que reparte recursos parejo (error típico de estudiante)
+    w.push({x:sol.map((_,i)=>Math.round(sol[i]*0.75+ri(d.rng,2,8)))});
+    // Opción con una variable en 0 (extremo del poliedro)
+    const zeroVar = ri(d.rng,0,n-1);
+    w.push({x:sol.map((v,i)=>i===zeroVar?0:Math.round(v*1.15+ri(d.rng,1,5)))});
     w.forEach(o=>{o.Z=0;for(let i=0;i<n;i++)o.Z+=c[i]*(o.x[i]||0);o.Z=Math.round(o.Z)});
     return w;
   }
@@ -666,12 +678,12 @@ x₁, x₂, x₃ ≥ 0<br><br>
     q_shadow: {
       ch:'Capítulo 5', title:'El Precio Sombra', icon:'👻',
       narr:`El <strong>precio sombra</strong> (shadow price) del queso nos dice cuánto vale cada kg adicional en términos de ganancia.`,
-      dial:[{c:'camilo',t:`Si el precio sombra del queso es $${shadowApprox.toLocaleString('es-CO')}/kg, y perdemos ${Math.floor(b[1]/2)} kg... ¿qué significa?`}],
+      dial:[{c:'camilo',t:`Si el precio sombra del queso es $${shadowQueso.toLocaleString('es-CO')}/kg, y perdemos ${Math.floor(b[1]/2)} kg... ¿qué significa?`}],
       choices:[
-        {l:'A',t:`Que cada kg de queso que perdemos nos cuesta ~$${shadowApprox.toLocaleString('es-CO')} en ganancia no obtenida`,ok:true,$:10e6,
+        {l:'A',t:`Que cada kg de queso que perdemos nos cuesta ~$${shadowQueso.toLocaleString('es-CO')} en ganancia no obtenida`,ok:true,$:10e6,
          fb:'¡Correcto! El precio sombra indica cuánto cambia Z por cada unidad adicional del recurso. Perder queso = perder ganancia.',
          react:{c:'camilo',t:'¡Exacto! El precio sombra cuantifica el costo de la escasez.'},nx:'q_whatif'},
-        {l:'B',t:'Que debemos vender el queso a $' + shadowApprox.toLocaleString('es-CO') + '/kg para no perder',$:-6e6,
+        {l:'B',t:'Que debemos vender el queso a $' + shadowQueso.toLocaleString('es-CO') + '/kg para no perder',$:-6e6,
          fb:'No. El precio sombra no es un precio de mercado. Es el valor marginal del recurso DENTRO del modelo de optimización.',
          react:{c:'camilo',t:'El precio sombra es interno al modelo, no es un precio de venta.'},nx:'q_whatif'},
         {l:'C',t:'Nada, el precio sombra solo aplica si GANAMOS recurso, no si perdemos',$:-5e6,
@@ -746,10 +758,10 @@ x₁, x₂ ≥ 0<br><br><em>💡 Último modelo. Resuélvelo en Excel Solver.</e
         const opts=[
           {t:`x₁=${res2.sol[0].toFixed(1)}, x₂=${res2.sol[1].toFixed(1)} → Z = ${fmtK(res2.Z)}`,ok:true,$:12e6,
            fb:`¡Perfecto! La solución óptima genera ${fmtK(res2.Z)} de ganancia.`,react:{c:'hernando',t:'¡Brillante! Ese contrato es nuestro.'}},
-          {t:`x₁=${Math.round(res2.sol[0]*0.6)}, x₂=${Math.round(res2.sol[1]*1.4)} → Z = ${fmtK(Math.round(c2[0]*res2.sol[0]*0.6+c2[1]*res2.sol[1]*1.4))}`,$:-7e6,
+          {t:`x₁=${Math.round(res2.sol[0]*0.7+3)}, x₂=${Math.round(res2.sol[1]*0.7+2)} → Z = ${fmtK(Math.round(c2[0]*(res2.sol[0]*0.7+3)+c2[1]*(res2.sol[1]*0.7+2)))}`,$:-7e6,
            fb:`No es la solución óptima. La correcta es x₁=${res2.sol[0].toFixed(1)}, x₂=${res2.sol[1].toFixed(1)} con Z=${fmtK(res2.Z)}.`,react:{c:'marcela',t:'Revisa en Excel.'}},
-          {t:`x₁=${Math.round(b2[0]/A2[0][0])}, x₂=0 → Z = ${fmtK(Math.round(c2[0]*b2[0]/A2[0][0]))}`,$:-5e6,
-           fb:`Producir solo un producto rara vez es óptimo. La solución correcta usa ambos: Z=${fmtK(res2.Z)}.`,react:{c:'camilo',t:'Diversificar suele ser mejor.'}},
+          {t:`x₁=${Math.round(res2.sol[0]*1.2+5)}, x₂=${Math.max(0,Math.round(res2.sol[1]*0.5-2))} → Z = ${fmtK(Math.round(c2[0]*(res2.sol[0]*1.2+5)+c2[1]*Math.max(0,res2.sol[1]*0.5-2)))}`,$:-5e6,
+           fb:`Esa combinación no es óptima (puede incluso violar alguna restricción). La correcta es Z=${fmtK(res2.Z)}.`,react:{c:'camilo',t:'Verifica las restricciones en Excel.'}},
         ];
         const sh=shuffle(opts,d.rng);['A','B','C'].forEach((l,i)=>{sh[i].l=l;sh[i].nx='q_final_decision'});
         return sh;
@@ -933,10 +945,13 @@ function goNext(id){
 /* ═══════════════════════════════════════════
    EPILOGUE / RESULTS
    ═══════════════════════════════════════════ */
+function calcGrade(money){
+  return Math.min(5.0, Math.max(0.5, Math.round(((money - 40e6) / (180e6 - 40e6)) * 45 + 5) / 10));
+}
 function showEpilogue(){
   if(G.interval)clearInterval(G.interval);
   const money=G.money;
-  const grade = Math.min(5.0, Math.max(0.5, Math.round(((money - 40e6) / (180e6 - 40e6)) * 45 + 5) / 10));
+  const grade = calcGrade(money);
   const timeUsed=Math.round((TOTAL_TIME-G.remaining)/60);
   const correct=G.history.filter(h=>h.correct).length;
   const total=G.history.length;
@@ -1016,7 +1031,7 @@ async function finalSubmit(){
   if(G.submitted)return;
   const btn=document.getElementById('submitBtn');
   if(btn){btn.disabled=true;btn.textContent='Enviando...'}
-  const grade=Math.min(5.0,Math.max(0.5,Math.round(((G.money-40e6)/(180e6-40e6))*45+5)/10));
+  const grade=calcGrade(G.money);
   try{
     await fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({
       action:'update',codigo1:G.codigo,
