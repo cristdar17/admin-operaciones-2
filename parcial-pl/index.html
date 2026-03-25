@@ -436,7 +436,7 @@ function buildScenes(d) {
 
     /* ────── Q4: RESTRICCIÓN 2 ────── */
     q_constraint2: {
-      ch:'Capítulo 2', title:'El Queso del Quindío', icon:'🧀',
+      ch:'Capítulo 2', title:'El Queso de Santa Rosa', icon:'🧀',
       narr:`<em>"El queso campesino viene de Santa Rosa. Tenemos ${b[1]} kg semanales."</em> Consumo por lote: ${PRODS.map((p,i)=>`${EMOJI[i]} ${A[1][i]} kg`).join(', ')}.`,
       dial:[{c:'hernando',t:`¿Y la restricción del queso? Es nuestro ingrediente más preciado.`}],
       choices:[
@@ -566,7 +566,11 @@ x₁, x₂, x₃ ≥ 0<br><br>
     },
     q_expand_solve: {
       ch:'Capítulo 4', title:'El Modelo Expandido', icon:'📊',
-      narr:`El modelo ahora tiene 4 productos. Ganancia chorizo: ${fmtK(c4[3])}. Nuevas disponibilidades ajustadas.<br><br><em>💡 Monta este modelo en Excel y resuélvelo con Solver.</em>`,
+      narr:`<strong>Modelo expandido (4 productos):</strong><br>
+Max Z = ${c4.map((v,i)=>`${v}x${i+1}`).join(' + ')}<br>
+${RES.map((r,i) => `${A4[i].map((a,j)=>`${a}x${j+1}`).join(' + ')} ≤ ${b4[i]} <em>(${r})</em>`).join('<br>')}<br>
+x₁, x₂, x₃, x₄ ≥ 0<br><br>
+<em>💡 Monta este modelo en Excel con Solver. x₄ = lotes de chorizos.</em>`,
       dial:[{c:'hernando',t:'¿Cuánto ganamos ahora con los 4 productos?'}],
       choices:(function(){
         if(!res4)return[{l:'A',t:'Error',$:0,ok:true,fb:'Error',nx:'crisis_call'}];
@@ -667,11 +671,11 @@ x₁, x₂, x₃ ≥ 0<br><br>
     /* ═══════ CONVERGENCIA: CRISIS DEL PROVEEDOR ═══════ */
     crisis_call: {
       ch:'Capítulo 5 — Giro Inesperado', title:'La Llamada', icon:'📞',
-      narr:`<strong>*RING RING*</strong> — El teléfono de Don Hernando suena. Su cara cambia de expresión.`,
+      narr:`<strong>*RING RING*</strong> — El teléfono de Don Hernando interrumpe la reunión.`,
       dial:[
-        {c:'hernando',t:'¿Aló? ... ¿QUÉ? ¿Don Alfonso solo puede entregar la <strong>mitad del queso</strong>? ¿Es en serio?'},
-        {c:'marcela',t:`Esto cambia TODO el modelo. El queso pasa de ${b[1]} kg a <strong>${Math.floor(b[1]/2)} kg</strong>.`},
-        {c:'hernando',t:'Necesito que analices el impacto. ¿Qué nos dice el modelo sobre esta situación?'},
+        {c:'hernando',t:'¿Aló? ... ¿QUÉ? Don Alfonso de <em>Lácteos Santa Rosa</em> solo puede entregar la <strong>mitad del queso</strong>. Problemas logísticos en la finca.'},
+        {c:'marcela',t:`Esto complica todo. El queso pasa de ${b[1]} kg a solo <strong>${Math.floor(b[1]/2)} kg</strong> esta semana.`},
+        {c:'hernando',t:'Sea cual sea la situación actual, necesito que analices el impacto de esta restricción. ¿Qué nos dicen los números?'},
       ],
       next:'q_shadow',
     },
@@ -724,8 +728,11 @@ x₁, x₂, x₃ ≥ 0<br><br>
     /* ═══════ PATH: EMERGENCIA ═══════ */
     emergency_intro: {
       ch:'Capítulo 6 — Emergencia', title:'Decisiones Difíciles', icon:'🆘',
-      narr:`La crisis del queso golpeó fuerte. Don Hernando necesita un plan de contingencia rápido.`,
-      dial:[{c:'marcela',t:'Con menos queso, ¿el modelo actual sigue siendo <strong>factible</strong>? Porque si no, estamos en problemas serios.'}],
+      narr:`La crisis del queso golpeó fuerte. Pero hay una posible salida: un restaurante en <strong>Manizales</strong> acaba de llamar preguntando si podemos proveerles arepas y empanadas — un negocio diferente que no depende tanto del queso.`,
+      dial:[
+        {c:'hernando',t:'Antes de aceptar ese contrato, necesitamos verificar algo básico: con los recursos actuales, ¿todavía podemos operar?'},
+        {c:'marcela',t:'Con menos queso, ¿el modelo actual sigue siendo <strong>factible</strong>? Si no, estamos en problemas serios.'},
+      ],
       next:'q_feasible',
     },
     q_feasible: {
@@ -748,7 +755,7 @@ x₁, x₂, x₃ ≥ 0<br><br>
     /* ═══════ CONVERGENCIA FINAL: RESOLVER PROBLEMA 2 ═══════ */
     q_solve2: {
       ch:'Capítulo 7 — Ronda Final', title:'Último Modelo', icon:'⚡',
-      narr:`Nuevo encargo: optimizar la producción de <strong>Arepas</strong> y <strong>Empanadas</strong> para el cliente de Manizales.<br><br>
+      narr:`El restaurante de Manizales quiere <strong>arepas</strong> y <strong>empanadas</strong> — una línea nueva que usa maíz y carne en vez de harina y queso. Es un modelo diferente al de la planta principal.<br><br>
 Max Z = ${c2[0]}x₁ + ${c2[1]}x₂<br>
 ${['Maíz','Carne','M. Obra'].map((r,i) => `${A2[i][0]}x₁ + ${A2[i][1]}x₂ ≤ ${b2[i]} <em>(${r})</em>`).join('<br>')}<br>
 x₁, x₂ ≥ 0<br><br><em>💡 Último modelo. Resuélvelo en Excel Solver.</em>`,
