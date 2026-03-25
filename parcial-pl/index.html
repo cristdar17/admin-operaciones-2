@@ -658,7 +658,7 @@ x₁, x₂, x₃ ≥ 0<br><br>
       narr:`<strong>*RING RING*</strong> — El teléfono de Don Hernando suena. Su cara cambia de expresión.`,
       dial:[
         {c:'hernando',t:'¿Aló? ... ¿QUÉ? ¿Don Alfonso solo puede entregar la <strong>mitad del queso</strong>? ¿Es en serio?'},
-        {c:'marcela',t:'Esto cambia TODO el modelo. El queso pasa de ${b[1]} kg a <strong>${Math.floor(b[1]/2)} kg</strong>.'},
+        {c:'marcela',t:`Esto cambia TODO el modelo. El queso pasa de ${b[1]} kg a <strong>${Math.floor(b[1]/2)} kg</strong>.`},
         {c:'hernando',t:'Necesito que analices el impacto. ¿Qué nos dice el modelo sobre esta situación?'},
       ],
       next:'q_shadow',
@@ -666,7 +666,7 @@ x₁, x₂, x₃ ≥ 0<br><br>
     q_shadow: {
       ch:'Capítulo 5', title:'El Precio Sombra', icon:'👻',
       narr:`El <strong>precio sombra</strong> (shadow price) del queso nos dice cuánto vale cada kg adicional en términos de ganancia.`,
-      dial:[{c:'camilo',t:'Si el precio sombra del queso es $${shadowApprox.toLocaleString('es-CO')}/kg, y perdemos ${Math.floor(b[1]/2)} kg... ¿qué significa?'}],
+      dial:[{c:'camilo',t:`Si el precio sombra del queso es $${shadowApprox.toLocaleString('es-CO')}/kg, y perdemos ${Math.floor(b[1]/2)} kg... ¿qué significa?`}],
       choices:[
         {l:'A',t:`Que cada kg de queso que perdemos nos cuesta ~$${shadowApprox.toLocaleString('es-CO')} en ganancia no obtenida`,ok:true,$:10e6,
          fb:'¡Correcto! El precio sombra indica cuánto cambia Z por cada unidad adicional del recurso. Perder queso = perder ganancia.',
