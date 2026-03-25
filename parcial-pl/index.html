@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabores del Eje Cafetero - Parcial Simulador Gerencial</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║  SETUP GOOGLE SHEETS - INSTRUCCIONES PARA EL PROFESOR   ║
+  ╠══════════════════════════════════════════════════════════╣
+  ║                                                          ║
+  ║  1. Crear un Google Sheet nuevo                          ║
+  ║  2. Ir a Extensiones > Apps Script                       ║
+  ║  3. Borrar todo y pegar este código:                     ║
+  ║                                                          ║
+  ║  function doPost(e) {                                    ║
+  ║    try {                                                 ║
+  ║      var sheet = SpreadsheetApp.getActiveSpreadsheet()   ║
+  ║        .getActiveSheet();                                ║
+  ║      var data = JSON.parse(e.postData.contents);         ║
+  ║      if (sheet.getLastRow() === 0) {                     ║
+  ║        sheet.appendRow(['Fecha','Nombre','Código',       ║
+  ║          'Cap1','Cap2','Cap3','NOTA FINAL',              ║
+  ║          'Tiempo (min)','Ruta','Detalle']);               ║
+  ║      }                                                   ║
+  ║      sheet.appendRow([                                   ║
+  ║        new Date().toLocaleString('es-CO'),               ║
+  ║        data.nombre, data.codigo,                         ║
+  ║        data.notaCap1, data.notaCap2, data.notaCap3,      ║
+  ║        data.notaFinal, data.tiempoUsado,                 ║
+  ║        data.ruta, JSON.stringify(data.respuestas)        ║
+  ║      ]);                                                 ║
+  ║      return ContentService.createTextOutput(             ║
+  ║        JSON.stringify({status:'ok'})                     ║
+  ║      ).setMimeType(ContentService.MimeType.JSON);        ║
+  ║    } catch(err) {                                        ║
+  ║      return ContentService.createTextOutput(             ║
+  ║        JSON.stringify({status:'error',msg:err.message})  ║
+  ║      ).setMimeType(ContentService.MimeType.JSON);        ║
+  ║    }                                                     ║
+  ║  }                                                       ║
+  ║  function doGet() {                                      ║
+  ║    return ContentService.createTextOutput('Activo');      ║
+  ║  }                                                       ║
+  ║                                                          ║
+  ║  4. Deploy > New deployment > Web app                    ║
+  ║     - Execute as: Me                                     ║
+  ║     - Who has access: Anyone                             ║
+  ║  5. Copiar la URL y pegarla abajo en SHEETS_URL          ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--bg2:#111827;--card:#1a2236;--card2:#1e293b;
+  --amber:#f59e0b;--amber-d:#d97706;--amber-l:#fbbf24;
+  --green:#10b981;--green-d:#059669;--red:#f43f5e;--red-d:#e11d48;
+  --blue:#3b82f6;--purple:#8b5cf6;--teal:#14b8a6;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+  background-image:radial-gradient(ellipse at 20% 50%,rgba(245,158,11,.06) 0%,transparent 50%),
+                   radial-gradient(ellipse at 80% 20%,rgba(59,130,246,.05) 0%,transparent 50%);
+}
+h1,h2,h3{font-family:'Playfair Display',serif;font-weight:700}
+.app{max-width:900px;margin:0 auto;padding:1rem;min-height:100vh;position:relative}
+
+/* TIMER BAR */
+.timer-bar{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:rgba(10,14,26,.95);backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(245,158,11,.2);
+  padding:.6rem 1.5rem;display:none;
+  justify-content:space-between;align-items:center;
+}
+.timer-bar.active{display:flex}
+.timer-clock{
+  font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;
+  letter-spacing:2px;
+}
+.timer-clock.warning{color:var(--amber)}
+.timer-clock.danger{color:var(--red);animation:pulse 1s infinite}
+.timer-clock.ok{color:var(--green)}
+.timer-progress{font-size:.85rem;color:var(--text2)}
+.timer-bar-fill{
+  position:absolute;bottom:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--green),var(--amber),var(--red));
+  transition:width 1s linear;
+}
+
+/* TOASTS */
+#toasts{position:fixed;top:70px;right:1rem;z-index:2000;display:flex;flex-direction:column;gap:.5rem}
+.toast{
+  padding:.8rem 1.2rem;border-radius:var(--radius-sm);
+  font-weight:600;font-size:.9rem;
+  transform:translateX(120%);opacity:0;
+  transition:all .4s cubic-bezier(.4,0,.2,1);
+  max-width:360px;box-shadow:var(--shadow);
+}
+.toast.show{transform:translateX(0);opacity:1}
+.toast.info{background:var(--blue);color:#fff}
+.toast.success{background:var(--green-d);color:#fff}
+.toast.warning{background:var(--amber-d);color:#fff}
+.toast.danger{background:var(--red-d);color:#fff;animation:shake .5s}
+
+/* SCREENS */
+.screen{
+  display:none;opacity:0;transform:translateY(20px);
+  transition:opacity .5s,transform .5s;padding-top:4.5rem;
+}
+.screen.active{display:block;opacity:1;transform:translateY(0)}
+
+/* SPLASH */
+.splash{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;text-align:center;padding-top:0 !important;
+}
+.splash-logo{font-size:4rem;margin-bottom:1rem;animation:float 3s ease-in-out infinite}
+.splash h1{font-size:2.8rem;line-height:1.1;margin-bottom:.5rem;
+  background:linear-gradient(135deg,var(--amber-l),var(--amber),var(--amber-d));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.splash .subtitle{font-size:1.3rem;color:var(--text2);margin-bottom:2rem;font-weight:300}
+.splash .tagline{
+  font-size:1rem;color:var(--text3);max-width:500px;line-height:1.6;
+  margin-bottom:3rem;
+}
+
+/* CARDS */
+.card{
+  background:var(--card);border:1px solid rgba(255,255,255,.06);
+  border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;
+  box-shadow:var(--shadow);transition:var(--transition);
+}
+.card:hover{border-color:rgba(245,158,11,.15)}
+.card-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1rem}
+.card-icon{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;flex-shrink:0;
+}
+
+/* CHARACTER DIALOGUE */
+.dialogue{
+  background:var(--card2);border-left:4px solid var(--amber);
+  border-radius:0 var(--radius) var(--radius) 0;
+  padding:1.2rem 1.5rem;margin:1rem 0;position:relative;
+}
+.dialogue::before{
+  content:'';position:absolute;left:-4px;top:12px;
+  width:0;height:0;border:8px solid transparent;
+  border-right-color:var(--card2);
+}
+.dialogue .char-name{font-weight:700;font-size:.85rem;margin-bottom:.3rem}
+.dialogue .char-name.hernando{color:var(--amber)}
+.dialogue .char-name.marcela{color:var(--teal)}
+.dialogue .char-name.camilo{color:var(--purple)}
+.dialogue p{color:var(--text2);line-height:1.7;font-size:.95rem}
+
+/* CHARACTER AVATAR */
+.avatar{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;font-weight:800;flex-shrink:0;
+}
+.avatar.hernando{background:linear-gradient(135deg,var(--amber),var(--amber-d))}
+.avatar.marcela{background:linear-gradient(135deg,var(--teal),#0d9488)}
+.avatar.camilo{background:linear-gradient(135deg,var(--purple),#7c3aed)}
+
+/* FORMS */
+.form-group{margin-bottom:1.2rem}
+.form-group label{display:block;font-weight:600;margin-bottom:.4rem;font-size:.9rem;color:var(--text2)}
+.input{
+  width:100%;padding:.7rem 1rem;border-radius:var(--radius-sm);
+  border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);
+  color:var(--text);font-size:1rem;font-family:inherit;
+  transition:var(--transition);
+}
+.input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.input::placeholder{color:var(--text3)}
+.input-sm{width:80px;text-align:center;padding:.5rem;font-weight:600}
+select.input{cursor:pointer}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  padding:.8rem 2rem;border-radius:var(--radius-sm);font-weight:700;
+  font-size:1rem;border:none;cursor:pointer;
+  transition:var(--transition);font-family:inherit;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  color:#000;box-shadow:0 4px 15px rgba(245,158,11,.3);
+}
+.btn-primary:hover{box-shadow:0 6px 25px rgba(245,158,11,.5);transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid rgba(255,255,255,.15)}
+.btn-secondary:hover{background:rgba(255,255,255,.12)}
+.btn-success{background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff}
+.btn-danger{background:linear-gradient(135deg,var(--red),var(--red-d));color:#fff}
+.btn-lg{padding:1rem 3rem;font-size:1.1rem;border-radius:var(--radius)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none !important}
+
+/* DATA TABLE */
+.data-table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  margin:1rem 0;border-radius:var(--radius);overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+}
+.data-table th{
+  background:rgba(245,158,11,.12);color:var(--amber-l);
+  padding:.8rem 1rem;text-align:center;font-weight:700;font-size:.85rem;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.data-table td{
+  padding:.7rem 1rem;text-align:center;border-top:1px solid rgba(255,255,255,.05);
+  font-variant-numeric:tabular-nums;
+}
+.data-table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.data-table .row-label{text-align:left;font-weight:600;color:var(--amber-l)}
+
+/* LP FORMULATION */
+.lp-row{
+  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
+  margin:.6rem 0;padding:.6rem;background:rgba(255,255,255,.03);
+  border-radius:var(--radius-sm);
+}
+.lp-row .lp-label{min-width:100px;font-weight:600;color:var(--text2);font-size:.85rem}
+.lp-row .var-name{color:var(--amber);font-weight:700;font-size:.95rem}
+.lp-row .operator{color:var(--text3);font-weight:500;padding:0 2px}
+
+/* QUESTION BLOCKS */
+.question{
+  background:var(--card);border:1px solid rgba(255,255,255,.06);
+  border-radius:var(--radius);padding:1.5rem;margin:1.2rem 0;
+  counter-increment:q;
+}
+.question .q-header{
+  display:flex;align-items:flex-start;gap:.8rem;margin-bottom:1rem;
+}
+.question .q-num{
+  background:var(--amber);color:#000;font-weight:800;
+  min-width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;flex-shrink:0;
+}
+.question .q-text{font-weight:600;line-height:1.5;font-size:.95rem}
+.question .q-pts{
+  margin-left:auto;background:rgba(245,158,11,.1);color:var(--amber);
+  padding:.2rem .6rem;border-radius:20px;font-size:.75rem;font-weight:700;
+  white-space:nowrap;
+}
+
+/* OPTIONS (RADIO) */
+.options{display:flex;flex-direction:column;gap:.5rem;margin-top:.8rem}
+.option{
+  display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;
+  border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);
+  cursor:pointer;transition:var(--transition);
+}
+.option:hover{background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2)}
+.option.selected{background:rgba(245,158,11,.1);border-color:var(--amber)}
+.option input[type="radio"]{display:none}
+.option .radio{
+  width:20px;height:20px;border-radius:50%;
+  border:2px solid var(--text3);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:var(--transition);
+}
+.option.selected .radio{border-color:var(--amber);background:var(--amber)}
+.option.selected .radio::after{content:'';width:8px;height:8px;background:#000;border-radius:50%}
+
+/* SCORE DISPLAY */
+.score-card{
+  text-align:center;padding:2rem;
+  background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(59,130,246,.05));
+  border:1px solid rgba(245,158,11,.2);border-radius:var(--radius);
+  margin:1.5rem 0;
+}
+.score-big{font-size:4rem;font-weight:900;font-family:'Playfair Display',serif}
+.score-label{color:var(--text2);font-size:1rem;margin-top:.3rem}
+
+/* GRADE BAR */
+.grade-bar{
+  height:12px;background:rgba(255,255,255,.08);border-radius:20px;
+  overflow:hidden;margin:.8rem 0;
+}
+.grade-bar-fill{height:100%;border-radius:20px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.grade-bar-fill.low{background:linear-gradient(90deg,var(--red),var(--red-d))}
+.grade-bar-fill.mid{background:linear-gradient(90deg,var(--amber),var(--amber-d))}
+.grade-bar-fill.high{background:linear-gradient(90deg,var(--green),var(--green-d))}
+
+/* SCENE HEADER */
+.scene-header{
+  text-align:center;margin:2rem 0;padding:2rem;
+  background:linear-gradient(135deg,rgba(245,158,11,.05),transparent);
+  border-radius:var(--radius);border:1px solid rgba(245,158,11,.1);
+}
+.scene-header .chapter{
+  font-size:.8rem;text-transform:uppercase;letter-spacing:4px;
+  color:var(--amber);font-weight:700;margin-bottom:.5rem;
+}
+.scene-header h2{font-size:2rem;margin-bottom:.5rem}
+.scene-header p{color:var(--text2);font-size:.95rem}
+
+/* NARRATIVE */
+.narrative{
+  font-size:1.05rem;line-height:1.8;color:var(--text2);
+  margin:1rem 0;padding:1rem 0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.narrative em{color:var(--amber-l);font-style:italic}
+.narrative strong{color:var(--text);font-weight:600}
+
+/* RESULT SCREEN */
+.result-actions{display:flex;gap:1rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap}
+
+/* TEXTAREA */
+textarea.input{min-height:100px;resize:vertical;line-height:1.6}
+
+/* LOADING */
+.loading-dots{display:flex;gap:.3rem;justify-content:center;padding:2rem}
+.loading-dots span{
+  width:10px;height:10px;background:var(--amber);border-radius:50%;
+  animation:bounce .6s infinite alternate;
+}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+
+/* BADGE */
+.badge{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.3rem .8rem;border-radius:20px;font-size:.8rem;font-weight:600;
+}
+.badge.good{background:rgba(16,185,129,.15);color:var(--green)}
+.badge.mid{background:rgba(245,158,11,.15);color:var(--amber)}
+.badge.bad{background:rgba(244,63,94,.15);color:var(--red)}
+
+/* FOOTER */
+.exam-footer{text-align:center;padding:2rem;color:var(--text3);font-size:.8rem;margin-top:2rem}
+
+/* ANIMATIONS */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes bounce{to{transform:translateY(-8px)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes confetti{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(300px) rotate(720deg);opacity:0}}
+
+.fade-in{animation:fadeIn .5s ease-out both}
+.slide-up{animation:slideUp .6s ease-out both}
+.delay-1{animation-delay:.1s}
+.delay-2{animation-delay:.2s}
+.delay-3{animation-delay:.3s}
+.delay-4{animation-delay:.4s}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .splash h1{font-size:2rem}
+  .lp-row{flex-direction:column;align-items:flex-start}
+  .data-table{font-size:.85rem}
+  .data-table th,.data-table td{padding:.5rem}
+  .timer-bar{padding:.4rem .8rem}
+  .timer-clock{font-size:1.2rem}
+}
+
+/* CONFETTI */
+.confetti-piece{
+  position:fixed;width:10px;height:10px;top:-10px;z-index:3000;
+  animation:confetti 3s ease-out forwards;
+}
+</style>
+</head>
+<body>
+
+<!-- TIMER BAR -->
+<div class="timer-bar" id="timerBar">
+  <div style="display:flex;align-items:center;gap:1rem">
+    <span style="font-size:1.2rem">&#9202;</span>
+    <span class="timer-clock" id="timerClock">01:25:00</span>
+  </div>
+  <div class="timer-progress" id="timerProgress"></div>
+  <div class="timer-bar-fill" id="timerFill" style="width:100%"></div>
+</div>
+
+<!-- TOASTS -->
+<div id="toasts"></div>
+
+<!-- APP -->
+<div class="app" id="app"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CONFIGURACIÓN — Cambiar SHEETS_URL antes de usar
+   ═══════════════════════════════════════════════════ */
+const SHEETS_URL = '';  // <-- Pegar URL del Apps Script aquí
+const TOTAL_TIME = 85 * 60; // 1h 25min en segundos
+const TEACHER_KEY = 'profe2025'; // Código para modo profesor
+
+/* ═══════════════════════════════════════════════════
+   UTILIDADES
+   ═══════════════════════════════════════════════════ */
+function mulberry32(seed) {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function seedFromString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) - h) + str.charCodeAt(i) | 0;
+  return Math.abs(h) || 12345;
+}
+function randInt(rng, min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
+function fmt$(n) { return '$' + n.toLocaleString('es-CO'); }
+function fmtK(n) { return fmt$(n * 1000); }
+function fmtTime(s) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+/* ═══════════════════════════════════════════════════
+   SIMPLEX SOLVER
+   ═══════════════════════════════════════════════════ */
+function solveSimplex(c, A, b) {
+  const m = A.length, n = c.length;
+  const T = [];
+  for (let i = 0; i < m; i++) {
+    const row = [...A[i]];
+    for (let j = 0; j < m; j++) row.push(i === j ? 1 : 0);
+    row.push(b[i]);
+    T.push(row);
+  }
+  const obj = c.map(v => -v);
+  for (let j = 0; j < m; j++) obj.push(0);
+  obj.push(0);
+  T.push(obj);
+  const cols = n + m + 1;
+  const basis = Array.from({length: m}, (_, i) => n + i);
+
+  for (let iter = 0; iter < 200; iter++) {
+    let pCol = -1, minV = -1e-9;
+    for (let j = 0; j < cols - 1; j++) {
+      if (T[m][j] < minV) { minV = T[m][j]; pCol = j; }
+    }
+    if (pCol === -1) break;
+    let pRow = -1, minR = Infinity;
+    for (let i = 0; i < m; i++) {
+      if (T[i][pCol] > 1e-9) {
+        const r = T[i][cols - 1] / T[i][pCol];
+        if (r < minR) { minR = r; pRow = i; }
+      }
+    }
+    if (pRow === -1) return null;
+    const pv = T[pRow][pCol];
+    for (let j = 0; j < cols; j++) T[pRow][j] /= pv;
+    for (let i = 0; i <= m; i++) {
+      if (i === pRow) continue;
+      const f = T[i][pCol];
+      for (let j = 0; j < cols; j++) T[i][j] -= f * T[pRow][j];
+    }
+    basis[pRow] = pCol;
+  }
+  const sol = new Array(n).fill(0);
+  for (let i = 0; i < m; i++) if (basis[i] < n) sol[basis[i]] = Math.round(T[i][cols-1] * 100) / 100;
+  const Z = Math.round(T[m][cols - 1] * 100) / 100;
+  const slacks = [];
+  for (let i = 0; i < m; i++) {
+    let used = 0;
+    for (let j = 0; j < n; j++) used += A[i][j] * sol[j];
+    slacks.push(Math.round((b[i] - used) * 100) / 100);
+  }
+  return { solution: sol, Z, slacks };
+}
+
+/* ═══════════════════════════════════════════════════
+   GENERADOR DE PROBLEMAS
+   ═══════════════════════════════════════════════════ */
+const PRODUCTS = ['Pandebonos', 'Buñuelos', 'Empanadas'];
+const PRODUCTS_EMOJI = ['🥐', '🫓', '🥟'];
+const RESOURCES = ['Harina de yuca (kg)', 'Queso campesino (kg)', 'Mano de obra (horas)', 'Horno (tandas)'];
+const RESOURCES_SHORT = ['Harina', 'Queso', 'M. Obra', 'Horno'];
+
+function generateAct1(rng) {
+  const A = [
+    [randInt(rng, 3, 5), randInt(rng, 4, 6), randInt(rng, 2, 3)],
+    [randInt(rng, 4, 6), randInt(rng, 2, 4), randInt(rng, 1, 2)],
+    [randInt(rng, 1, 2), randInt(rng, 2, 3), randInt(rng, 2, 3)],
+    [randInt(rng, 1, 2), randInt(rng, 1, 2), randInt(rng, 1, 2)],
+  ];
+  const b = [
+    randInt(rng, 80, 120) * 10,
+    randInt(rng, 50, 80) * 10,
+    randInt(rng, 16, 28) * 10,
+    randInt(rng, 25, 45) * 10,
+  ];
+  const c = [
+    randInt(rng, 80, 150),
+    randInt(rng, 60, 120),
+    randInt(rng, 70, 130),
+  ];
+  const sol = solveSimplex(c, A, b);
+  return { A, b, c, sol, products: PRODUCTS, resources: RESOURCES };
+}
+
+function generateAct2A(rng) {
+  // EXPANSION: 4 productos, 4 recursos
+  const prods = ['Pandebonos', 'Buñuelos', 'Empanadas', 'Chorizos'];
+  const emojis = ['🥐', '🫓', '🥟', '🌭'];
+  const A = [
+    [randInt(rng,3,4), randInt(rng,4,5), randInt(rng,2,3), randInt(rng,2,3)],
+    [randInt(rng,4,5), randInt(rng,2,3), randInt(rng,1,2), randInt(rng,3,4)],
+    [randInt(rng,1,2), randInt(rng,2,3), randInt(rng,2,3), randInt(rng,1,2)],
+    [randInt(rng,1,2), randInt(rng,1,2), randInt(rng,1,2), randInt(rng,1,2)],
+  ];
+  const b = [
+    randInt(rng,100,140)*10,
+    randInt(rng,60,90)*10,
+    randInt(rng,20,32)*10,
+    randInt(rng,30,50)*10,
+  ];
+  const c = [randInt(rng,80,140),randInt(rng,60,110),randInt(rng,70,120),randInt(rng,90,160)];
+  const sol = solveSimplex(c, A, b);
+  return { A, b, c, sol, products: prods, emojis, resources: RESOURCES };
+}
+
+function generateAct2B(rng, act1) {
+  // CRISIS: mismos productos pero queso a la mitad + nuevo recurso limitado
+  const A = act1.A.map(r => [...r]);
+  const b = [...act1.b];
+  b[1] = Math.floor(b[1] * 0.5); // queso a la mitad
+  const c = [...act1.c];
+  const sol = solveSimplex(c, A, b);
+  return { A, b, c, sol, products: PRODUCTS, resources: RESOURCES, originalB1: act1.b[1] };
+}
+
+function generateAct2C(rng) {
+  // MINIMIZACIÓN: minimizar costo de producción cumpliendo demanda mínima
+  const prods = ['Pandebonos', 'Buñuelos', 'Empanadas'];
+  const costs = [randInt(rng,30,60), randInt(rng,25,50), randInt(rng,35,55)];
+  // Demanda mínima
+  const demand = [randInt(rng,20,40), randInt(rng,15,35), randInt(rng,20,40)];
+  // Recurso limitado: harina total
+  const harinaPerUnit = [randInt(rng,2,4), randInt(rng,3,5), randInt(rng,2,3)];
+  const maxHarina = randInt(rng,250,400);
+  // Presupuesto MO
+  const moPerUnit = [randInt(rng,1,2), randInt(rng,1,2), randInt(rng,2,3)];
+  const maxMO = randInt(rng,120,200);
+
+  // Para solver: Min c'x => Max -c'x, demanda xi >= di => -xi <= -di
+  const cNeg = costs.map(v => -v);
+  const Aall = [
+    [-1, 0, 0],
+    [0, -1, 0],
+    [0, 0, -1],
+    harinaPerUnit,
+    moPerUnit,
+  ];
+  const ball = [
+    -demand[0], -demand[1], -demand[2],
+    maxHarina, maxMO,
+  ];
+  const solRaw = solveSimplex(cNeg, Aall, ball);
+  let sol = null;
+  if (solRaw) {
+    sol = {
+      solution: solRaw.solution,
+      Z: -solRaw.Z,
+      slacks: solRaw.slacks,
+    };
+  }
+  return { costs, demand, harinaPerUnit, moPerUnit, maxHarina, maxMO, sol, products: prods };
+}
+
+function generateAct3(rng) {
+  // Ronda rápida: preguntas conceptuales + mini-problema
+  // Mini LP de 2 variables para formular rápido
+  const p = ['Arepas', 'Empanadas'];
+  const c = [randInt(rng,50,100), randInt(rng,60,110)];
+  const A = [
+    [randInt(rng,2,4), randInt(rng,3,5)],
+    [randInt(rng,3,5), randInt(rng,1,3)],
+    [randInt(rng,1,2), randInt(rng,2,3)],
+  ];
+  const b = [randInt(rng,60,100)*10, randInt(rng,40,80)*10, randInt(rng,20,40)*10];
+  const res = ['Maíz (kg)', 'Carne (kg)', 'Mano de obra (h)'];
+  const sol = solveSimplex(c, A, b);
+  return { products: p, c, A, b, resources: res, sol };
+}
+
+/* ═══════════════════════════════════════════════════
+   ESTADO DE LA APLICACIÓN
+   ═══════════════════════════════════════════════════ */
+const state = {
+  screen: 'splash',
+  nombre: '', codigo: '',
+  rng: null, seed: 0,
+  act1: null, act2: null, act3: null,
+  act1Answers: {}, act2Answers: {}, act3Answers: {},
+  act1Score: 0, act2Score: 0, act3Score: 0,
+  path: '', // 'A', 'B', 'C'
+  timerStarted: false,
+  remaining: TOTAL_TIME,
+  interval: null,
+  progress: 0, // 0=not started, 1=act1, 2=act1done, 3=act2, 4=act2done, 5=act3, 6=done
+  submitted: false,
+  notificationsShown: new Set(),
+};
+
+/* ═══════════════════════════════════════════════════
+   TOASTS / NOTIFICACIONES
+   ═══════════════════════════════════════════════════ */
+function toast(msg, type = 'info', duration = 5000) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = msg;
+  document.getElementById('toasts').appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 400);
+  }, duration);
+}
+
+/* ═══════════════════════════════════════════════════
+   TIMER
+   ═══════════════════════════════════════════════════ */
+function startTimer() {
+  state.timerStarted = true;
+  document.getElementById('timerBar').classList.add('active');
+  state.interval = setInterval(timerTick, 1000);
+}
+
+function timerTick() {
+  state.remaining--;
+  if (state.remaining <= 0) {
+    state.remaining = 0;
+    clearInterval(state.interval);
+    toast('&#9200; &#161;Se acabó el tiempo! Enviando tus respuestas...', 'danger', 8000);
+    setTimeout(() => finishExam(), 2000);
+  }
+  updateTimerUI();
+  checkTimerNotifications();
+}
+
+function updateTimerUI() {
+  const clock = document.getElementById('timerClock');
+  const fill = document.getElementById('timerFill');
+  const prog = document.getElementById('timerProgress');
+  clock.textContent = fmtTime(state.remaining);
+  const pct = (state.remaining / TOTAL_TIME) * 100;
+  fill.style.width = pct + '%';
+  clock.className = 'timer-clock ' + (pct > 40 ? 'ok' : pct > 15 ? 'warning' : 'danger');
+
+  const screens = ['','Capítulo 1','','Capítulo 2','','Capítulo 3','Finalizado'];
+  prog.textContent = screens[state.progress] || '';
+}
+
+function checkTimerNotifications() {
+  const mins = Math.floor(state.remaining / 60);
+  const pct = state.remaining / TOTAL_TIME;
+  const ns = state.notificationsShown;
+
+  // Time-based
+  if (mins === 60 && !ns.has('60m')) { ns.add('60m'); toast('&#9203; Llevas 25 minutos. ¡Buen arranque!', 'info'); }
+  if (mins === 42 && !ns.has('half')) {
+    ns.add('half');
+    toast('&#9201; ¡Mitad del tiempo! Quedan ~42 minutos', 'warning');
+  }
+  if (mins === 15 && !ns.has('15m')) { ns.add('15m'); toast('&#9889; &#161;15 minutos! Asegúrate de enviar algo', 'danger', 7000); }
+  if (mins === 5 && !ns.has('5m')) { ns.add('5m'); toast('&#128293; &#161;ÚLTIMOS 5 MINUTOS! Envía lo que tengas', 'danger', 10000); }
+
+  // Progress-based
+  const elapsed = TOTAL_TIME - state.remaining;
+  const elapsedMin = elapsed / 60;
+  if (elapsedMin >= 35 && state.progress <= 1 && !ns.has('slow1')) {
+    ns.add('slow1');
+    toast('&#9888;&#65039; Llevas 35 min en el Cap. 1. &#161;Intenta avanzar!', 'warning');
+  }
+  if (elapsedMin >= 25 && state.progress >= 2 && !ns.has('fast1')) {
+    ns.add('fast1');
+    toast('&#128640; &#161;Excelente ritmo! Terminaste el Cap. 1 a tiempo', 'success');
+  }
+  if (elapsedMin >= 60 && state.progress <= 3 && !ns.has('slow2')) {
+    ns.add('slow2');
+    toast('&#9889; Llevas 1 hora y sigues en Cap. 2. &#161;Acelera!', 'danger');
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   SCORING
+   ═══════════════════════════════════════════════════ */
+function scoreAct1() {
+  const ans = state.act1Answers;
+  const prob = state.act1;
+  const sol = prob.sol;
+  let score = 0;
+
+  // Q1: Variables (10 pts)
+  if (ans.q1 === 'correct') score += 10;
+
+  // Q2: Función objetivo (15 pts) - direction + coefficients
+  if (ans.q2dir === 'max') score += 3;
+  for (let i = 0; i < 3; i++) {
+    if (Math.abs((parseFloat(ans['q2c' + i]) || 0) - prob.c[i]) < 0.5) score += 4;
+  }
+
+  // Q3: Restricciones (25 pts) - 4 restricciones × ~6.25 pts
+  for (let i = 0; i < 4; i++) {
+    let rScore = 0;
+    for (let j = 0; j < 3; j++) {
+      if (Math.abs((parseFloat(ans[`q3a${i}${j}`]) || 0) - prob.A[i][j]) < 0.5) rScore++;
+    }
+    if (Math.abs((parseFloat(ans[`q3b${i}`]) || 0) - prob.b[i]) < 1) rScore++;
+    score += (rScore / 4) * 6.25;
+  }
+
+  // Q4: Solución óptima (20 pts)
+  if (sol) {
+    for (let i = 0; i < 3; i++) {
+      const studentVal = parseFloat(ans['q4x' + i]) || 0;
+      const correctVal = sol.solution[i];
+      const tol = Math.max(correctVal * 0.08, 1);
+      if (Math.abs(studentVal - correctVal) <= tol) score += 6.67;
+    }
+  }
+
+  // Q5: Z* (10 pts)
+  if (sol) {
+    const studentZ = parseFloat(ans.q5z) || 0;
+    const tol = Math.max(sol.Z * 0.08, 5);
+    if (Math.abs(studentZ - sol.Z) <= tol) score += 10;
+  }
+
+  // Q6: Interpretación (20 pts)
+  if (sol) {
+    // Recurso más limitante (se agota = slack ≈ 0)
+    const bindingIdx = sol.slacks.indexOf(Math.min(...sol.slacks));
+    if (parseInt(ans.q6binding) === bindingIdx) score += 8;
+    // Recurso con más holgura
+    const slackIdx = sol.slacks.indexOf(Math.max(...sol.slacks));
+    if (parseInt(ans.q6slack) === slackIdx) score += 7;
+    // Recomendación (texto)
+    const rec = (ans.q6rec || '').toLowerCase();
+    if (rec.length > 15) score += 2;
+    const keywords = ['producir','recurso','aumentar','invertir','queso','harina','capacidad','lote','ganancia','holgura','restricción','cuello','botella','más','óptim'];
+    const matched = keywords.filter(k => rec.includes(k)).length;
+    score += Math.min(3, matched);
+  }
+
+  state.act1Score = Math.min(100, Math.round(score));
+  return state.act1Score;
+}
+
+function scoreAct2() {
+  const ans = state.act2Answers;
+  const prob = state.act2;
+  let score = 0;
+  const path = state.path;
+
+  if (path === 'A') {
+    // Expansion: 4 variables
+    const sol = prob.sol;
+    // Q1: Función objetivo (20 pts)
+    if (ans.q1dir === 'max') score += 4;
+    for (let i = 0; i < 4; i++) {
+      if (Math.abs((parseFloat(ans['q1c' + i]) || 0) - prob.c[i]) < 0.5) score += 4;
+    }
+    // Q2: Restricciones (25 pts)
+    for (let i = 0; i < 4; i++) {
+      let rS = 0;
+      for (let j = 0; j < 4; j++) {
+        if (Math.abs((parseFloat(ans[`q2a${i}${j}`]) || 0) - prob.A[i][j]) < 0.5) rS++;
+      }
+      if (Math.abs((parseFloat(ans[`q2b${i}`]) || 0) - prob.b[i]) < 1) rS++;
+      score += (rS / 5) * 6.25;
+    }
+    // Q3: Solución (25 pts)
+    if (sol) {
+      for (let i = 0; i < 4; i++) {
+        const sv = parseFloat(ans['q3x' + i]) || 0;
+        const cv = sol.solution[i];
+        const tol = Math.max(cv * 0.08, 1);
+        if (Math.abs(sv - cv) <= tol) score += 5;
+      }
+      const sz = parseFloat(ans.q3z) || 0;
+      const tz = Math.max(sol.Z * 0.08, 5);
+      if (Math.abs(sz - sol.Z) <= tz) score += 5;
+    }
+    // Q4: Interpretación (30 pts)
+    const interp = (ans.q4text || '').toLowerCase();
+    if (interp.length > 20) score += 10;
+    const kw = ['chorizo','nuevo','producto','expand','ganar','profit','recurso','invertir','más','crecer','lote','producir','ampliar'];
+    score += Math.min(20, kw.filter(k => interp.includes(k)).length * 4);
+  } else if (path === 'B') {
+    // Crisis: restricción modificada
+    const sol = prob.sol;
+    // Q1: Identificar cambio (15 pts)
+    if (ans.q1change === '1') score += 15; // queso = recurso 1
+    // Q2: Nueva solución (30 pts)
+    if (sol) {
+      for (let i = 0; i < 3; i++) {
+        const sv = parseFloat(ans['q2x' + i]) || 0;
+        const cv = sol.solution[i];
+        const tol = Math.max(cv * 0.08, 1);
+        if (Math.abs(sv - cv) <= tol) score += 8;
+      }
+      const sz = parseFloat(ans.q2z) || 0;
+      const tz = Math.max(sol.Z * 0.08, 5);
+      if (Math.abs(sz - sol.Z) <= tz) score += 6;
+    }
+    // Q3: Comparación (25 pts)
+    const comp = (ans.q3comp || '').toLowerCase();
+    if (comp.length > 15) score += 8;
+    const kw2 = ['disminuy','baj','menos','perd','reduc','queso','proveedor','afect','cambiar','restric','impact','menor'];
+    score += Math.min(17, kw2.filter(k => comp.includes(k)).length * 4);
+    // Q4: Recomendación (30 pts)
+    const rec = (ans.q4rec || '').toLowerCase();
+    if (rec.length > 20) score += 10;
+    const kw3 = ['proveedor','alternativ','negociar','buscar','sustituir','receta','queso','adaptar','plan','contingencia','diversificar'];
+    score += Math.min(20, kw3.filter(k => rec.includes(k)).length * 5);
+  } else {
+    // Cost minimization
+    const sol = prob.sol;
+    // Q1: Tipo de objetivo (10 pts)
+    if (ans.q1type === 'min') score += 10;
+    // Q2: Función objetivo (15 pts)
+    for (let i = 0; i < 3; i++) {
+      if (Math.abs((parseFloat(ans['q2c' + i]) || 0) - prob.costs[i]) < 0.5) score += 5;
+    }
+    // Q3: Restricciones de demanda (20 pts)
+    for (let i = 0; i < 3; i++) {
+      if (Math.abs((parseFloat(ans['q3d' + i]) || 0) - prob.demand[i]) < 0.5) score += 5;
+      if (ans['q3sign' + i] === 'gte') score += 1.67;
+    }
+    // Q4: Solución (25 pts)
+    if (sol) {
+      for (let i = 0; i < 3; i++) {
+        const sv = parseFloat(ans['q4x' + i]) || 0;
+        const cv = sol.solution[i];
+        const tol = Math.max(cv * 0.08, 1);
+        if (Math.abs(sv - cv) <= tol) score += 6.67;
+      }
+      const sz = parseFloat(ans.q4z) || 0;
+      const tz = Math.max(Math.abs(sol.Z) * 0.08, 5);
+      if (Math.abs(sz - sol.Z) <= tz) score += 5;
+    }
+    // Q5: Interpretación (30 pts)
+    const interp = (ans.q5text || '').toLowerCase();
+    if (interp.length > 20) score += 10;
+    const kw4 = ['costo','minim','demand','cumplir','gasto','eficien','ahorro','presupuesto','recurso','reduci','product'];
+    score += Math.min(20, kw4.filter(k => interp.includes(k)).length * 5);
+  }
+
+  state.act2Score = Math.min(100, Math.round(score));
+  return state.act2Score;
+}
+
+function scoreAct3() {
+  const ans = state.act3Answers;
+  const prob = state.act3;
+  const sol = prob.sol;
+  let score = 0;
+
+  // Q1: Formular LP rápido - función objetivo (20pts)
+  if (ans.q1dir === 'max') score += 4;
+  for (let i = 0; i < 2; i++) {
+    if (Math.abs((parseFloat(ans['q1c' + i]) || 0) - prob.c[i]) < 0.5) score += 8;
+  }
+
+  // Q2: Restricciones (25pts)
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 2; j++) {
+      if (Math.abs((parseFloat(ans[`q2a${i}${j}`]) || 0) - prob.A[i][j]) < 0.5) score += 3;
+    }
+    if (Math.abs((parseFloat(ans[`q2b${i}`]) || 0) - prob.b[i]) < 1) score += 2.33;
+  }
+
+  // Q3: Solución (25pts)
+  if (sol) {
+    for (let i = 0; i < 2; i++) {
+      const sv = parseFloat(ans['q3x' + i]) || 0;
+      const cv = sol.solution[i];
+      const tol = Math.max(cv * 0.08, 1);
+      if (Math.abs(sv - cv) <= tol) score += 8;
+    }
+    const sz = parseFloat(ans.q3z) || 0;
+    const tz = Math.max(sol.Z * 0.08, 5);
+    if (Math.abs(sz - sol.Z) <= tz) score += 9;
+  }
+
+  // Q4: Decisión estratégica (30pts)
+  const dec = (ans.q4text || '').toLowerCase();
+  if (dec.length > 20) score += 10;
+  const kw = ['producir','lote','ganancia','recurso','invert','ampliar','óptim','restricción','capacidad','crecer','rentab','maíz','carne','mano','obra'];
+  score += Math.min(20, kw.filter(k => dec.includes(k)).length * 4);
+
+  state.act3Score = Math.min(100, Math.round(score));
+  return state.act3Score;
+}
+
+function calcFinalGrade() {
+  return Math.round(((state.act1Score * 0.40) + (state.act2Score * 0.35) + (state.act3Score * 0.25)) / 100 * 50) / 10;
+}
+
+/* ═══════════════════════════════════════════════════
+   GOOGLE SHEETS
+   ═══════════════════════════════════════════════════ */
+async function submitToSheets() {
+  if (!SHEETS_URL) return false;
+  try {
+    const data = {
+      nombre: state.nombre,
+      codigo: state.codigo,
+      notaCap1: (state.act1Score / 100 * 5).toFixed(1),
+      notaCap2: (state.act2Score / 100 * 5).toFixed(1),
+      notaCap3: (state.act3Score / 100 * 5).toFixed(1),
+      notaFinal: calcFinalGrade().toFixed(1),
+      tiempoUsado: Math.round((TOTAL_TIME - state.remaining) / 60),
+      ruta: state.path === 'A' ? 'Expansión' : state.path === 'B' ? 'Crisis Proveedor' : 'Reducción Costos',
+      respuestas: {
+        act1: state.act1Answers,
+        act2: state.act2Answers,
+        act3: state.act3Answers,
+      },
+    };
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'text/plain' },
+      mode: 'no-cors',
+    });
+    return true;
+  } catch (e) {
+    console.error('Error enviando a Sheets:', e);
+    return false;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER HELPERS
+   ═══════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const app = $('app');
+
+function render(html) {
+  app.innerHTML = html;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function dialogueBox(char, text, extraClass = '') {
+  const colors = { hernando: 'var(--amber)', marcela: 'var(--teal)', camilo: 'var(--purple)' };
+  const names = { hernando: 'Don Hernando - CEO', marcela: 'Marcela - Jefa de Planta', camilo: 'Camilo - Analista Financiero' };
+  const emojis = { hernando: '👨‍💼', marcela: '👩‍🔧', camilo: '🧑‍💻' };
+  return `
+    <div class="dialogue ${extraClass}" style="border-left-color:${colors[char]}">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
+        <span class="avatar ${char}">${emojis[char]}</span>
+        <span class="char-name ${char}">${names[char]}</span>
+      </div>
+      <p>${text}</p>
+    </div>`;
+}
+
+function dataTableHTML(A, b, c, products, resources, emojis) {
+  emojis = emojis || PRODUCTS_EMOJI;
+  let html = `<table class="data-table"><thead><tr><th>Recurso</th>`;
+  products.forEach((p, i) => html += `<th>${emojis[i] || ''} ${p}</th>`);
+  html += `<th>Disponible</th></tr></thead><tbody>`;
+  resources.forEach((r, i) => {
+    html += `<tr><td class="row-label">${r}</td>`;
+    A[i].forEach(v => html += `<td>${v}</td>`);
+    html += `<td><strong>${b[i].toLocaleString('es-CO')}</strong></td></tr>`;
+  });
+  html += `<tr style="background:rgba(245,158,11,.08)"><td class="row-label" style="color:var(--amber-l)">Ganancia por lote (miles $)</td>`;
+  c.forEach(v => html += `<td style="font-weight:700;color:var(--amber-l)">${fmtK(v)}</td>`);
+  html += `<td></td></tr></tbody></table>`;
+  return html;
+}
+
+function lpFormRow(label, nVars, prefix, showSign = true, signPrefix = '') {
+  let html = `<div class="lp-row"><span class="lp-label">${label}:</span>`;
+  for (let i = 0; i < nVars; i++) {
+    if (i > 0) html += `<span class="operator">+</span>`;
+    html += `<input type="number" class="input input-sm" id="${prefix}${i}" step="any" placeholder="?">`;
+    html += `<span class="var-name">x<sub>${i + 1}</sub></span>`;
+  }
+  if (showSign) {
+    html += `<span class="operator">&le;</span>`;
+    html += `<input type="number" class="input input-sm" id="${signPrefix}" step="any" placeholder="?" style="width:100px">`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+/* ═══════════════════════════════════════════════════
+   PANTALLAS
+   ═══════════════════════════════════════════════════ */
+function showSplash() {
+  render(`
+    <div class="splash">
+      <div class="splash-logo">🏭</div>
+      <h1 class="fade-in">Sabores del Eje<br>Cafetero</h1>
+      <p class="subtitle fade-in delay-1">Simulador Gerencial — Parcial de Programación Lineal</p>
+      <p class="tagline fade-in delay-2">
+        Una empresa. Recursos limitados. Decisiones que importan.<br>
+        <em>Pereira, Colombia — ${new Date().toLocaleDateString('es-CO', {year:'numeric',month:'long',day:'numeric'})}</em>
+      </p>
+      <div class="card fade-in delay-3" style="max-width:420px;width:100%">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input class="input" id="regName" placeholder="Tu nombre..." autofocus>
+        </div>
+        <div class="form-group">
+          <label>Código estudiantil</label>
+          <input class="input" id="regCode" placeholder="Ej: 1088345678">
+        </div>
+        <button class="btn btn-primary btn-lg" style="width:100%;margin-top:.5rem" onclick="startExam()">
+          Comenzar Misión &#128640;
+        </button>
+      </div>
+      <p class="exam-footer fade-in delay-4">Administración de Operaciones 2 — Universidad Tecnológica de Pereira</p>
+    </div>
+  `);
+  setTimeout(() => {
+    const nameInput = $('regName');
+    if (nameInput) nameInput.focus();
+  }, 100);
+}
+
+function showBriefing() {
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Briefing</div>
+      <h2>Tu Misión</h2>
+      <p>Antes de entrar a la planta, lee las reglas</p>
+    </div>
+
+    ${dialogueBox('hernando', `¡Hola, <strong>${state.nombre.split(' ')[0]}</strong>! Bienvenido/a a <em>Sabores del Eje Cafetero</em>. Somos una empresa familiar que empezó con un puesto de pandebonos en la Plaza de Bolívar y hoy abastecemos todo el Eje Cafetero.`)}
+
+    ${dialogueBox('hernando', `Necesito que optimices nuestra producción. Vas a enfrentar <strong>3 desafíos</strong> que pondrán a prueba tu capacidad de análisis. Cada decisión que tomes cambiará el rumbo de la empresa.`)}
+
+    <div class="card slide-up delay-1">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(59,130,246,.15)">📋</div>
+        <h3>Reglas del Simulador</h3>
+      </div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:.7rem;padding-left:.5rem">
+        <li style="display:flex;gap:.6rem;align-items:flex-start">
+          <span style="color:var(--amber)">&#9202;</span>
+          <span>Tienes <strong>1 hora y 25 minutos</strong>. El reloj corre arriba.</span>
+        </li>
+        <li style="display:flex;gap:.6rem;align-items:flex-start">
+          <span style="color:var(--green)">📊</span>
+          <span>Puedes usar <strong>Excel y Solver</strong> para resolver modelos.</span>
+        </li>
+        <li style="display:flex;gap:.6rem;align-items:flex-start">
+          <span style="color:var(--blue)">🤖</span>
+          <span>Puedes usar <strong>IA como apoyo</strong>, pero los datos son únicos para ti. Sin entender PL, no llegarás lejos.</span>
+        </li>
+        <li style="display:flex;gap:.6rem;align-items:flex-start">
+          <span style="color:var(--purple)">🔀</span>
+          <span>Tus decisiones en el <strong>Capítulo 1</strong> determinan qué problema enfrentas en el <strong>Capítulo 2</strong>.</span>
+        </li>
+        <li style="display:flex;gap:.6rem;align-items:flex-start">
+          <span style="color:var(--red)">📨</span>
+          <span>Los resultados se envían <strong>automáticamente</strong>. No hay vuelta atrás.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card slide-up delay-2" style="text-align:center;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.02))">
+      <p style="font-size:1.1rem;margin-bottom:.5rem">Tu código de estudiante genera <strong>datos únicos</strong> para ti.</p>
+      <p style="color:var(--text3);font-size:.9rem;margin-bottom:1rem">Semilla: <code style="color:var(--amber)">${state.seed}</code> — Tus números son distintos a los de tus compañeros.</p>
+      <p style="font-size:1.3rem;font-weight:700;color:var(--amber)">¿Listo para optimizar?</p>
+    </div>
+
+    <div style="text-align:center;margin:1.5rem 0">
+      <button class="btn btn-primary btn-lg" onclick="beginAct1()">
+        Entrar a la Planta &#127981;
+      </button>
+    </div>
+  `);
+}
+
+function showAct1() {
+  state.progress = 1;
+  const p = state.act1;
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Capítulo 1</div>
+      <h2>El Primer Encargo</h2>
+      <p>Optimiza la producción semanal de Sabores del Eje</p>
+    </div>
+
+    ${dialogueBox('marcela', `Hola, soy Marcela, la jefa de planta. Te voy a dar los datos de nuestra operación en <em>Dosquebradas</em>. Producimos tres líneas principales por lotes de 100 unidades.`)}
+
+    <div class="card slide-up delay-1">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(245,158,11,.15)">📊</div>
+        <h3>Datos de Producción Semanal</h3>
+      </div>
+      <p style="color:var(--text2);margin-bottom:.8rem">Consumo de recursos por <strong>lote</strong> (100 unidades) de cada producto:</p>
+      ${dataTableHTML(p.A, p.b, p.c, p.products, p.resources)}
+      <p style="color:var(--text2);font-size:.9rem;margin-top:.5rem">
+        &#128161; <strong>Objetivo:</strong> Maximizar la ganancia total semanal.
+      </p>
+    </div>
+
+    ${dialogueBox('hernando', `Necesito que formules esto como un <strong>modelo de Programación Lineal</strong> y lo resuelvas. ¡La empresa depende de tus cálculos!`)}
+
+    <!-- Q1: Variables de Decisión -->
+    <div class="question slide-up delay-2">
+      <div class="q-header">
+        <span class="q-num">1</span>
+        <span class="q-text">¿Cuáles son las variables de decisión del modelo?</span>
+        <span class="q-pts">10 pts</span>
+      </div>
+      <div class="options" id="q1options">
+        <label class="option" onclick="selectOption(this,'q1','wrong1')">
+          <input type="radio" name="q1"><span class="radio"></span>
+          <span>x₁ = ganancia por pandebonos, x₂ = ganancia por buñuelos, x₃ = ganancia por empanadas</span>
+        </label>
+        <label class="option" onclick="selectOption(this,'q1','correct')">
+          <input type="radio" name="q1"><span class="radio"></span>
+          <span>x₁ = lotes de pandebonos, x₂ = lotes de buñuelos, x₃ = lotes de empanadas a producir por semana</span>
+        </label>
+        <label class="option" onclick="selectOption(this,'q1','wrong2')">
+          <input type="radio" name="q1"><span class="radio"></span>
+          <span>x₁ = kg de harina, x₂ = kg de queso, x₃ = horas de mano de obra a utilizar</span>
+        </label>
+        <label class="option" onclick="selectOption(this,'q1','wrong3')">
+          <input type="radio" name="q1"><span class="radio"></span>
+          <span>x₁ = precio de pandebonos, x₂ = precio de buñuelos, x₃ = precio de empanadas</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Q2: Función Objetivo -->
+    <div class="question slide-up delay-3">
+      <div class="q-header">
+        <span class="q-num">2</span>
+        <span class="q-text">Formula la función objetivo. Completa los coeficientes:</span>
+        <span class="q-pts">15 pts</span>
+      </div>
+      <div class="lp-row" style="font-size:1.1rem">
+        <select class="input" id="q2dir" style="width:80px">
+          <option value="">?</option>
+          <option value="max">Max</option>
+          <option value="min">Min</option>
+        </select>
+        <span style="font-weight:700;color:var(--text)">Z =</span>
+        <input type="number" class="input input-sm" id="q2c0" step="any" placeholder="?">
+        <span class="var-name">x<sub>1</sub></span>
+        <span class="operator">+</span>
+        <input type="number" class="input input-sm" id="q2c1" step="any" placeholder="?">
+        <span class="var-name">x<sub>2</sub></span>
+        <span class="operator">+</span>
+        <input type="number" class="input input-sm" id="q2c2" step="any" placeholder="?">
+        <span class="var-name">x<sub>3</sub></span>
+      </div>
+      <p style="color:var(--text3);font-size:.85rem;margin-top:.3rem">&#128161; Recuerda: los coeficientes están en la tabla como "ganancia por lote (miles $)". Ingresa solo el número (ej: 120 para $120.000)</p>
+    </div>
+
+    <!-- Q3: Restricciones -->
+    <div class="question slide-up delay-4">
+      <div class="q-header">
+        <span class="q-num">3</span>
+        <span class="q-text">Escribe las restricciones del modelo. Completa los coeficientes y el lado derecho:</span>
+        <span class="q-pts">25 pts</span>
+      </div>
+      ${RESOURCES_SHORT.map((r, i) => `
+        <div class="lp-row">
+          <span class="lp-label">${r}:</span>
+          <input type="number" class="input input-sm" id="q3a${i}0" step="any" placeholder="?">
+          <span class="var-name">x<sub>1</sub></span>
+          <span class="operator">+</span>
+          <input type="number" class="input input-sm" id="q3a${i}1" step="any" placeholder="?">
+          <span class="var-name">x<sub>2</sub></span>
+          <span class="operator">+</span>
+          <input type="number" class="input input-sm" id="q3a${i}2" step="any" placeholder="?">
+          <span class="var-name">x<sub>3</sub></span>
+          <span class="operator">&le;</span>
+          <input type="number" class="input input-sm" id="q3b${i}" step="any" placeholder="?" style="width:100px">
+        </div>
+      `).join('')}
+      <p style="color:var(--text3);font-size:.85rem;margin-top:.5rem">Además: x₁, x₂, x₃ ≥ 0 (no negatividad)</p>
+    </div>
+
+    <!-- Q4: Solución -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">4</span>
+        <span class="q-text">Resuelve el modelo con Simplex (usa Excel Solver). ¿Cuál es la solución óptima?</span>
+        <span class="q-pts">20 pts</span>
+      </div>
+      <p style="color:var(--text2);font-size:.9rem;margin-bottom:.8rem">
+        &#128187; Abre Excel, introduce el modelo y usa Solver. Ingresa los valores óptimos:
+      </p>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        <div class="form-group" style="flex:1;min-width:120px">
+          <label>x₁* (${PRODUCTS[0]})</label>
+          <input type="number" class="input" id="q4x0" step="any" placeholder="Lotes">
+        </div>
+        <div class="form-group" style="flex:1;min-width:120px">
+          <label>x₂* (${PRODUCTS[1]})</label>
+          <input type="number" class="input" id="q4x1" step="any" placeholder="Lotes">
+        </div>
+        <div class="form-group" style="flex:1;min-width:120px">
+          <label>x₃* (${PRODUCTS[2]})</label>
+          <input type="number" class="input" id="q4x2" step="any" placeholder="Lotes">
+        </div>
+      </div>
+    </div>
+
+    <!-- Q5: Valor Z* -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">5</span>
+        <span class="q-text">¿Cuál es el valor óptimo de Z? (ganancia máxima semanal en miles de $)</span>
+        <span class="q-pts">10 pts</span>
+      </div>
+      <div class="form-group">
+        <label>Z* (miles de pesos)</label>
+        <input type="number" class="input" id="q5z" step="any" placeholder="Ej: 15400" style="max-width:300px">
+      </div>
+    </div>
+
+    <!-- Q6: Interpretación -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">6</span>
+        <span class="q-text">Análisis e interpretación de los resultados</span>
+        <span class="q-pts">20 pts</span>
+      </div>
+      <div class="form-group">
+        <label>¿Cuál recurso se agota completamente? (restricción activa / binding)</label>
+        <select class="input" id="q6binding" style="max-width:400px">
+          <option value="">— Selecciona —</option>
+          ${RESOURCES_SHORT.map((r, i) => `<option value="${i}">${r}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>¿Cuál recurso tiene más holgura? (sobra más)</label>
+        <select class="input" id="q6slack" style="max-width:400px">
+          <option value="">— Selecciona —</option>
+          ${RESOURCES_SHORT.map((r, i) => `<option value="${i}">${r}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>¿Qué le recomendarías a Don Hernando basándote en los resultados? (mín. 20 caracteres)</label>
+        <textarea class="input" id="q6rec" placeholder="Escribe tu recomendación gerencial..."></textarea>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin:2rem 0">
+      <button class="btn btn-primary btn-lg" onclick="submitAct1()">
+        Enviar Capítulo 1 &#128640;
+      </button>
+    </div>
+  `);
+}
+
+function showAct1Result() {
+  state.progress = 2;
+  const score = state.act1Score;
+  const pct = score;
+  let path, narrative;
+
+  if (pct >= 70) {
+    state.path = 'A';
+    path = 'Expansión';
+    narrative = `
+      ${dialogueBox('hernando', `<strong>¡Impresionante!</strong> Marcela, ¿viste esos números? Esto es exactamente lo que necesitábamos. Con resultados así, es hora de dar el siguiente paso.`)}
+      ${dialogueBox('marcela', `Don Hernando, con esta optimización podemos pensar en <em>expandir la línea de producción</em>. He estado mirando los números para agregar chorizos santarrosanos a nuestra oferta...`)}
+      ${dialogueBox('hernando', `¡Hagámoslo! Agreguemos un cuarto producto. Pero necesito que nuestro analista reformule todo el modelo. ¿Puedes con el reto?`)}
+      <div class="card" style="border-color:var(--green);text-align:center">
+        <span class="badge good">Ruta Desbloqueada</span>
+        <h3 style="margin-top:.5rem;color:var(--green)">&#128640; La Expansión</h3>
+        <p style="color:var(--text2)">Un nuevo producto, más variables, más complejidad. ¡Demuestra que puedes escalar!</p>
+      </div>
+    `;
+  } else if (pct >= 40) {
+    state.path = 'B';
+    path = 'Crisis del Proveedor';
+    narrative = `
+      ${dialogueBox('hernando', `Hmm... no está perfecto, pero se puede trabajar con esto.`)}
+      <div class="narrative"><em>*Suena el teléfono de Don Hernando*</em></div>
+      ${dialogueBox('hernando', `¿Aló? ... ¿QUÉ? ¿Cómo que Don Alfonso solo puede entregar la <strong>mitad del queso</strong> esta semana? ¡Pero si el queso campesino del Quindío es nuestro ingrediente estrella!`)}
+      ${dialogueBox('marcela', `Houston, tenemos un problema. Si el queso se reduce a la mitad, toda la producción se desbarajusta. Toca recalcular TODO.`)}
+      <div class="card" style="border-color:var(--amber);text-align:center">
+        <span class="badge mid">Ruta Desbloqueada</span>
+        <h3 style="margin-top:.5rem;color:var(--amber)">&#9888;&#65039; Crisis del Proveedor</h3>
+        <p style="color:var(--text2)">El queso se redujo a la mitad. ¿Cómo cambia la solución óptima? Reformula y resuelve.</p>
+      </div>
+    `;
+  } else {
+    state.path = 'C';
+    path = 'Reducción de Costos';
+    narrative = `
+      ${dialogueBox('hernando', `Bueno... la verdad esperaba más. Pero no te preocupes, todos aprendemos.`)}
+      <div class="narrative"><em>*Llega un correo urgente de los inversionistas*</em></div>
+      ${dialogueBox('camilo', `Don Hernando, malas noticias. Los inversionistas quieren que <strong>reduzcamos costos de producción</strong> al máximo. Hay que cumplir la demanda mínima pero gastando lo menos posible.`)}
+      ${dialogueBox('hernando', `Toca cambiar de enfoque. Ya no es maximizar ganancia, es <strong>minimizar costos</strong>. ¿Puedes replantear el problema?`)}
+      <div class="card" style="border-color:var(--red);text-align:center">
+        <span class="badge bad">Ruta Desbloqueada</span>
+        <h3 style="margin-top:.5rem;color:var(--red)">&#128181; Reducción de Costos</h3>
+        <p style="color:var(--text2)">Cambia el enfoque: minimizar costos cumpliendo demanda mínima. Un tipo distinto de PL.</p>
+      </div>
+    `;
+  }
+
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Resultados — Capítulo 1</div>
+      <h2>Tu Desempeño</h2>
+    </div>
+
+    <div class="score-card slide-up delay-1">
+      <div class="score-big" style="color:${pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)'}">${pct}/100</div>
+      <div class="score-label">Puntos en el Capítulo 1</div>
+      <div class="grade-bar" style="margin-top:1rem">
+        <div class="grade-bar-fill ${pct >= 70 ? 'high' : pct >= 40 ? 'mid' : 'low'}" style="width:${pct}%"></div>
+      </div>
+    </div>
+
+    ${narrative}
+
+    <div style="text-align:center;margin:2rem 0">
+      <button class="btn btn-primary btn-lg" onclick="beginAct2()">
+        Continuar al Capítulo 2 &#10132;
+      </button>
+    </div>
+  `);
+  // Trigger grade bar animation
+  setTimeout(() => {
+    const bar = document.querySelector('.grade-bar-fill');
+    if (bar) bar.style.width = pct + '%';
+  }, 100);
+}
+
+function showAct2() {
+  state.progress = 3;
+  const path = state.path;
+
+  if (path === 'A') renderAct2A();
+  else if (path === 'B') renderAct2B();
+  else renderAct2C();
+}
+
+function renderAct2A() {
+  const p = state.act2;
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Capítulo 2 — La Expansión</div>
+      <h2>Nuevos Horizontes</h2>
+      <p>La empresa crece: un nuevo producto entra a la línea</p>
+    </div>
+
+    ${dialogueBox('marcela', `Con el éxito de la optimización anterior, Don Hernando decidió agregar <strong>chorizos santarrosanos</strong> a la producción. Aquí están los nuevos datos con 4 productos.`)}
+
+    <div class="card slide-up delay-1">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(16,185,129,.15)">📊</div>
+        <h3>Datos de Producción Expandida</h3>
+      </div>
+      ${dataTableHTML(p.A, p.b, p.c, p.products, p.resources, p.emojis)}
+    </div>
+
+    ${dialogueBox('hernando', `Ahora el modelo tiene <strong>4 variables</strong>. Más complejidad, más ganancia potencial. ¡Demuéstrame que puedes!`)}
+
+    <!-- Q1: FO con 4 variables -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">1</span>
+        <span class="q-text">Formula la función objetivo para el modelo expandido:</span>
+        <span class="q-pts">20 pts</span>
+      </div>
+      <div class="lp-row" style="font-size:1.05rem">
+        <select class="input" id="q1dir" style="width:80px">
+          <option value="">?</option><option value="max">Max</option><option value="min">Min</option>
+        </select>
+        <span style="font-weight:700">Z =</span>
+        ${[0,1,2,3].map(i => `
+          ${i > 0 ? '<span class="operator">+</span>' : ''}
+          <input type="number" class="input input-sm" id="q1c${i}" step="any" placeholder="?">
+          <span class="var-name">x<sub>${i+1}</sub></span>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Q2: Restricciones 4x4 -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">2</span>
+        <span class="q-text">Escribe las restricciones (ahora con 4 variables):</span>
+        <span class="q-pts">25 pts</span>
+      </div>
+      ${RESOURCES_SHORT.map((r, i) => `
+        <div class="lp-row">
+          <span class="lp-label">${r}:</span>
+          ${[0,1,2,3].map(j => `
+            ${j > 0 ? '<span class="operator">+</span>' : ''}
+            <input type="number" class="input input-sm" id="q2a${i}${j}" step="any" placeholder="?">
+            <span class="var-name">x<sub>${j+1}</sub></span>
+          `).join('')}
+          <span class="operator">&le;</span>
+          <input type="number" class="input input-sm" id="q2b${i}" step="any" placeholder="?" style="width:100px">
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Q3: Solución -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">3</span>
+        <span class="q-text">Resuelve con Solver. Solución óptima:</span>
+        <span class="q-pts">25 pts</span>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        ${p.products.map((prod, i) => `
+          <div class="form-group" style="flex:1;min-width:100px">
+            <label>x${i+1}* (${prod})</label>
+            <input type="number" class="input" id="q3x${i}" step="any" placeholder="Lotes">
+          </div>
+        `).join('')}
+        <div class="form-group" style="flex:1;min-width:100px">
+          <label>Z* (miles $)</label>
+          <input type="number" class="input" id="q3z" step="any" placeholder="Ganancia">
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4: Interpretación -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">4</span>
+        <span class="q-text">¿Valió la pena agregar el chorizo? ¿Qué le recomiendas a Don Hernando sobre la expansión?</span>
+        <span class="q-pts">30 pts</span>
+      </div>
+      <textarea class="input" id="q4text" placeholder="Analiza si la expansión es conveniente. Compara con el escenario anterior. ¿Qué recursos se vuelven más críticos? (mín. 30 caracteres)"></textarea>
+    </div>
+
+    <div style="text-align:center;margin:2rem 0">
+      <button class="btn btn-primary btn-lg" onclick="submitAct2()">Enviar Capítulo 2 &#128640;</button>
+    </div>
+  `);
+}
+
+function renderAct2B() {
+  const p = state.act2;
+  const act1 = state.act1;
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Capítulo 2 — Crisis del Proveedor</div>
+      <h2>Queso a la Mitad</h2>
+      <p>El proveedor de queso solo puede entregar el 50%</p>
+    </div>
+
+    ${dialogueBox('marcela', `Don Alfonso de <em>Lácteos Santa Rosa</em> llamó: por un problema logístico, solo puede entregar <strong>${p.b[1]} kg</strong> de queso esta semana, en vez de los ${p.originalB1} kg habituales.`)}
+
+    <div class="card slide-up delay-1">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(245,158,11,.15)">&#9888;&#65039;</div>
+        <h3>Datos Modificados</h3>
+      </div>
+      <p style="color:var(--text2);margin-bottom:.5rem">Los datos son los mismos del Capítulo 1, <strong>excepto el queso</strong>:</p>
+      ${dataTableHTML(p.A, p.b, p.c, p.products, p.resources)}
+    </div>
+
+    <!-- Q1: Identificar cambio -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">1</span>
+        <span class="q-text">¿Cuál restricción del modelo cambió?</span>
+        <span class="q-pts">15 pts</span>
+      </div>
+      <select class="input" id="q1change" style="max-width:400px">
+        <option value="">— Selecciona —</option>
+        ${RESOURCES_SHORT.map((r, i) => `<option value="${i}">${r}</option>`).join('')}
+      </select>
+    </div>
+
+    <!-- Q2: Nueva solución -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">2</span>
+        <span class="q-text">Resuelve el modelo con la restricción modificada. Nueva solución óptima:</span>
+        <span class="q-pts">30 pts</span>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        ${PRODUCTS.map((prod, i) => `
+          <div class="form-group" style="flex:1;min-width:100px">
+            <label>x${i+1}* (${prod})</label>
+            <input type="number" class="input" id="q2x${i}" step="any" placeholder="Lotes">
+          </div>
+        `).join('')}
+        <div class="form-group" style="flex:1;min-width:100px">
+          <label>Z* (miles $)</label>
+          <input type="number" class="input" id="q2z" step="any" placeholder="Ganancia">
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3: Comparación -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">3</span>
+        <span class="q-text">Compara la solución actual con la del Capítulo 1. ¿Cuánto se pierde? ¿Qué productos se ven más afectados?</span>
+        <span class="q-pts">25 pts</span>
+      </div>
+      <textarea class="input" id="q3comp" placeholder="Analiza el impacto del cambio en el queso sobre la producción y ganancia. (mín. 20 caracteres)"></textarea>
+    </div>
+
+    <!-- Q4: Recomendación -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">4</span>
+        <span class="q-text">¿Qué estrategia le recomiendas a Don Hernando para manejar esta crisis?</span>
+        <span class="q-pts">30 pts</span>
+      </div>
+      <textarea class="input" id="q4rec" placeholder="Propón alternativas: ¿buscar otro proveedor? ¿Cambiar recetas? ¿Negociar plazos? (mín. 25 caracteres)"></textarea>
+    </div>
+
+    <div style="text-align:center;margin:2rem 0">
+      <button class="btn btn-primary btn-lg" onclick="submitAct2()">Enviar Capítulo 2 &#128640;</button>
+    </div>
+  `);
+}
+
+function renderAct2C() {
+  const p = state.act2;
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Capítulo 2 — Reducción de Costos</div>
+      <h2>Minimizar para Sobrevivir</h2>
+      <p>Los inversionistas exigen eficiencia: producir lo necesario al menor costo</p>
+    </div>
+
+    ${dialogueBox('camilo', `Los inversionistas quieren que cumplamos con la <strong>demanda mínima semanal</strong> de cada producto, pero gastando lo <strong>menos posible</strong>. Cambió el juego: ahora es minimización.`)}
+
+    <div class="card slide-up delay-1">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(244,63,94,.15)">&#128181;</div>
+        <h3>Datos de Costos y Demanda</h3>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Producto</th><th>Costo por lote (miles $)</th><th>Demanda mínima (lotes)</th></tr>
+        </thead>
+        <tbody>
+          ${p.products.map((prod, i) => `
+            <tr>
+              <td class="row-label">${PRODUCTS_EMOJI[i]} ${prod}</td>
+              <td>${fmtK(p.costs[i])}</td>
+              <td><strong>${p.demand[i]}</strong></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <table class="data-table" style="margin-top:1rem">
+        <thead>
+          <tr><th>Recurso</th>${p.products.map((pr,i) => `<th>${PRODUCTS_EMOJI[i]} ${pr}</th>`).join('')}<th>Disponible</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="row-label">Harina (kg/lote)</td>${p.harinaPerUnit.map(v => `<td>${v}</td>`).join('')}<td><strong>${p.maxHarina}</strong></td></tr>
+          <tr><td class="row-label">Mano de obra (h/lote)</td>${p.moPerUnit.map(v => `<td>${v}</td>`).join('')}<td><strong>${p.maxMO}</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Q1: Tipo de objetivo -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">1</span>
+        <span class="q-text">¿Qué tipo de función objetivo necesitas en este caso?</span>
+        <span class="q-pts">10 pts</span>
+      </div>
+      <div class="options" id="q1opts">
+        <label class="option" onclick="selectOption(this,'q1type','max')">
+          <input type="radio" name="q1t"><span class="radio"></span>
+          <span>Maximizar</span>
+        </label>
+        <label class="option" onclick="selectOption(this,'q1type','min')">
+          <input type="radio" name="q1t"><span class="radio"></span>
+          <span>Minimizar</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Q2: FO -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">2</span>
+        <span class="q-text">Escribe los coeficientes de la función objetivo (costos):</span>
+        <span class="q-pts">15 pts</span>
+      </div>
+      <div class="lp-row">
+        <span style="font-weight:700">Min Z =</span>
+        ${[0,1,2].map(i => `
+          ${i > 0 ? '<span class="operator">+</span>' : ''}
+          <input type="number" class="input input-sm" id="q2c${i}" step="any" placeholder="?">
+          <span class="var-name">x<sub>${i+1}</sub></span>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Q3: Restricciones de demanda -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">3</span>
+        <span class="q-text">Escribe las restricciones de demanda mínima:</span>
+        <span class="q-pts">20 pts</span>
+      </div>
+      ${p.products.map((prod, i) => `
+        <div class="lp-row">
+          <span class="lp-label">${prod}:</span>
+          <span class="var-name">x<sub>${i+1}</sub></span>
+          <select class="input" id="q3sign${i}" style="width:60px">
+            <option value="">?</option>
+            <option value="lte">≤</option>
+            <option value="gte">≥</option>
+            <option value="eq">=</option>
+          </select>
+          <input type="number" class="input input-sm" id="q3d${i}" step="any" placeholder="?">
+        </div>
+      `).join('')}
+      <p style="color:var(--text3);font-size:.85rem;margin-top:.3rem">Además: restricciones de harina y mano de obra (como en la tabla)</p>
+    </div>
+
+    <!-- Q4: Solución -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">4</span>
+        <span class="q-text">Resuelve el modelo de minimización. Solución óptima:</span>
+        <span class="q-pts">25 pts</span>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        ${p.products.map((prod, i) => `
+          <div class="form-group" style="flex:1;min-width:100px">
+            <label>x${i+1}* (${prod})</label>
+            <input type="number" class="input" id="q4x${i}" step="any" placeholder="Lotes">
+          </div>
+        `).join('')}
+        <div class="form-group" style="flex:1;min-width:100px">
+          <label>Z* (costo mínimo, miles $)</label>
+          <input type="number" class="input" id="q4z" step="any" placeholder="Costo">
+        </div>
+      </div>
+    </div>
+
+    <!-- Q5: Interpretación -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">5</span>
+        <span class="q-text">¿Qué aprendizaje gerencial deja este ejercicio? ¿Cuándo conviene minimizar vs maximizar?</span>
+        <span class="q-pts">30 pts</span>
+      </div>
+      <textarea class="input" id="q5text" placeholder="Reflexiona sobre cuándo una empresa debe enfocarse en minimizar costos vs maximizar ganancias. (mín. 25 caracteres)"></textarea>
+    </div>
+
+    <div style="text-align:center;margin:2rem 0">
+      <button class="btn btn-primary btn-lg" onclick="submitAct2()">Enviar Capítulo 2 &#128640;</button>
+    </div>
+  `);
+}
+
+function showAct2Result() {
+  state.progress = 4;
+  const score = state.act2Score;
+  const pathNames = { A: 'Expansión', B: 'Crisis del Proveedor', C: 'Reducción de Costos' };
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Resultados — Capítulo 2</div>
+      <h2>${pathNames[state.path]}</h2>
+    </div>
+
+    <div class="score-card slide-up delay-1">
+      <div class="score-big" style="color:${score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--amber)' : 'var(--red)'}">${score}/100</div>
+      <div class="score-label">Puntos en el Capítulo 2</div>
+      <div class="grade-bar" style="margin-top:1rem">
+        <div class="grade-bar-fill ${score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low'}" style="width:${score}%"></div>
+      </div>
+    </div>
+
+    ${dialogueBox('hernando', score >= 60
+      ? `¡Bien hecho! Has demostrado que puedes adaptarte a los cambios. Pero queda un <strong>último desafío</strong>...`
+      : `No estuvo fácil, ¿verdad? Pero así es el mundo real de las operaciones. Aún queda una oportunidad de sumar puntos en el <strong>desafío final</strong>.`
+    )}
+
+    ${dialogueBox('marcela', `Don Hernando acaba de recibir una propuesta de un nuevo cliente en <em>Manizales</em>. Necesitamos analizar rápido si nos conviene. ¡Es tu prueba de fuego!`)}
+
+    <div style="text-align:center;margin:2rem 0">
+      <button class="btn btn-primary btn-lg" onclick="beginAct3()">
+        Desafío Final &#9889;
+      </button>
+    </div>
+  `);
+}
+
+function showAct3() {
+  state.progress = 5;
+  const p = state.act3;
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Capítulo 3 — Desafío Final</div>
+      <h2>El Cliente de Manizales</h2>
+      <p>Ronda relámpago: formula, resuelve y decide</p>
+    </div>
+
+    ${dialogueBox('hernando', `Un restaurante grande en Manizales quiere que les proveamos <strong>arepas</strong> y <strong>empanadas</strong> semanalmente. Necesito que analices si nos conviene y cuánto producir. ¡Rapidito!`)}
+
+    <div class="card slide-up delay-1">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(139,92,246,.15)">&#9889;</div>
+        <h3>Datos del Nuevo Pedido</h3>
+      </div>
+      <p style="color:var(--text2);margin-bottom:.5rem">Producción por lotes de 100 unidades para el cliente de Manizales:</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>Recurso</th>${p.products.map((pr,i) => `<th>${['🫓','🥟'][i] || ''} ${pr}</th>`).join('')}<th>Disponible</th></tr>
+        </thead>
+        <tbody>
+          ${p.resources.map((r, i) => `
+            <tr>
+              <td class="row-label">${r}</td>
+              ${p.A[i].map(v => `<td>${v}</td>`).join('')}
+              <td><strong>${p.b[i]}</strong></td>
+            </tr>
+          `).join('')}
+          <tr style="background:rgba(245,158,11,.08)">
+            <td class="row-label" style="color:var(--amber-l)">Ganancia por lote (miles $)</td>
+            ${p.c.map(v => `<td style="font-weight:700;color:var(--amber-l)">${fmtK(v)}</td>`).join('')}
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Q1: FO -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">1</span>
+        <span class="q-text">Función objetivo (2 variables):</span>
+        <span class="q-pts">20 pts</span>
+      </div>
+      <div class="lp-row">
+        <select class="input" id="q1dir" style="width:80px">
+          <option value="">?</option><option value="max">Max</option><option value="min">Min</option>
+        </select>
+        <span style="font-weight:700">Z =</span>
+        <input type="number" class="input input-sm" id="q1c0" step="any" placeholder="?">
+        <span class="var-name">x<sub>1</sub></span>
+        <span class="operator">+</span>
+        <input type="number" class="input input-sm" id="q1c1" step="any" placeholder="?">
+        <span class="var-name">x<sub>2</sub></span>
+      </div>
+    </div>
+
+    <!-- Q2: Restricciones -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">2</span>
+        <span class="q-text">Restricciones:</span>
+        <span class="q-pts">25 pts</span>
+      </div>
+      ${p.resources.map((r, i) => `
+        <div class="lp-row">
+          <span class="lp-label">${r.split('(')[0].trim()}:</span>
+          <input type="number" class="input input-sm" id="q2a${i}0" step="any" placeholder="?">
+          <span class="var-name">x<sub>1</sub></span>
+          <span class="operator">+</span>
+          <input type="number" class="input input-sm" id="q2a${i}1" step="any" placeholder="?">
+          <span class="var-name">x<sub>2</sub></span>
+          <span class="operator">&le;</span>
+          <input type="number" class="input input-sm" id="q2b${i}" step="any" placeholder="?" style="width:100px">
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Q3: Solución -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">3</span>
+        <span class="q-text">Solución óptima:</span>
+        <span class="q-pts">25 pts</span>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        ${p.products.map((prod, i) => `
+          <div class="form-group" style="flex:1;min-width:120px">
+            <label>x${i+1}* (${prod})</label>
+            <input type="number" class="input" id="q3x${i}" step="any" placeholder="Lotes">
+          </div>
+        `).join('')}
+        <div class="form-group" style="flex:1;min-width:120px">
+          <label>Z* (miles $)</label>
+          <input type="number" class="input" id="q3z" step="any" placeholder="Ganancia">
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4: Decisión -->
+    <div class="question">
+      <div class="q-header">
+        <span class="q-num">4</span>
+        <span class="q-text">Decisión gerencial: ¿Debería Sabores del Eje aceptar el contrato con el restaurante de Manizales? Justifica con los resultados del modelo.</span>
+        <span class="q-pts">30 pts</span>
+      </div>
+      <textarea class="input" id="q4text" placeholder="Usa los resultados de tu modelo para justificar tu recomendación. Menciona la ganancia esperada, los recursos necesarios y los riesgos. (mín. 30 caracteres)" style="min-height:120px"></textarea>
+    </div>
+
+    <div style="text-align:center;margin:2rem 0">
+      <button class="btn btn-danger btn-lg" onclick="submitAct3()">
+        Finalizar Examen &#128203;
+      </button>
+    </div>
+  `);
+}
+
+function showResults() {
+  state.progress = 6;
+  if (state.interval) clearInterval(state.interval);
+
+  const grade = calcFinalGrade();
+  const timeUsed = Math.round((TOTAL_TIME - state.remaining) / 60);
+  const pathNames = { A: 'Expansión &#128640;', B: 'Crisis del Proveedor &#9888;&#65039;', C: 'Reducción de Costos &#128181;' };
+
+  let emoji, message, gradeClass;
+  if (grade >= 4.5) { emoji = '&#127942;'; message = '¡EXCEPCIONAL! Eres un crack de las operaciones.'; gradeClass = 'high'; }
+  else if (grade >= 4.0) { emoji = '&#11088;'; message = '¡Excelente trabajo! Dominas la programación lineal.'; gradeClass = 'high'; }
+  else if (grade >= 3.5) { emoji = '&#128170;'; message = 'Muy bien. Sólido conocimiento de PL.'; gradeClass = 'high'; }
+  else if (grade >= 3.0) { emoji = '&#128077;'; message = 'Aprobado. Hay margen de mejora, pero vas bien.'; gradeClass = 'mid'; }
+  else if (grade >= 2.0) { emoji = '&#128172;'; message = 'Necesitas reforzar los conceptos de PL.'; gradeClass = 'low'; }
+  else { emoji = '&#128218;'; message = 'A estudiar más. La PL es tu amiga, dale otra oportunidad.'; gradeClass = 'low'; }
+
+  render(`
+    <div class="scene-header slide-up">
+      <div class="chapter">Resultados Finales</div>
+      <h2>Tu Legado en Sabores del Eje</h2>
+    </div>
+
+    <div class="score-card slide-up delay-1" style="padding:2.5rem">
+      <div style="font-size:3rem;margin-bottom:.5rem">${emoji}</div>
+      <div class="score-big" style="font-size:5rem;color:${grade >= 3.0 ? 'var(--green)' : grade >= 2.0 ? 'var(--amber)' : 'var(--red)'}">${grade.toFixed(1)}</div>
+      <div class="score-label" style="font-size:1.2rem">de 5.0</div>
+      <p style="margin-top:1rem;color:var(--text2);font-size:1.1rem">${message}</p>
+    </div>
+
+    <div class="card slide-up delay-2">
+      <h3 style="margin-bottom:1rem">Desglose por Capítulo</h3>
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
+            <span>Cap. 1 — El Primer Encargo (40%)</span>
+            <strong>${state.act1Score}/100</strong>
+          </div>
+          <div class="grade-bar"><div class="grade-bar-fill ${state.act1Score >= 70 ? 'high' : state.act1Score >= 40 ? 'mid' : 'low'}" style="width:${state.act1Score}%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
+            <span>Cap. 2 — ${pathNames[state.path]} (35%)</span>
+            <strong>${state.act2Score}/100</strong>
+          </div>
+          <div class="grade-bar"><div class="grade-bar-fill ${state.act2Score >= 70 ? 'high' : state.act2Score >= 40 ? 'mid' : 'low'}" style="width:${state.act2Score}%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
+            <span>Cap. 3 — Desafío Final (25%)</span>
+            <strong>${state.act3Score}/100</strong>
+          </div>
+          <div class="grade-bar"><div class="grade-bar-fill ${state.act3Score >= 70 ? 'high' : state.act3Score >= 40 ? 'mid' : 'low'}" style="width:${state.act3Score}%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card slide-up delay-3">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
+        <div><span style="color:var(--text3)">Estudiante:</span> <strong>${state.nombre}</strong></div>
+        <div><span style="color:var(--text3)">Código:</span> <strong>${state.codigo}</strong></div>
+        <div><span style="color:var(--text3)">Tiempo:</span> <strong>${timeUsed} min</strong></div>
+        <div><span style="color:var(--text3)">Ruta:</span> <strong>${state.path === 'A' ? 'Expansión' : state.path === 'B' ? 'Crisis Proveedor' : 'Red. Costos'}</strong></div>
+      </div>
+    </div>
+
+    ${dialogueBox('hernando', grade >= 3.0
+      ? `Ha sido un placer tenerte en el equipo, <strong>${state.nombre.split(' ')[0]}</strong>. Sabores del Eje tiene futuro gracias a personas como tú. ¡Éxitos!`
+      : `<strong>${state.nombre.split(' ')[0]}</strong>, la programación lineal es una herramienta poderosa. Te invito a practicar más — la próxima vez lo vas a dominar. ¡Ánimo!`
+    )}
+
+    <div id="submitSection" style="text-align:center;margin:2rem 0">
+      ${SHEETS_URL
+        ? `<button class="btn btn-success btn-lg" id="submitBtn" onclick="finalSubmit()">
+            Enviar Resultados al Profesor &#128232;
+          </button>
+          <p style="color:var(--text3);font-size:.85rem;margin-top:.5rem">Haz clic para enviar tu nota a la hoja de cálculo del curso.</p>`
+        : `<div class="card" style="border-color:var(--amber)">
+            <p style="color:var(--amber)">&#9888;&#65039; No hay URL de Google Sheets configurada. Toma un pantallazo de esta pantalla como evidencia.</p>
+          </div>`
+      }
+    </div>
+
+    <div class="exam-footer">
+      Administración de Operaciones 2 — UTP — ${new Date().toLocaleDateString('es-CO')}<br>
+      <span style="font-size:.75rem">Simulador Gerencial v1.0</span>
+    </div>
+  `);
+
+  // Confetti for high grades
+  if (grade >= 4.0) launchConfetti();
+}
+
+function launchConfetti() {
+  const colors = ['#f59e0b','#10b981','#3b82f6','#8b5cf6','#f43f5e','#14b8a6'];
+  for (let i = 0; i < 50; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+    piece.style.animationDelay = Math.random() * 1.5 + 's';
+    piece.style.width = (6 + Math.random() * 8) + 'px';
+    piece.style.height = (6 + Math.random() * 8) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 5000);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   ACCIONES / EVENT HANDLERS
+   ═══════════════════════════════════════════════════ */
+function selectOption(el, key, value) {
+  const parent = el.closest('.options') || el.closest('.question');
+  parent.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  if (state.progress === 1) state.act1Answers[key] = value;
+  else if (state.progress === 3) state.act2Answers[key] = value;
+  else if (state.progress === 5) state.act3Answers[key] = value;
+}
+
+function collectInputs(prefix, answers) {
+  document.querySelectorAll(`[id^="${prefix}"], select[id^="${prefix}"], textarea[id^="${prefix}"]`).forEach(el => {
+    answers[el.id] = el.value;
+  });
+}
+
+function startExam() {
+  const name = ($('regName') || {}).value?.trim();
+  const code = ($('regCode') || {}).value?.trim();
+  if (!name || !code) {
+    toast('Completa tu nombre y código', 'warning');
+    return;
+  }
+  state.nombre = name;
+  state.codigo = code;
+  state.seed = seedFromString(code);
+  state.rng = mulberry32(state.seed);
+
+  // Generate all problems
+  state.act1 = generateAct1(state.rng);
+  state.act3 = generateAct3(state.rng);
+
+  showBriefing();
+}
+
+function beginAct1() {
+  startTimer();
+  showAct1();
+}
+
+function submitAct1() {
+  // Collect all answers from inputs
+  collectInputs('q', state.act1Answers);
+  const score = scoreAct1();
+  toast(`Capítulo 1 completado: ${score}/100`, score >= 70 ? 'success' : score >= 40 ? 'warning' : 'danger');
+
+  // Generate Act 2 based on path
+  const rng2 = mulberry32(state.seed + 1000);
+  if (state.act1Score >= 70) {
+    state.path = 'A';
+    state.act2 = generateAct2A(rng2);
+  } else if (state.act1Score >= 40) {
+    state.path = 'B';
+    state.act2 = generateAct2B(rng2, state.act1);
+  } else {
+    state.path = 'C';
+    state.act2 = generateAct2C(rng2);
+  }
+
+  setTimeout(() => showAct1Result(), 300);
+}
+
+function beginAct2() {
+  showAct2();
+}
+
+function submitAct2() {
+  collectInputs('q', state.act2Answers);
+  const score = scoreAct2();
+  toast(`Capítulo 2 completado: ${score}/100`, score >= 70 ? 'success' : score >= 40 ? 'warning' : 'danger');
+  setTimeout(() => showAct2Result(), 300);
+}
+
+function beginAct3() {
+  showAct3();
+}
+
+function submitAct3() {
+  collectInputs('q', state.act3Answers);
+  const score = scoreAct3();
+  toast(`Capítulo 3 completado: ${score}/100`, score >= 70 ? 'success' : score >= 40 ? 'warning' : 'danger');
+  setTimeout(() => showResults(), 300);
+}
+
+function finishExam() {
+  // Time's up: score whatever is available
+  if (state.progress <= 1) {
+    collectInputs('q', state.act1Answers);
+    scoreAct1();
+    const rng2 = mulberry32(state.seed + 1000);
+    if (state.act1Score >= 70) { state.path = 'A'; state.act2 = generateAct2A(rng2); }
+    else if (state.act1Score >= 40) { state.path = 'B'; state.act2 = generateAct2B(rng2, state.act1); }
+    else { state.path = 'C'; state.act2 = generateAct2C(rng2); }
+  }
+  if (state.progress <= 3) {
+    collectInputs('q', state.act2Answers);
+    scoreAct2();
+  }
+  if (state.progress <= 5) {
+    collectInputs('q', state.act3Answers);
+    scoreAct3();
+  }
+  showResults();
+}
+
+async function finalSubmit() {
+  if (state.submitted) return;
+  const btn = $('submitBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = 'Enviando... &#9203;'; }
+
+  const ok = await submitToSheets();
+  state.submitted = true;
+
+  if (ok || !SHEETS_URL) {
+    toast('&#9989; ¡Resultados enviados correctamente!', 'success', 8000);
+    if (btn) btn.innerHTML = '&#9989; Enviado';
+  } else {
+    toast('Error al enviar. Toma pantallazo como respaldo.', 'danger', 10000);
+    if (btn) { btn.innerHTML = 'Reintentar'; btn.disabled = false; state.submitted = false; }
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   MODO PROFESOR (teacher mode)
+   ═══════════════════════════════════════════════════ */
+function checkTeacherMode() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') === 'teacher') {
+    const pwd = prompt('Contraseña de profesor:');
+    if (pwd === TEACHER_KEY) {
+      showTeacherMode(params.get('code') || '');
+      return true;
+    }
+  }
+  return false;
+}
+
+function showTeacherMode(code) {
+  if (!code) {
+    render(`
+      <div class="splash" style="padding-top:2rem">
+        <h1 style="font-size:2rem;-webkit-text-fill-color:var(--text)">&#128218; Modo Profesor</h1>
+        <p style="color:var(--text2);margin:1rem 0">Ingresa el código de un estudiante para ver sus respuestas correctas:</p>
+        <div class="form-group" style="max-width:300px;width:100%">
+          <input class="input" id="teacherCode" placeholder="Código del estudiante">
+        </div>
+        <button class="btn btn-primary" onclick="viewStudentAnswers()">Ver Solución</button>
+      </div>
+    `);
+    return;
+  }
+  viewStudentSolution(code);
+}
+
+function viewStudentAnswers() {
+  const code = ($('teacherCode') || {}).value?.trim();
+  if (!code) return;
+  viewStudentSolution(code);
+}
+
+function viewStudentSolution(code) {
+  const seed = seedFromString(code);
+  const rng = mulberry32(seed);
+  const act1 = generateAct1(rng);
+  const act3 = generateAct3(rng);
+
+  let act2Info = '';
+  // Show all 3 possible paths
+  const rng2a = mulberry32(seed + 1000);
+  const a2a = generateAct2A(rng2a);
+  const rng2b = mulberry32(seed + 1000);
+  const a2b = generateAct2B(rng2b, act1);
+  const rng2c = mulberry32(seed + 1000);
+  const a2c = generateAct2C(rng2c);
+
+  render(`
+    <div style="padding-top:1rem">
+      <h2 style="color:var(--amber);margin-bottom:1rem">&#128218; Soluciones — Código: ${code} (Seed: ${seed})</h2>
+
+      <div class="card">
+        <h3>Capítulo 1 — El Primer Encargo</h3>
+        <p><strong>FO:</strong> Max Z = ${act1.c.map((c,i) => `${c}x${i+1}`).join(' + ')}</p>
+        <p><strong>Restricciones:</strong></p>
+        ${act1.A.map((row, i) => `<p style="color:var(--text2)">${RESOURCES_SHORT[i]}: ${row.map((v,j) => `${v}x${j+1}`).join(' + ')} ≤ ${act1.b[i]}</p>`).join('')}
+        ${act1.sol ? `
+          <p style="margin-top:.5rem"><strong>Solución:</strong> ${act1.sol.solution.map((v,i) => `x${i+1}* = ${v.toFixed(2)}`).join(', ')}</p>
+          <p><strong>Z* = ${act1.sol.Z.toFixed(2)}</strong> (miles $)</p>
+          <p><strong>Holguras:</strong> ${act1.sol.slacks.map((s,i) => `${RESOURCES_SHORT[i]}: ${s.toFixed(2)}`).join(', ')}</p>
+        ` : '<p style="color:var(--red)">Error al resolver</p>'}
+      </div>
+
+      <div class="card">
+        <h3>Capítulo 2A — Expansión (si Cap1 ≥ 70)</h3>
+        <p><strong>FO:</strong> Max Z = ${a2a.c.map((c,i) => `${c}x${i+1}`).join(' + ')}</p>
+        ${a2a.sol ? `<p><strong>Sol:</strong> ${a2a.sol.solution.map((v,i) => `x${i+1}*=${v.toFixed(2)}`).join(', ')} | Z*=${a2a.sol.Z.toFixed(2)}</p>` : ''}
+      </div>
+
+      <div class="card">
+        <h3>Capítulo 2B — Crisis (si Cap1 40-69)</h3>
+        <p>Queso: ${a2b.b[1]} (original: ${a2b.originalB1})</p>
+        ${a2b.sol ? `<p><strong>Sol:</strong> ${a2b.sol.solution.map((v,i) => `x${i+1}*=${v.toFixed(2)}`).join(', ')} | Z*=${a2b.sol.Z.toFixed(2)}</p>` : ''}
+      </div>
+
+      <div class="card">
+        <h3>Capítulo 2C — Minimización (si Cap1 < 40)</h3>
+        <p><strong>Costos:</strong> ${a2c.costs.map((c,i) => `${c}x${i+1}`).join(' + ')}</p>
+        <p><strong>Demanda mín:</strong> ${a2c.demand.join(', ')}</p>
+        ${a2c.sol ? `<p><strong>Sol:</strong> ${a2c.sol.solution.map((v,i) => `x${i+1}*=${v.toFixed(2)}`).join(', ')} | Z*=${a2c.sol.Z.toFixed(2)}</p>` : ''}
+      </div>
+
+      <div class="card">
+        <h3>Capítulo 3 — Desafío Final</h3>
+        <p><strong>FO:</strong> Max Z = ${act3.c.map((c,i) => `${c}x${i+1}`).join(' + ')}</p>
+        ${act3.sol ? `<p><strong>Sol:</strong> ${act3.sol.solution.map((v,i) => `x${i+1}*=${v.toFixed(2)}`).join(', ')} | Z*=${act3.sol.Z.toFixed(2)}</p>` : ''}
+      </div>
+
+      <div style="margin-top:1rem">
+        <button class="btn btn-secondary" onclick="showTeacherMode('')">&#8592; Buscar otro</button>
+      </div>
+    </div>
+  `);
+}
+
+/* ═══════════════════════════════════════════════════
+   INICIALIZACIÓN
+   ═══════════════════════════════════════════════════ */
+if (!checkTeacherMode()) {
+  showSplash();
+}
+
+// Handle Enter key on registration
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && state.screen === 'splash') {
+    startExam();
+  }
+});
+</script>
+</body>
+</html>
