@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constructora Risaralda — Solver con Enteros</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--card:#151d30;--card2:#1a2540;
+  --amber:#f59e0b;--amber-d:#d97706;--amber-l:#fbbf24;
+  --green:#10b981;--green-d:#059669;--red:#f43f5e;--red-d:#e11d48;
+  --blue:#3b82f6;--purple:#8b5cf6;--teal:#14b8a6;--pink:#ec4899;
+  --cyan:#06b6d4;--orange:#f97316;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --radius:14px;--shadow:0 8px 32px rgba(0,0,0,.5);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+}
+h1,h2,h3{font-family:'Playfair Display',serif}
+
+/* ===== NAV ===== */
+.top-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(10,14,26,.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  padding:.7rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+}
+.top-nav .brand{display:flex;align-items:center;gap:.6rem}
+.top-nav .brand-icon{font-size:1.4rem}
+.top-nav .brand-text{font-weight:800;font-size:1rem;
+  background:linear-gradient(135deg,var(--amber-l),var(--amber));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.top-nav .nav-tag{
+  font-size:.7rem;font-weight:600;padding:.3rem .8rem;border-radius:20px;
+  background:rgba(245,158,11,.1);color:var(--amber);text-transform:uppercase;letter-spacing:1px;
+}
+
+/* ===== HERO ===== */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:6rem 1.5rem 3rem;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:-50%;width:200%;height:200%;
+  background:radial-gradient(circle at 30% 40%,rgba(245,158,11,.08) 0%,transparent 50%),
+             radial-gradient(circle at 70% 60%,rgba(20,184,166,.06) 0%,transparent 40%),
+             radial-gradient(circle at 50% 80%,rgba(139,92,246,.05) 0%,transparent 30%);
+  animation:bgPulse 8s ease-in-out infinite alternate;
+}
+@keyframes bgPulse{0%{transform:scale(1)}100%{transform:scale(1.05)}}
+.hero>*{position:relative;z-index:1}
+.hero-icon{font-size:5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.hero h1{
+  font-size:clamp(2.2rem,5vw,3.5rem);font-weight:900;line-height:1.1;margin-bottom:.5rem;
+  background:linear-gradient(135deg,var(--amber-l),var(--amber),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero .sub{font-size:1.15rem;color:var(--text2);font-weight:300;margin-bottom:2rem;max-width:600px}
+.hero .scroll-hint{
+  margin-top:2rem;color:var(--text3);font-size:.85rem;
+  animation:bounce 2s ease-in-out infinite;
+}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ===== CHAPTER ===== */
+.chapter{
+  max-width:800px;margin:0 auto;padding:4rem 1.5rem;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .6s,transform .6s;
+}
+.chapter.visible{opacity:1;transform:translateY(0)}
+.chapter-header{text-align:center;margin-bottom:2.5rem}
+.chapter-tag{
+  text-transform:uppercase;letter-spacing:5px;
+  font-size:.72rem;font-weight:700;color:var(--amber);margin-bottom:.3rem;
+}
+.chapter-title{
+  font-size:1.8rem;margin-bottom:.5rem;
+  background:linear-gradient(135deg,var(--amber-l),var(--amber));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.chapter-sub{color:var(--text3);font-size:.9rem}
+
+/* ===== NARRATIVE ===== */
+.narrative{
+  font-size:1.02rem;line-height:1.85;color:var(--text2);
+  margin-bottom:1.2rem;padding-bottom:1rem;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.narrative em{color:var(--amber-l);font-style:italic}
+.narrative strong{color:var(--text);font-weight:600}
+
+/* ===== DIALOGUE ===== */
+.dialogue{display:flex;gap:.8rem;margin:.8rem 0;animation:fadeSlide .4s ease-out both}
+.dialogue .avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+}
+.dialogue .bubble{
+  background:var(--card2);border-radius:2px var(--radius) var(--radius) var(--radius);
+  padding:.8rem 1.1rem;flex:1;position:relative;
+}
+.dialogue .bubble::before{
+  content:'';position:absolute;left:-6px;top:10px;
+  border:6px solid transparent;border-right-color:var(--card2);
+}
+.dialogue .char-name{font-size:.75rem;font-weight:700;margin-bottom:.2rem}
+.dialogue .char-text{font-size:.93rem;line-height:1.6;color:var(--text2)}
+.av-rafael{background:linear-gradient(135deg,var(--amber),var(--amber-d))}
+.av-valentina{background:linear-gradient(135deg,var(--teal),#0d9488)}
+.av-tu{background:linear-gradient(135deg,var(--purple),#7c3aed)}
+.nm-rafael{color:var(--amber)}.nm-valentina{color:var(--teal)}.nm-tu{color:var(--purple)}
+
+/* ===== EXERCISE CARD ===== */
+.exercise-card{
+  background:var(--card);border:1px solid rgba(255,255,255,.06);
+  border-radius:var(--radius);overflow:hidden;margin:2rem 0;
+  box-shadow:var(--shadow);
+}
+.exercise-num{
+  display:flex;align-items:center;gap:.8rem;
+  padding:1rem 1.3rem;
+  background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.02));
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.exercise-num .num-badge{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  color:#000;font-weight:900;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;
+}
+.exercise-num .ex-title{font-weight:700;font-size:1.05rem}
+.exercise-num .ex-type{
+  margin-left:auto;font-size:.7rem;font-weight:600;
+  padding:.25rem .7rem;border-radius:20px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.type-max{background:rgba(16,185,129,.1);color:var(--green)}
+.type-min{background:rgba(59,130,246,.1);color:var(--blue)}
+.type-bin{background:rgba(139,92,246,.1);color:var(--purple)}
+
+.exercise-body{padding:1.3rem}
+.exercise-body p{color:var(--text2);line-height:1.7;margin-bottom:.8rem;font-size:.95rem}
+.exercise-body .highlight{
+  color:var(--amber-l);font-weight:600;
+}
+
+/* ===== DATA TABLE ===== */
+.data-table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  margin:1rem 0;border-radius:10px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);font-size:.85rem;
+}
+.data-table th{
+  background:rgba(245,158,11,.08);color:var(--amber-l);
+  padding:.6rem .8rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;
+}
+.data-table td{
+  padding:.5rem .8rem;text-align:center;
+  border-top:1px solid rgba(255,255,255,.04);font-variant-numeric:tabular-nums;
+}
+.data-table .label{text-align:left;font-weight:600;color:var(--amber-l)}
+.data-table .obj-row td{background:rgba(16,185,129,.05);font-weight:700;color:var(--green)}
+.data-table .obj-row .label{color:var(--green)}
+
+/* ===== MODEL BOX ===== */
+.model-box{
+  background:var(--card2);border:1px solid rgba(245,158,11,.15);
+  border-radius:10px;padding:1.2rem;margin:1rem 0;
+  font-family:'JetBrains Mono','Fira Code',monospace;font-size:.88rem;
+  line-height:2;color:var(--text2);
+}
+.model-box .fo{color:var(--green);font-weight:700}
+.model-box .sa{color:var(--amber-l);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:1px;display:block;margin:.3rem 0}
+.model-box .rest{color:var(--text2)}
+.model-box .nn{color:var(--text3);font-style:italic;margin-top:.3rem;display:block}
+.model-box .int-tag{
+  display:inline-block;background:rgba(139,92,246,.15);color:var(--purple);
+  padding:.15rem .5rem;border-radius:6px;font-size:.78rem;font-weight:700;
+  margin-top:.3rem;
+}
+
+/* ===== SOLVE BUTTON ===== */
+.btn-solve{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;
+  width:100%;padding:.9rem;margin-top:1rem;
+  border:2px solid var(--amber);border-radius:var(--radius);
+  background:rgba(245,158,11,.06);color:var(--amber);
+  font-family:inherit;font-size:.95rem;font-weight:700;
+  cursor:pointer;transition:all .25s;
+}
+.btn-solve:hover{background:rgba(245,158,11,.15);transform:translateY(-1px);box-shadow:0 4px 20px rgba(245,158,11,.15)}
+.btn-solve:active{transform:scale(.98)}
+.btn-solve .icon{font-size:1.2rem}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  padding:1rem;opacity:0;pointer-events:none;
+  transition:opacity .3s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--card);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);max-width:720px;width:100%;
+  max-height:90vh;overflow-y:auto;
+  transform:translateY(20px) scale(.97);transition:transform .3s;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.modal-overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.06);
+  position:sticky;top:0;background:var(--card);z-index:1;
+}
+.modal-head h3{font-size:1.1rem;font-family:'Inter',sans-serif;font-weight:800}
+.modal-close{
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.06);color:var(--text2);
+  font-size:1.2rem;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-close:hover{background:rgba(255,255,255,.12);color:var(--text)}
+.modal-body{padding:1.5rem}
+
+/* ===== STEP ===== */
+.step{margin-bottom:1.5rem}
+.step-head{
+  display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;
+}
+.step-num{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  color:#000;font-weight:800;font-size:.8rem;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.step-title{font-weight:700;font-size:.95rem;color:var(--text)}
+.step p{color:var(--text2);font-size:.9rem;line-height:1.7;margin-bottom:.5rem}
+
+/* ===== EXCEL TABLE ===== */
+.excel-table{
+  width:100%;border-collapse:collapse;margin:.8rem 0;
+  font-size:.8rem;font-family:'JetBrains Mono','Fira Code',monospace;
+}
+.excel-table th{
+  background:#217346;color:#fff;padding:.45rem .6rem;
+  font-weight:600;text-align:center;border:1px solid #1a5c37;
+  font-size:.72rem;
+}
+.excel-table td{
+  padding:.4rem .6rem;text-align:center;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.02);
+}
+.excel-table .col-header{
+  background:rgba(33,115,70,.15);color:var(--green);font-weight:700;
+  font-size:.72rem;
+}
+.excel-table .row-header{
+  background:rgba(245,158,11,.06);color:var(--amber-l);
+  font-weight:600;text-align:left;
+}
+.excel-table .result-cell{
+  background:rgba(16,185,129,.1);color:var(--green);font-weight:800;
+  font-size:.9rem;
+}
+.excel-table .formula-cell{
+  background:rgba(59,130,246,.08);color:var(--blue);font-weight:600;
+  font-size:.75rem;
+}
+.excel-table .var-cell{
+  background:rgba(139,92,246,.1);color:var(--purple);font-weight:800;
+}
+
+/* ===== SOLVER CONFIG ===== */
+.solver-config{
+  background:rgba(33,115,70,.06);border:1px solid rgba(33,115,70,.2);
+  border-radius:10px;padding:1rem;margin:.8rem 0;
+}
+.solver-config h4{
+  color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.6rem;
+  display:flex;align-items:center;gap:.4rem;
+}
+.solver-row{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.35rem 0;font-size:.85rem;color:var(--text2);
+  border-bottom:1px solid rgba(255,255,255,.03);
+}
+.solver-row:last-child{border-bottom:none}
+.solver-label{color:var(--text3);min-width:140px;font-size:.8rem}
+.solver-val{color:var(--text);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:.82rem}
+.solver-val.green{color:var(--green)}
+.solver-val.purple{color:var(--purple)}
+.solver-val.amber{color:var(--amber)}
+
+/* ===== ANSWER BOX ===== */
+.answer-box{
+  background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));
+  border:1px solid rgba(16,185,129,.2);border-radius:10px;
+  padding:1.2rem;margin-top:1rem;text-align:center;
+}
+.answer-box .answer-label{font-size:.75rem;color:var(--green);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:.3rem}
+.answer-box .answer-val{font-size:1.5rem;font-weight:900;color:var(--green)}
+.answer-box .answer-detail{color:var(--text2);font-size:.88rem;margin-top:.5rem}
+
+/* ===== WORKSHOP TAG ===== */
+.workshop-tag{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.4rem 1rem;border-radius:20px;
+  background:rgba(59,130,246,.1);color:var(--blue);
+  font-weight:700;font-size:.8rem;text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:1rem;
+}
+
+/* ===== WORKSHOP CARD ===== */
+.workshop-card{
+  background:var(--card);border:2px dashed rgba(59,130,246,.2);
+  border-radius:var(--radius);overflow:hidden;margin:2rem 0;
+}
+.workshop-card .exercise-num{
+  background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(59,130,246,.02));
+}
+.workshop-card .num-badge{
+  background:linear-gradient(135deg,var(--blue),#2563eb) !important;
+  color:#fff !important;
+}
+
+/* ===== DIVIDER ===== */
+.section-divider{
+  text-align:center;padding:4rem 0;
+}
+.section-divider .divider-icon{font-size:3rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite}
+.section-divider h2{
+  font-size:1.8rem;margin-bottom:.5rem;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.section-divider p{color:var(--text3);font-size:.95rem}
+
+/* ===== FOOTER ===== */
+.footer{
+  text-align:center;padding:4rem 1.5rem;
+  border-top:1px solid rgba(255,255,255,.04);
+}
+.footer p{color:var(--text3);font-size:.85rem}
+.footer .heart{color:var(--red)}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== TIP BOX ===== */
+.tip-box{
+  background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);
+  border-radius:10px;padding:1rem;margin:.8rem 0;
+  display:flex;gap:.6rem;align-items:flex-start;
+}
+.tip-box .tip-icon{font-size:1.2rem;flex-shrink:0;margin-top:.1rem}
+.tip-box p{color:var(--text2);font-size:.88rem;line-height:1.6}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .hero h1{font-size:2rem}
+  .chapter-title{font-size:1.4rem}
+  .modal{max-height:95vh}
+  .modal-body{padding:1rem}
+  .excel-table{font-size:.7rem}
+  .excel-table td,.excel-table th{padding:.3rem .4rem}
+  .solver-row{flex-direction:column;align-items:flex-start;gap:.1rem}
+  .solver-label{min-width:auto}
+  .data-table{font-size:.78rem}
+}
+
+/* scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+  <div class="brand">
+    <span class="brand-icon">🏗️</span>
+    <span class="brand-text">Constructora Risaralda</span>
+  </div>
+  <span class="nav-tag">Solver + Enteros</span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-icon">🏗️</div>
+  <h1>Constructora Risaralda</h1>
+  <p class="sub">Programación Lineal Entera con Solver en Excel — 10 casos reales de la construcción en el Eje Cafetero</p>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:1rem">
+    <span style="display:flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:10px;background:var(--card);border:1px solid rgba(255,255,255,.06);font-size:.85rem">
+      <span style="color:var(--green)">✅</span> 5 Resueltos
+    </span>
+    <span style="display:flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:10px;background:var(--card);border:1px solid rgba(255,255,255,.06);font-size:.85rem">
+      <span style="color:var(--blue)">📝</span> 5 Taller
+    </span>
+    <span style="display:flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:10px;background:var(--card);border:1px solid rgba(255,255,255,.06);font-size:.85rem">
+      <span style="color:var(--purple)">🔢</span> Variables Enteras
+    </span>
+  </div>
+  <div class="scroll-hint">↓ Scroll para empezar ↓</div>
+</section>
+
+<!-- ═══════════════ INTRO ═══════════════ -->
+<section class="chapter" id="intro">
+  <div class="chapter-header">
+    <div class="chapter-tag">Prólogo</div>
+    <h2 class="chapter-title">Bienvenido a la Constructora</h2>
+  </div>
+  <p class="narrative">Es lunes a las 7:00 AM en Pereira. El sol sale detrás del Nevado del Ruiz mientras llegas a las oficinas de <em>Constructora Risaralda S.A.S.</em> en la Circunvalar. Hoy es tu primer día como <strong>Analista de Operaciones</strong>.</p>
+  <div class="dialogue">
+    <div class="avatar av-rafael">👷</div>
+    <div class="bubble">
+      <div class="char-name nm-rafael">Rafael Ospina — Gerente General</div>
+      <div class="char-text">¡Buenos días! Soy Don Rafael. Llevamos 20 años construyendo en el Eje Cafetero. Pero últimamente las decisiones se han vuelto más complejas... necesitamos optimizar con <strong>números enteros</strong>. No podemos construir 2.7 casas, ¿cierto?</div>
+    </div>
+  </div>
+  <div class="dialogue">
+    <div class="avatar av-valentina">👩‍💼</div>
+    <div class="bubble">
+      <div class="char-name nm-valentina">Valentina Ríos — Ingeniera de Proyectos</div>
+      <div class="char-text">Yo manejo todos los datos técnicos. Te voy a presentar <strong>10 casos reales</strong> de la constructora. Los primeros 5 los resolvemos juntos paso a paso en Excel con Solver. Los otros 5... <em>son tu taller</em>.</div>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <p><strong>¿Qué cambia con enteros?</strong> En Solver, además de las restricciones normales, agregamos que las variables sean <strong>"int" (enteras)</strong>. Esto hace que Solver busque solo soluciones con números enteros, no decimales. El método sigue siendo Simplex LP, pero con la restricción adicional de integridad.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ EJERCICIO 1 ═══════════════ -->
+<section class="chapter" id="ej1">
+  <div class="exercise-card">
+    <div class="exercise-num">
+      <div class="num-badge">1</div>
+      <div class="ex-title">Mezcla de Proyectos Inmobiliarios</div>
+      <span class="ex-type type-max">MAX</span>
+    </div>
+    <div class="exercise-body">
+      <p><strong>Constructora Risaralda</strong> puede ejecutar tres tipos de proyectos este semestre: <span class="highlight">Casas (x₁)</span>, <span class="highlight">Apartamentos (x₂)</span> y <span class="highlight">Locales Comerciales (x₃)</span>.</p>
+
+      <div class="dialogue">
+        <div class="avatar av-rafael">👷</div>
+        <div class="bubble">
+          <div class="char-name nm-rafael">Don Rafael</div>
+          <div class="char-text">Cada casa nos deja $120M de utilidad, cada apto $150M y cada local $200M. Pero tenemos limitaciones de presupuesto, personal y tiempo.</div>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Recurso</th><th>🏠 Casa (x₁)</th><th>🏢 Apto (x₂)</th><th>🏪 Local (x₃)</th><th>Disponible</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">Presupuesto ($M)</td><td>30</td><td>45</td><td>55</td><td>350</td></tr>
+          <tr><td class="label">Ingenieros (meses-hombre)</td><td>2</td><td>3</td><td>4</td><td>28</td></tr>
+          <tr><td class="label">Tiempo (meses)</td><td>3</td><td>5</td><td>6</td><td>40</td></tr>
+          <tr class="obj-row"><td class="label">Utilidad ($M)</td><td>120</td><td>150</td><td>200</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Max Z = 120x₁ + 150x₂ + 200x₃</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">30x₁ + 45x₂ + 55x₃ ≤ 350 &nbsp;(Presupuesto)</span><br>
+        <span class="rest">2x₁ + 3x₂ + 4x₃ ≤ 28 &nbsp;(Ingenieros)</span><br>
+        <span class="rest">3x₁ + 5x₂ + 6x₃ ≤ 40 &nbsp;(Tiempo)</span><br>
+        <span class="nn">x₁, x₂, x₃ ≥ 0</span>
+        <span class="int-tag">🔢 x₁, x₂, x₃ ∈ ℤ (enteros)</span>
+      </div>
+
+      <button class="btn-solve" onclick="openModal('modal1')">
+        <span class="icon">📊</span> Ver solución paso a paso en Excel
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL 1 -->
+<div class="modal-overlay" id="modal1">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📊 Ejercicio 1 — Solución en Excel con Solver</h3>
+      <button class="modal-close" onclick="closeModal('modal1')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="step">
+        <div class="step-head"><div class="step-num">1</div><div class="step-title">Montar la hoja de cálculo</div></div>
+        <p>Organiza los datos en Excel con esta estructura. Las celdas amarillas (B2:D2) son las <strong>variables de decisión</strong> (empiezan en 0).</p>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">1</td><td class="row-header">Producto</td><td>Casa</td><td>Apto</td><td>Local</td><td></td><td></td></tr>
+            <tr><td class="col-header">2</td><td class="row-header">Cantidad</td><td class="var-cell">0</td><td class="var-cell">0</td><td class="var-cell">0</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Utilidad unit.</td><td>120</td><td>150</td><td>200</td><td class="formula-cell">=SUMAPRODUCTO(B3:D3,B2:D2)</td><td></td></tr>
+            <tr><td class="col-header">4</td><td class="row-header"></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td class="col-header">5</td><td class="row-header">Restricción</td><td>Casa</td><td>Apto</td><td>Local</td><td class="formula-cell">Usado</td><td>Disponible</td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">Presupuesto</td><td>30</td><td>45</td><td>55</td><td class="formula-cell">=SUMAPRODUCTO(B6:D6,$B$2:$D$2)</td><td>350</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Ingenieros</td><td>2</td><td>3</td><td>4</td><td class="formula-cell">=SUMAPRODUCTO(B7:D7,$B$2:$D$2)</td><td>28</td></tr>
+            <tr><td class="col-header">8</td><td class="row-header">Tiempo</td><td>3</td><td>5</td><td>6</td><td class="formula-cell">=SUMAPRODUCTO(B8:D8,$B$2:$D$2)</td><td>40</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">2</div><div class="step-title">Configurar Solver</div></div>
+        <p>Ve a <strong>Datos → Solver</strong> y configura:</p>
+        <div class="solver-config">
+          <h4>⚙️ Parámetros de Solver</h4>
+          <div class="solver-row"><span class="solver-label">Objetivo:</span><span class="solver-val green">E3 (Utilidad total)</span></div>
+          <div class="solver-row"><span class="solver-label">Optimizar:</span><span class="solver-val amber">Máximo</span></div>
+          <div class="solver-row"><span class="solver-label">Cambiando celdas:</span><span class="solver-val purple">B2:D2</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 1:</span><span class="solver-val">E6 ≤ F6 (Presupuesto)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 2:</span><span class="solver-val">E7 ≤ F7 (Ingenieros)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 3:</span><span class="solver-val">E8 ≤ F8 (Tiempo)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 4:</span><span class="solver-val purple">B2:D2 = entero (int)</span></div>
+          <div class="solver-row"><span class="solver-label">Método:</span><span class="solver-val">Simplex LP</span></div>
+          <div class="solver-row"><span class="solver-label">✅ Marcar:</span><span class="solver-val green">Convertir variables no restringidas en no negativas</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">3</div><div class="step-title">Resultado de Solver</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">2</td><td class="row-header">Cantidad</td><td class="var-cell">3</td><td class="var-cell">2</td><td class="var-cell">3</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Utilidad unit.</td><td>120</td><td>150</td><td>200</td><td class="result-cell">1,260</td><td></td></tr>
+            <tr><td class="col-header">5</td><td class="row-header">Restricción</td><td>Casa</td><td>Apto</td><td>Local</td><td class="formula-cell">Usado</td><td>Disponible</td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">Presupuesto</td><td>30</td><td>45</td><td>55</td><td>345</td><td>350</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Ingenieros</td><td>2</td><td>3</td><td>4</td><td>24</td><td>28</td></tr>
+            <tr><td class="col-header">8</td><td class="row-header">Tiempo</td><td>3</td><td>5</td><td>6</td><td>37</td><td>40</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="answer-box">
+        <div class="answer-label">Solución Óptima</div>
+        <div class="answer-val">Z = $1,260 M</div>
+        <div class="answer-detail">🏠 Casas: <strong>3</strong> &nbsp;|&nbsp; 🏢 Aptos: <strong>2</strong> &nbsp;|&nbsp; 🏪 Locales: <strong>3</strong></div>
+        <div class="answer-detail" style="margin-top:.3rem;font-size:.82rem;color:var(--text3)">Presupuesto usado: $345M/350M · Ingenieros: 24/28 · Tiempo: 37/40</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ EJERCICIO 2 ═══════════════ -->
+<section class="chapter" id="ej2">
+  <div class="exercise-card">
+    <div class="exercise-num">
+      <div class="num-badge">2</div>
+      <div class="ex-title">Cuadrillas de Obra al Mínimo Costo</div>
+      <span class="ex-type type-min">MIN</span>
+    </div>
+    <div class="exercise-body">
+      <p>La constructora necesita asignar cuadrillas de trabajo a dos obras simultáneas: <span class="highlight">Obra Circunvalar (x₁)</span> y <span class="highlight">Obra Cerritos (x₂)</span>.</p>
+
+      <div class="dialogue">
+        <div class="avatar av-valentina">👩‍💼</div>
+        <div class="bubble">
+          <div class="char-name nm-valentina">Valentina</div>
+          <div class="char-text">Cada cuadrilla en Circunvalar cuesta $8M/mes y en Cerritos $6M/mes. Necesitamos cumplir mínimos de producción y seguridad.</div>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Requisito</th><th>Circunvalar (x₁)</th><th>Cerritos (x₂)</th><th>Mínimo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">Metros cúbicos/mes</td><td>40</td><td>30</td><td>≥ 240</td></tr>
+          <tr><td class="label">Trabajadores seguridad</td><td>3</td><td>5</td><td>≥ 30</td></tr>
+          <tr class="obj-row"><td class="label">Costo/cuadrilla ($M)</td><td>8</td><td>6</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Min Z = 8x₁ + 6x₂</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">40x₁ + 30x₂ ≥ 240 &nbsp;(Producción mínima)</span><br>
+        <span class="rest">3x₁ + 5x₂ ≥ 30 &nbsp;(Seguridad mínima)</span><br>
+        <span class="nn">x₁, x₂ ≥ 0</span>
+        <span class="int-tag">🔢 x₁, x₂ ∈ ℤ (enteros)</span>
+      </div>
+
+      <button class="btn-solve" onclick="openModal('modal2')">
+        <span class="icon">📊</span> Ver solución paso a paso en Excel
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL 2 -->
+<div class="modal-overlay" id="modal2">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📊 Ejercicio 2 — Minimización con Enteros</h3>
+      <button class="modal-close" onclick="closeModal('modal2')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="step">
+        <div class="step-head"><div class="step-num">1</div><div class="step-title">Montar la hoja de cálculo</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">1</td><td class="row-header">Obra</td><td>Circunvalar</td><td>Cerritos</td><td></td></tr>
+            <tr><td class="col-header">2</td><td class="row-header">Cuadrillas</td><td class="var-cell">0</td><td class="var-cell">0</td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Costo unit.</td><td>8</td><td>6</td><td class="formula-cell">=SUMAPRODUCTO(B3:C3,B2:C2)</td></tr>
+            <tr><td class="col-header">4</td><td class="row-header"></td><td></td><td></td><td></td></tr>
+            <tr><td class="col-header">5</td><td class="row-header">Restricción</td><td>Circunvalar</td><td>Cerritos</td><td class="formula-cell">Logrado | Mínimo</td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">m³/mes</td><td>40</td><td>30</td><td class="formula-cell">=SUMAPRODUCTO(...) | 240</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Seguridad</td><td>3</td><td>5</td><td class="formula-cell">=SUMAPRODUCTO(...) | 30</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">2</div><div class="step-title">Configurar Solver</div></div>
+        <div class="solver-config">
+          <h4>⚙️ Parámetros de Solver</h4>
+          <div class="solver-row"><span class="solver-label">Objetivo:</span><span class="solver-val green">D3 (Costo total)</span></div>
+          <div class="solver-row"><span class="solver-label">Optimizar:</span><span class="solver-val amber">Mínimo ⬇️</span></div>
+          <div class="solver-row"><span class="solver-label">Cambiando celdas:</span><span class="solver-val purple">B2:C2</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 1:</span><span class="solver-val">D6 ≥ E6 (Producción)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 2:</span><span class="solver-val">D7 ≥ E7 (Seguridad)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 3:</span><span class="solver-val purple">B2:C2 = entero (int)</span></div>
+          <div class="solver-row"><span class="solver-label">Método:</span><span class="solver-val">Simplex LP</span></div>
+        </div>
+        <div class="tip-box">
+          <span class="tip-icon">⚠️</span>
+          <p><strong>¡Ojo!</strong> En minimización las restricciones suelen ser ≥ (mínimos a cumplir), al revés de maximización donde son ≤ (máximos disponibles).</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">3</div><div class="step-title">Resultado de Solver</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">2</td><td class="row-header">Cuadrillas</td><td class="var-cell">6</td><td class="var-cell">0</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Costo unit.</td><td>8</td><td>6</td><td class="result-cell">48</td><td></td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">m³/mes</td><td>40</td><td>30</td><td>240</td><td>240</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Seguridad</td><td>3</td><td>5</td><td>18</td><td>30</td></tr>
+          </tbody>
+        </table>
+        <p style="color:var(--red);font-size:.85rem;margin-top:.5rem">⚠️ Ojo: con x₁=6, x₂=0 tenemos 18 de seguridad pero necesitamos 30. Solver ajusta a:</p>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">2</td><td class="row-header">Cuadrillas</td><td class="var-cell">3</td><td class="var-cell">4</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Costo unit.</td><td>8</td><td>6</td><td class="result-cell">48</td><td></td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">m³/mes</td><td>40</td><td>30</td><td>240</td><td>240</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Seguridad</td><td>3</td><td>5</td><td>29</td><td>30</td></tr>
+          </tbody>
+        </table>
+        <p style="color:var(--red);font-size:.85rem;margin-top:.5rem">Aún falta 1 de seguridad. La solución entera factible es:</p>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">2</td><td class="row-header">Cuadrillas</td><td class="var-cell">0</td><td class="var-cell">8</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Costo unit.</td><td>8</td><td>6</td><td class="result-cell">48</td><td></td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">m³/mes</td><td>40</td><td>30</td><td>240</td><td>240</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Seguridad</td><td>3</td><td>5</td><td>40</td><td>30</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="answer-box">
+        <div class="answer-label">Solución Óptima</div>
+        <div class="answer-val">Z = $48 M (costo mínimo)</div>
+        <div class="answer-detail">Circunvalar: <strong>0 cuadrillas</strong> &nbsp;|&nbsp; Cerritos: <strong>8 cuadrillas</strong></div>
+        <div class="answer-detail" style="margin-top:.3rem;font-size:.82rem;color:var(--text3)">Producción: 240/240 m³ ✅ · Seguridad: 40/30 ✅</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ EJERCICIO 3 ═══════════════ -->
+<section class="chapter" id="ej3">
+  <div class="exercise-card">
+    <div class="exercise-num">
+      <div class="num-badge">3</div>
+      <div class="ex-title">Producción de Prefabricados con Demanda Mínima</div>
+      <span class="ex-type type-max">MAX</span>
+    </div>
+    <div class="exercise-body">
+      <p>La planta de prefabricados produce <span class="highlight">Vigas (x₁)</span> y <span class="highlight">Columnas (x₂)</span>. Hay contratos que exigen cantidades mínimas de cada producto.</p>
+
+      <div class="dialogue">
+        <div class="avatar av-valentina">👩‍💼</div>
+        <div class="bubble">
+          <div class="char-name nm-valentina">Valentina</div>
+          <div class="char-text">Tenemos un contrato con el municipio: mínimo 5 vigas y 3 columnas. Pero también tenemos límites de acero y tiempo de curado.</div>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Recurso / Requisito</th><th>🔩 Vigas (x₁)</th><th>🪨 Columnas (x₂)</th><th>Límite</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">Acero (ton)</td><td>4</td><td>6</td><td>≤ 60</td></tr>
+          <tr><td class="label">Tiempo curado (días)</td><td>2</td><td>3</td><td>≤ 30</td></tr>
+          <tr><td class="label">Demanda mín. vigas</td><td>1</td><td>0</td><td>≥ 5</td></tr>
+          <tr><td class="label">Demanda mín. columnas</td><td>0</td><td>1</td><td>≥ 3</td></tr>
+          <tr class="obj-row"><td class="label">Utilidad ($M)</td><td>25</td><td>35</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Max Z = 25x₁ + 35x₂</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">4x₁ + 6x₂ ≤ 60 &nbsp;(Acero)</span><br>
+        <span class="rest">2x₁ + 3x₂ ≤ 30 &nbsp;(Curado)</span><br>
+        <span class="rest">x₁ ≥ 5 &nbsp;(Demanda mín. vigas)</span><br>
+        <span class="rest">x₂ ≥ 3 &nbsp;(Demanda mín. columnas)</span><br>
+        <span class="nn">x₁, x₂ ≥ 0</span>
+        <span class="int-tag">🔢 x₁, x₂ ∈ ℤ (enteros)</span>
+      </div>
+
+      <button class="btn-solve" onclick="openModal('modal3')">
+        <span class="icon">📊</span> Ver solución paso a paso en Excel
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL 3 -->
+<div class="modal-overlay" id="modal3">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📊 Ejercicio 3 — Restricciones Mixtas (≤ y ≥)</h3>
+      <button class="modal-close" onclick="closeModal('modal3')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="step">
+        <div class="step-head"><div class="step-num">1</div><div class="step-title">Hoja de cálculo</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">1</td><td class="row-header">Producto</td><td>Vigas</td><td>Columnas</td><td></td><td></td></tr>
+            <tr><td class="col-header">2</td><td class="row-header">Cantidad</td><td class="var-cell">0</td><td class="var-cell">0</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Utilidad unit.</td><td>25</td><td>35</td><td class="formula-cell">=SUMAPRODUCTO(B3:C3,B2:C2)</td><td></td></tr>
+            <tr><td class="col-header">5</td><td class="row-header">Restricción</td><td>Vigas</td><td>Columnas</td><td class="formula-cell">Usado</td><td>Límite</td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">Acero</td><td>4</td><td>6</td><td class="formula-cell">=SUMAPRODUCTO(...)</td><td>60</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Curado</td><td>2</td><td>3</td><td class="formula-cell">=SUMAPRODUCTO(...)</td><td>30</td></tr>
+            <tr><td class="col-header">8</td><td class="row-header">Dem. vigas</td><td>1</td><td>0</td><td class="formula-cell">=SUMAPRODUCTO(...)</td><td>5</td></tr>
+            <tr><td class="col-header">9</td><td class="row-header">Dem. columnas</td><td>0</td><td>1</td><td class="formula-cell">=SUMAPRODUCTO(...)</td><td>3</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">2</div><div class="step-title">Configurar Solver</div></div>
+        <div class="solver-config">
+          <h4>⚙️ Parámetros de Solver</h4>
+          <div class="solver-row"><span class="solver-label">Objetivo:</span><span class="solver-val green">D3 (Max)</span></div>
+          <div class="solver-row"><span class="solver-label">Cambiando celdas:</span><span class="solver-val purple">B2:C2</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 1:</span><span class="solver-val">D6 ≤ E6 (Acero)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 2:</span><span class="solver-val">D7 ≤ E7 (Curado)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 3:</span><span class="solver-val amber">D8 ≥ E8 (Dem. vigas) ⬆️</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 4:</span><span class="solver-val amber">D9 ≥ E9 (Dem. columnas) ⬆️</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 5:</span><span class="solver-val purple">B2:C2 = int</span></div>
+        </div>
+        <div class="tip-box">
+          <span class="tip-icon">💡</span>
+          <p><strong>Mezcla de signos:</strong> Las restricciones de recursos son ≤ (no pasarse del máximo) y las de demanda son ≥ (cumplir el mínimo). ¡Ambas pueden coexistir!</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">3</div><div class="step-title">Resultado</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">2</td><td class="row-header">Cantidad</td><td class="var-cell">6</td><td class="var-cell">6</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Utilidad</td><td>25</td><td>35</td><td class="result-cell">360</td><td></td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">Acero</td><td>4</td><td>6</td><td>60</td><td>60</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Curado</td><td>2</td><td>3</td><td>30</td><td>30</td></tr>
+            <tr><td class="col-header">8</td><td class="row-header">Dem. vigas</td><td>1</td><td>0</td><td>6</td><td>5</td></tr>
+            <tr><td class="col-header">9</td><td class="row-header">Dem. col.</td><td>0</td><td>1</td><td>6</td><td>3</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="answer-box">
+        <div class="answer-label">Solución Óptima</div>
+        <div class="answer-val">Z = $360 M</div>
+        <div class="answer-detail">🔩 Vigas: <strong>6</strong> &nbsp;|&nbsp; 🪨 Columnas: <strong>6</strong></div>
+        <div class="answer-detail" style="margin-top:.3rem;font-size:.82rem;color:var(--text3)">Acero: 60/60 (activa) · Curado: 30/30 (activa) · Demandas cumplidas ✅</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ EJERCICIO 4 ═══════════════ -->
+<section class="chapter" id="ej4">
+  <div class="exercise-card">
+    <div class="exercise-num">
+      <div class="num-badge">4</div>
+      <div class="ex-title">Selección de Proyectos (Variables Binarias)</div>
+      <span class="ex-type type-bin">BIN</span>
+    </div>
+    <div class="exercise-body">
+      <p>La constructora tiene <strong>4 proyectos candidatos</strong> pero no puede ejecutar todos. Cada proyecto se ejecuta completo o no se ejecuta: <span class="highlight">decisión binaria (0 o 1)</span>.</p>
+
+      <div class="dialogue">
+        <div class="avatar av-rafael">👷</div>
+        <div class="bubble">
+          <div class="char-name nm-rafael">Don Rafael</div>
+          <div class="char-text">Tenemos $500M de presupuesto y 15 ingenieros. ¿Cuáles proyectos ejecutamos para maximizar la rentabilidad?</div>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Proyecto</th><th>Inversión ($M)</th><th>Ingenieros</th><th>Rentabilidad ($M)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">🏘️ Conjunto Cerritos (x₁)</td><td>200</td><td>6</td><td>80</td></tr>
+          <tr><td class="label">🏢 Torre Centro (x₂)</td><td>300</td><td>8</td><td>120</td></tr>
+          <tr><td class="label">🏪 Mall Cuba (x₃)</td><td>150</td><td>4</td><td>65</td></tr>
+          <tr><td class="label">🏫 Colegio Dosq. (x₄)</td><td>180</td><td>5</td><td>70</td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Max Z = 80x₁ + 120x₂ + 65x₃ + 70x₄</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">200x₁ + 300x₂ + 150x₃ + 180x₄ ≤ 500 &nbsp;(Presupuesto)</span><br>
+        <span class="rest">6x₁ + 8x₂ + 4x₃ + 5x₄ ≤ 15 &nbsp;(Ingenieros)</span><br>
+        <span class="int-tag">🔢 x₁, x₂, x₃, x₄ ∈ {0, 1} (binarias)</span>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">💡</span>
+        <p><strong>Variables binarias:</strong> En Solver, en vez de agregar la restricción "int", seleccionas <strong>"bin"</strong> (binario). Esto fuerza a que cada variable sea 0 (no ejecutar) o 1 (ejecutar).</p>
+      </div>
+
+      <button class="btn-solve" onclick="openModal('modal4')">
+        <span class="icon">📊</span> Ver solución paso a paso en Excel
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL 4 -->
+<div class="modal-overlay" id="modal4">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📊 Ejercicio 4 — Variables Binarias (0/1)</h3>
+      <button class="modal-close" onclick="closeModal('modal4')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="step">
+        <div class="step-head"><div class="step-num">1</div><div class="step-title">Hoja de cálculo</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">1</td><td class="row-header">Proyecto</td><td>Cerritos</td><td>Centro</td><td>Cuba</td><td>Dosq.</td><td></td></tr>
+            <tr><td class="col-header">2</td><td class="row-header">Ejecutar (0/1)</td><td class="var-cell">0</td><td class="var-cell">0</td><td class="var-cell">0</td><td class="var-cell">0</td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Rentabilidad</td><td>80</td><td>120</td><td>65</td><td>70</td><td class="formula-cell">=SUMAPRODUCTO(B3:E3,B2:E2)</td></tr>
+            <tr><td class="col-header">5</td><td class="row-header">Restricción</td><td>Cerr.</td><td>Centro</td><td>Cuba</td><td>Dosq.</td><td class="formula-cell">Usado | Disp.</td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">Inversión</td><td>200</td><td>300</td><td>150</td><td>180</td><td class="formula-cell">=SUMAPRODUCTO(...) | 500</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Ingenieros</td><td>6</td><td>8</td><td>4</td><td>5</td><td class="formula-cell">=SUMAPRODUCTO(...) | 15</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">2</div><div class="step-title">Configurar Solver</div></div>
+        <div class="solver-config">
+          <h4>⚙️ Parámetros de Solver</h4>
+          <div class="solver-row"><span class="solver-label">Objetivo:</span><span class="solver-val green">F3 (Max)</span></div>
+          <div class="solver-row"><span class="solver-label">Cambiando celdas:</span><span class="solver-val purple">B2:E2</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 1:</span><span class="solver-val">F6 ≤ G6 (Inversión)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 2:</span><span class="solver-val">F7 ≤ G7 (Ingenieros)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 3:</span><span class="solver-val purple">B2:E2 = bin (binario) ← ¡No int!</span></div>
+          <div class="solver-row"><span class="solver-label">Método:</span><span class="solver-val">Simplex LP</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">3</div><div class="step-title">Resultado</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">2</td><td class="row-header">Ejecutar</td><td class="var-cell">1</td><td class="var-cell">1</td><td class="var-cell">0</td><td class="var-cell">0</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Rentabilidad</td><td>80</td><td>120</td><td>65</td><td>70</td><td class="result-cell">200</td><td></td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">Inversión</td><td>200</td><td>300</td><td>150</td><td>180</td><td>500</td><td>500</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Ingenieros</td><td>6</td><td>8</td><td>4</td><td>5</td><td>14</td><td>15</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="answer-box">
+        <div class="answer-label">Solución Óptima</div>
+        <div class="answer-val">Z = $200 M</div>
+        <div class="answer-detail">🏘️ Cerritos: <strong>SÍ</strong> &nbsp;|&nbsp; 🏢 Centro: <strong>SÍ</strong> &nbsp;|&nbsp; 🏪 Cuba: <strong>NO</strong> &nbsp;|&nbsp; 🏫 Dosq.: <strong>NO</strong></div>
+        <div class="answer-detail" style="margin-top:.3rem;font-size:.82rem;color:var(--text3)">Inversión: $500M/500M · Ingenieros: 14/15 · Presupuesto al límite</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ EJERCICIO 5 ═══════════════ -->
+<section class="chapter" id="ej5">
+  <div class="exercise-card">
+    <div class="exercise-num">
+      <div class="num-badge">5</div>
+      <div class="ex-title">Lotes VIS y No-VIS con Proporción</div>
+      <span class="ex-type type-max">MAX</span>
+    </div>
+    <div class="exercise-body">
+      <p>Por normativa municipal, la constructora debe garantizar que <strong>al menos el 40%</strong> de los lotes construidos sean <span class="highlight">VIS (Vivienda de Interés Social)</span>.</p>
+
+      <div class="dialogue">
+        <div class="avatar av-rafael">👷</div>
+        <div class="bubble">
+          <div class="char-name nm-rafael">Don Rafael</div>
+          <div class="char-text">Los lotes VIS dejan $15M y los No-VIS $40M de utilidad. Pero la Alcaldía nos exige mínimo 40% VIS del total. Tenemos 80 hectáreas y $600M.</div>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Recurso</th><th>🏠 VIS (x₁)</th><th>🏡 No-VIS (x₂)</th><th>Disponible</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">Terreno (ha)</td><td>2</td><td>5</td><td>≤ 80</td></tr>
+          <tr><td class="label">Inversión ($M)</td><td>10</td><td>25</td><td>≤ 600</td></tr>
+          <tr><td class="label">Proporción VIS</td><td colspan="2">x₁ ≥ 0.4(x₁ + x₂)</td><td>≥ 40%</td></tr>
+          <tr class="obj-row"><td class="label">Utilidad ($M)</td><td>15</td><td>40</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Max Z = 15x₁ + 40x₂</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">2x₁ + 5x₂ ≤ 80 &nbsp;(Terreno)</span><br>
+        <span class="rest">10x₁ + 25x₂ ≤ 600 &nbsp;(Inversión)</span><br>
+        <span class="rest">x₁ ≥ 0.4(x₁ + x₂) → 0.6x₁ − 0.4x₂ ≥ 0 &nbsp;(Proporción VIS)</span><br>
+        <span class="nn">x₁, x₂ ≥ 0</span>
+        <span class="int-tag">🔢 x₁, x₂ ∈ ℤ (enteros)</span>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">💡</span>
+        <p><strong>Truco de proporciones:</strong> "x₁ ≥ 40% del total" se traduce como x₁ ≥ 0.4(x₁+x₂). Reordenando: 0.6x₁ − 0.4x₂ ≥ 0. Así queda lineal y Solver la maneja sin problema.</p>
+      </div>
+
+      <button class="btn-solve" onclick="openModal('modal5')">
+        <span class="icon">📊</span> Ver solución paso a paso en Excel
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL 5 -->
+<div class="modal-overlay" id="modal5">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📊 Ejercicio 5 — Restricción de Proporción</h3>
+      <button class="modal-close" onclick="closeModal('modal5')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="step">
+        <div class="step-head"><div class="step-num">1</div><div class="step-title">Hoja de cálculo</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">1</td><td class="row-header">Tipo</td><td>VIS</td><td>No-VIS</td><td></td><td></td></tr>
+            <tr><td class="col-header">2</td><td class="row-header">Lotes</td><td class="var-cell">0</td><td class="var-cell">0</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Utilidad unit.</td><td>15</td><td>40</td><td class="formula-cell">=SUMAPRODUCTO(B3:C3,B2:C2)</td><td></td></tr>
+            <tr><td class="col-header">5</td><td class="row-header">Restricción</td><td>VIS</td><td>No-VIS</td><td class="formula-cell">Usado</td><td>Límite</td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">Terreno</td><td>2</td><td>5</td><td class="formula-cell">=SUMAPRODUCTO(...)</td><td>80</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Inversión</td><td>10</td><td>25</td><td class="formula-cell">=SUMAPRODUCTO(...)</td><td>600</td></tr>
+            <tr><td class="col-header">8</td><td class="row-header">Proporción</td><td>0.6</td><td>-0.4</td><td class="formula-cell">=SUMAPRODUCTO(...)</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">2</div><div class="step-title">Solver</div></div>
+        <div class="solver-config">
+          <h4>⚙️ Parámetros de Solver</h4>
+          <div class="solver-row"><span class="solver-label">Objetivo:</span><span class="solver-val green">D3 (Max)</span></div>
+          <div class="solver-row"><span class="solver-label">Cambiando celdas:</span><span class="solver-val purple">B2:C2</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 1:</span><span class="solver-val">D6 ≤ E6 (Terreno)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 2:</span><span class="solver-val">D7 ≤ E7 (Inversión)</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 3:</span><span class="solver-val amber">D8 ≥ E8 (Proporción VIS) ⬆️</span></div>
+          <div class="solver-row"><span class="solver-label">Restricción 4:</span><span class="solver-val purple">B2:C2 = int</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><div class="step-num">3</div><div class="step-title">Resultado</div></div>
+        <table class="excel-table">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr></thead>
+          <tbody>
+            <tr><td class="col-header">2</td><td class="row-header">Lotes</td><td class="var-cell">20</td><td class="var-cell">8</td><td></td><td></td></tr>
+            <tr><td class="col-header">3</td><td class="row-header">Utilidad</td><td>15</td><td>40</td><td class="result-cell">620</td><td></td></tr>
+            <tr><td class="col-header">6</td><td class="row-header">Terreno</td><td>2</td><td>5</td><td>80</td><td>80</td></tr>
+            <tr><td class="col-header">7</td><td class="row-header">Inversión</td><td>10</td><td>25</td><td>400</td><td>600</td></tr>
+            <tr><td class="col-header">8</td><td class="row-header">Proporción</td><td>0.6</td><td>-0.4</td><td>8.8</td><td>0</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:.85rem;color:var(--text2);margin-top:.5rem">VIS = 20/(20+8) = 71% ≥ 40% ✅. La proporción se cumple holgadamente porque VIS usa menos terreno y el recurso limitante es el terreno.</p>
+      </div>
+
+      <div class="answer-box">
+        <div class="answer-label">Solución Óptima</div>
+        <div class="answer-val">Z = $620 M</div>
+        <div class="answer-detail">🏠 VIS: <strong>20 lotes</strong> &nbsp;|&nbsp; 🏡 No-VIS: <strong>8 lotes</strong></div>
+        <div class="answer-detail" style="margin-top:.3rem;font-size:.82rem;color:var(--text3)">Terreno: 80/80 ha (activa) · Inversión: $400M/600M · VIS: 71% ✅</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ SEPARADOR TALLER ═══════════════ -->
+<section class="chapter" id="taller-divider">
+  <div class="section-divider">
+    <div class="divider-icon">📝</div>
+    <h2>Taller — Tu Turno</h2>
+    <p>5 ejercicios para resolver en Excel con Solver. ¡Manos a la obra!</p>
+  </div>
+
+  <div class="dialogue">
+    <div class="avatar av-valentina">👩‍💼</div>
+    <div class="bubble">
+      <div class="char-name nm-valentina">Valentina</div>
+      <div class="char-text">Ya viste cómo se hace. Ahora te toca a ti. Plantea el modelo, móntalo en Excel, configura Solver con enteros y encuentra la solución óptima. <strong>¡Éxitos!</strong></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ TALLER 6 ═══════════════ -->
+<section class="chapter" id="ej6">
+  <div class="workshop-card">
+    <div class="exercise-num">
+      <div class="num-badge">6</div>
+      <div class="ex-title">Asignación de Maquinaria Pesada</div>
+      <span class="ex-type type-max">MAX</span>
+    </div>
+    <div class="exercise-body">
+      <span class="workshop-tag">📝 Taller</span>
+      <p>La constructora debe asignar su maquinaria a tres frentes de obra: <span class="highlight">Excavación (x₁)</span>, <span class="highlight">Cimentación (x₂)</span> y <span class="highlight">Estructura (x₃)</span>. Cada frente genera una ganancia distinta por equipo asignado.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Recurso</th><th>⛏️ Excav. (x₁)</th><th>🏗️ Ciment. (x₂)</th><th>🔨 Estruct. (x₃)</th><th>Disponible</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">Operarios</td><td>4</td><td>3</td><td>5</td><td>≤ 36</td></tr>
+          <tr><td class="label">Combustible (gal/día)</td><td>20</td><td>15</td><td>25</td><td>≤ 180</td></tr>
+          <tr><td class="label">Horas máquina/día</td><td>6</td><td>8</td><td>7</td><td>≤ 56</td></tr>
+          <tr class="obj-row"><td class="label">Ganancia ($M/equipo)</td><td>18</td><td>22</td><td>30</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Max Z = 18x₁ + 22x₂ + 30x₃</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">4x₁ + 3x₂ + 5x₃ ≤ 36 &nbsp;(Operarios)</span><br>
+        <span class="rest">20x₁ + 15x₂ + 25x₃ ≤ 180 &nbsp;(Combustible)</span><br>
+        <span class="rest">6x₁ + 8x₂ + 7x₃ ≤ 56 &nbsp;(Horas máquina)</span><br>
+        <span class="nn">x₁, x₂, x₃ ≥ 0</span>
+        <span class="int-tag">🔢 x₁, x₂, x₃ ∈ ℤ (enteros)</span>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">🎯</span>
+        <p><strong>Tu tarea:</strong> Monta este modelo en Excel, configura Solver con la restricción de enteros, y encuentra la solución óptima. ¿Cuántos equipos asignar a cada frente?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ TALLER 7 ═══════════════ -->
+<section class="chapter" id="ej7">
+  <div class="workshop-card">
+    <div class="exercise-num">
+      <div class="num-badge">7</div>
+      <div class="ex-title">Compra de Materiales al Menor Costo</div>
+      <span class="ex-type type-min">MIN</span>
+    </div>
+    <div class="exercise-body">
+      <span class="workshop-tag">📝 Taller</span>
+      <p>Se necesita comprar materiales de dos proveedores: <span class="highlight">Proveedor Pereira (x₁)</span> y <span class="highlight">Proveedor Manizales (x₂)</span>. Se compran por lotes enteros y se deben cumplir requisitos mínimos de cemento y varilla.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Material por lote</th><th>📦 Pereira (x₁)</th><th>📦 Manizales (x₂)</th><th>Mínimo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">Cemento (bultos)</td><td>50</td><td>30</td><td>≥ 300</td></tr>
+          <tr><td class="label">Varilla (barras)</td><td>20</td><td>40</td><td>≥ 200</td></tr>
+          <tr><td class="label">Arena (m³)</td><td>10</td><td>8</td><td>≥ 60</td></tr>
+          <tr class="obj-row"><td class="label">Costo/lote ($M)</td><td>12</td><td>10</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Min Z = 12x₁ + 10x₂</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">50x₁ + 30x₂ ≥ 300 &nbsp;(Cemento)</span><br>
+        <span class="rest">20x₁ + 40x₂ ≥ 200 &nbsp;(Varilla)</span><br>
+        <span class="rest">10x₁ + 8x₂ ≥ 60 &nbsp;(Arena)</span><br>
+        <span class="nn">x₁, x₂ ≥ 0</span>
+        <span class="int-tag">🔢 x₁, x₂ ∈ ℤ (enteros)</span>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">🎯</span>
+        <p><strong>Tu tarea:</strong> Recuerda que en minimización las restricciones son ≥. Configura Solver para encontrar el costo mínimo con lotes enteros.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ TALLER 8 ═══════════════ -->
+<section class="chapter" id="ej8">
+  <div class="workshop-card">
+    <div class="exercise-num">
+      <div class="num-badge">8</div>
+      <div class="ex-title">Mezcla de Concreto con Calidad Mínima</div>
+      <span class="ex-type type-max">MAX</span>
+    </div>
+    <div class="exercise-body">
+      <span class="workshop-tag">📝 Taller</span>
+      <p>La planta produce dos tipos de concreto: <span class="highlight">Estándar (x₁)</span> y <span class="highlight">Premium (x₂)</span>, vendidos por metro cúbico entero. Hay recursos limitados y un contrato que exige mínimo 10 m³ de Premium.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Recurso / Requisito</th><th>🧱 Estándar (x₁)</th><th>💎 Premium (x₂)</th><th>Límite</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">Cemento (bultos)</td><td>5</td><td>8</td><td>≤ 120</td></tr>
+          <tr><td class="label">Gravilla (m³)</td><td>3</td><td>4</td><td>≤ 60</td></tr>
+          <tr><td class="label">Horas planta</td><td>1</td><td>2</td><td>≤ 30</td></tr>
+          <tr><td class="label">Demanda Premium</td><td>0</td><td>1</td><td>≥ 10</td></tr>
+          <tr class="obj-row"><td class="label">Utilidad ($M/m³)</td><td>3</td><td>5</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Max Z = 3x₁ + 5x₂</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">5x₁ + 8x₂ ≤ 120 &nbsp;(Cemento)</span><br>
+        <span class="rest">3x₁ + 4x₂ ≤ 60 &nbsp;(Gravilla)</span><br>
+        <span class="rest">x₁ + 2x₂ ≤ 30 &nbsp;(Horas planta)</span><br>
+        <span class="rest">x₂ ≥ 10 &nbsp;(Demanda Premium)</span><br>
+        <span class="nn">x₁, x₂ ≥ 0</span>
+        <span class="int-tag">🔢 x₁, x₂ ∈ ℤ (enteros)</span>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">🎯</span>
+        <p><strong>Tu tarea:</strong> Este modelo mezcla restricciones ≤ (recursos) con ≥ (demanda mínima). Asegúrate de configurar bien el signo de cada restricción en Solver.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ TALLER 9 ═══════════════ -->
+<section class="chapter" id="ej9">
+  <div class="workshop-card">
+    <div class="exercise-num">
+      <div class="num-badge">9</div>
+      <div class="ex-title">Apertura de Sedes Regionales</div>
+      <span class="ex-type type-bin">BIN</span>
+    </div>
+    <div class="exercise-body">
+      <span class="workshop-tag">📝 Taller</span>
+      <p>La constructora evalúa abrir sedes en <strong>3 ciudades</strong> del Eje Cafetero. Cada sede se abre o no se abre (decisión binaria).</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Sede</th><th>Inversión ($M)</th><th>Personal</th><th>Rentabilidad anual ($M)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">☕ Pereira (x₁)</td><td>400</td><td>25</td><td>180</td></tr>
+          <tr><td class="label">🌋 Manizales (x₂)</td><td>350</td><td>20</td><td>150</td></tr>
+          <tr><td class="label">🌿 Armenia (x₃)</td><td>280</td><td>15</td><td>120</td></tr>
+        </tbody>
+      </table>
+
+      <p><strong>Restricciones:</strong></p>
+      <ul style="color:var(--text2);font-size:.92rem;padding-left:1.2rem;line-height:2">
+        <li>Presupuesto total: <strong>$700M</strong></li>
+        <li>Personal disponible: <strong>40 personas</strong></li>
+        <li>Se debe abrir <strong>al menos 1 sede</strong>: x₁ + x₂ + x₃ ≥ 1</li>
+      </ul>
+
+      <div class="model-box">
+        <span class="fo">Max Z = 180x₁ + 150x₂ + 120x₃</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">400x₁ + 350x₂ + 280x₃ ≤ 700 &nbsp;(Presupuesto)</span><br>
+        <span class="rest">25x₁ + 20x₂ + 15x₃ ≤ 40 &nbsp;(Personal)</span><br>
+        <span class="rest">x₁ + x₂ + x₃ ≥ 1 &nbsp;(Mínimo 1 sede)</span><br>
+        <span class="int-tag">🔢 x₁, x₂, x₃ ∈ {0, 1} (binarias)</span>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">🎯</span>
+        <p><strong>Tu tarea:</strong> Usa variables <strong>binarias (bin)</strong> en Solver, no enteras. Recuerda agregar la restricción de "al menos 1 sede".</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ TALLER 10 ═══════════════ -->
+<section class="chapter" id="ej10">
+  <div class="workshop-card">
+    <div class="exercise-num">
+      <div class="num-badge">10</div>
+      <div class="ex-title">Distribución de Camiones Mixer</div>
+      <span class="ex-type type-min">MIN</span>
+    </div>
+    <div class="exercise-body">
+      <span class="workshop-tag">📝 Taller</span>
+      <p>La constructora debe enviar camiones mixer (de concreto) a tres obras simultáneas. Cada camión es una unidad entera. Se quiere minimizar el costo total de transporte cumpliendo las entregas mínimas.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Requisito</th><th>🏗️ Obra Norte (x₁)</th><th>🏗️ Obra Sur (x₂)</th><th>🏗️ Obra Centro (x₃)</th><th>Mínimo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="label">Concreto (m³/viaje)</td><td>8</td><td>6</td><td>10</td><td>≥ 60</td></tr>
+          <tr><td class="label">Distancia (km)</td><td>15</td><td>25</td><td>10</td><td>≤ 120 total</td></tr>
+          <tr><td class="label">Tiempo (hrs/viaje)</td><td>2</td><td>3</td><td>1.5</td><td>≤ 20</td></tr>
+          <tr class="obj-row"><td class="label">Costo/viaje ($M)</td><td>3</td><td>4.5</td><td>2.5</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="model-box">
+        <span class="fo">Min Z = 3x₁ + 4.5x₂ + 2.5x₃</span>
+        <span class="sa">Sujeto a:</span>
+        <span class="rest">8x₁ + 6x₂ + 10x₃ ≥ 60 &nbsp;(Concreto mínimo)</span><br>
+        <span class="rest">15x₁ + 25x₂ + 10x₃ ≤ 120 &nbsp;(Distancia máxima)</span><br>
+        <span class="rest">2x₁ + 3x₂ + 1.5x₃ ≤ 20 &nbsp;(Tiempo)</span><br>
+        <span class="nn">x₁, x₂, x₃ ≥ 0</span>
+        <span class="int-tag">🔢 x₁, x₂, x₃ ∈ ℤ (enteros)</span>
+      </div>
+
+      <div class="tip-box">
+        <span class="tip-icon">🎯</span>
+        <p><strong>Tu tarea:</strong> Este modelo mezcla restricciones ≥ (mínimo de concreto) con ≤ (límites de distancia y tiempo) en una minimización. ¡Cuidado con los signos!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<section class="chapter" id="footer-section">
+  <div class="dialogue">
+    <div class="avatar av-rafael">👷</div>
+    <div class="bubble">
+      <div class="char-name nm-rafael">Don Rafael</div>
+      <div class="char-text">¡Excelente trabajo! Ya sabes montar modelos de PL entera en Excel con Solver. Recuerda: en la vida real, <strong>las decisiones siempre son enteras</strong>. No puedes contratar 2.5 ingenieros ni construir 3.7 casas.</div>
+    </div>
+  </div>
+
+  <div class="dialogue">
+    <div class="avatar av-valentina">👩‍💼</div>
+    <div class="bubble">
+      <div class="char-name nm-valentina">Valentina</div>
+      <div class="char-text">Tips finales: <strong>(1)</strong> Siempre marca "int" o "bin" en las restricciones de Solver. <strong>(2)</strong> Usa SUMAPRODUCTO para todo. <strong>(3)</strong> Verifica que la solución sea factible sustituyendo en cada restricción.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Administración de Operaciones 2 — Semana 7 <span class="heart">❤️</span> Constructora Risaralda S.A.S.</p>
+    <p style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">Pereira, Colombia · 2026</p>
+  </div>
+</section>
+
+<script>
+// Intersection Observer for scroll animations
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible') });
+}, { threshold: 0.15 });
+document.querySelectorAll('.chapter').forEach(c => obs.observe(c));
+
+// Modal open/close
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay) {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+});
+// Close modal on Escape
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => {
+      m.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  }
+});
+</script>
+</body>
+</html>
