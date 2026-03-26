@@ -66,7 +66,7 @@ h1,h2,h3{font-family:'Playfair Display',serif}
 /* ===== SCENE CONTAINER ===== */
 .scene{
   min-height:100vh;display:flex;flex-direction:column;
-  justify-content:center;padding:5rem 1.2rem 2rem;
+  justify-content:center;padding:6.5rem 1.2rem 2rem;
   max-width:720px;margin:0 auto;
   opacity:0;transform:translateY(15px);
   transition:opacity .5s,transform .5s;
@@ -239,6 +239,66 @@ h1,h2,h3{font-family:'Playfair Display',serif}
   .hud{padding:.4rem .8rem;font-size:.9rem}
   .hud-money{font-size:1rem}
 }
+
+/* ===== HUD PROGRESS BAR ===== */
+.hud-progress{
+  position:fixed;top:44px;left:0;right:0;z-index:99;
+  background:rgba(10,14,26,.9);padding:2px 1.2rem 4px;
+  display:none;align-items:center;gap:.8rem;
+}
+.hud-progress.active{display:flex}
+.hud-progress-bar{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.hud-progress-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--green));border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1);width:0}
+.hud-progress-text{font-size:.72rem;color:var(--text3);white-space:nowrap;font-weight:600}
+
+/* ===== QUESTION NUMBER BADGE ===== */
+.q-number-badge{
+  text-align:center;font-size:.85rem;font-weight:800;
+  letter-spacing:4px;text-transform:uppercase;
+  color:var(--amber);margin-bottom:.5rem;
+  background:rgba(245,158,11,.08);padding:.4rem 1.2rem;
+  border-radius:20px;display:inline-block;
+  margin-left:auto;margin-right:auto;
+  width:fit-content;
+}
+.scene .q-number-badge{display:block;margin:0 auto .5rem}
+
+/* ===== SCREEN FLASH ===== */
+.screen-flash{
+  position:fixed;inset:0;z-index:500;pointer-events:none;
+  animation:flashAnim .6s ease-out forwards;
+}
+.correct-flash{background:rgba(16,185,129,.15)}
+.wrong-flash{background:rgba(244,63,94,.1)}
+@keyframes flashAnim{0%{opacity:1}100%{opacity:0}}
+
+/* ===== SHAKE ON WRONG ===== */
+.shake-anim{animation:shakeScene .4s ease-out}
+@keyframes shakeScene{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+/* ===== CELEBRATION FEEDBACK ===== */
+.fb-celebrate{text-align:center;margin-bottom:.8rem}
+.fb-icon-big{font-size:3rem;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275)}
+.fb-title-correct{
+  font-size:1.5rem;font-weight:900;
+  background:linear-gradient(135deg,var(--green),var(--teal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-top:.3rem;
+}
+.fb-money-big{
+  text-align:center;font-size:1.8rem;font-weight:900;
+  margin:.8rem 0;color:var(--green);
+  animation:popIn .5s cubic-bezier(.175,.885,.32,1.275) .2s both;
+}
+.fb-money-big.pos{color:var(--green)}
+@keyframes popIn{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ===== SPARKLE PARTICLES ===== */
+.sparkle{
+  position:fixed;top:50px;z-index:200;font-size:1.2rem;
+  pointer-events:none;animation:sparkleAnim 1.2s ease-out forwards;
+}
+@keyframes sparkleAnim{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-40px) scale(.5) rotate(20deg)}}
 </style>
 </head>
 <body>
@@ -247,6 +307,10 @@ h1,h2,h3{font-family:'Playfair Display',serif}
   <div class="hud-money"><span class="symbol">💰</span> $<span class="amount" id="hudMoney">100,000,000</span></div>
   <div class="hud-chapter" id="hudChapter"></div>
   <div class="hud-timer ok" id="hudTimer">01:25:00</div>
+</div>
+<div class="hud-progress" id="hudProgress">
+  <div class="hud-progress-bar"><div class="hud-progress-fill" id="hudProgressFill"></div></div>
+  <span class="hud-progress-text" id="hudProgressText">Pregunta 0 de 14</span>
 </div>
 <div id="toasts"></div>
 <div id="moneyFloats"></div>
@@ -825,6 +889,7 @@ const G = {
   data:null, scenes:null,
   remaining:TOTAL_TIME, interval:null, timerStarted:false,
   notifs:new Set(), submitted:false,
+  streak:0,
 };
 
 /* ═══════════════════════════════════════════
@@ -842,6 +907,17 @@ function showMoneyFloat(amount){
   el.textContent=(amount>=0?'+':'')+fmt$(amount);
   document.getElementById('moneyFloats').appendChild(el);
   setTimeout(()=>el.remove(),2000);
+  if(amount > 0) {
+    for(let i=0;i<6;i++){
+      const p=document.createElement('div');
+      p.className='sparkle';
+      p.style.left=(40+Math.random()*20)+'vw';
+      p.style.animationDelay=(Math.random()*.3)+'s';
+      p.textContent=['\u2728','\uD83D\uDCB0','\u2B50','\uD83C\uDFAF'][Math.floor(Math.random()*4)];
+      document.getElementById('moneyFloats').appendChild(p);
+      setTimeout(()=>p.remove(),1500);
+    }
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -850,6 +926,7 @@ function showMoneyFloat(amount){
 function startTimer(){
   G.timerStarted=true;
   document.getElementById('hud').classList.add('active');
+  document.getElementById('hudProgress').classList.add('active');
   G.interval=setInterval(()=>{
     G.remaining--;
     if(G.remaining<=0){G.remaining=0;clearInterval(G.interval);toast('⏰ ¡Tiempo! Enviando resultados...','danger',8000);setTimeout(()=>showEpilogue(),2000)}
@@ -862,6 +939,14 @@ function updateHUD(){
   const pct=G.remaining/TOTAL_TIME;
   el.className='hud-timer '+(pct>.35?'ok':pct>.12?'warn':'danger');
   document.getElementById('hudMoney').textContent=G.money.toLocaleString('es-CO');
+  const progFill=document.getElementById('hudProgressFill');
+  const progText=document.getElementById('hudProgressText');
+  if(progFill&&progText){
+    const total=14;
+    const done=G.history.length;
+    progFill.style.width=(done/total*100)+'%';
+    progText.textContent='Pregunta '+done+' de '+total;
+  }
 }
 function checkNotifs(){
   const m=Math.floor(G.remaining/60),ns=G.notifs;
@@ -886,6 +971,10 @@ function renderScene(id){
   document.getElementById('hudChapter').textContent=sc.ch||'';
   let html=`<div class="scene" id="currentScene">`;
   if(sc.icon) html+=`<div class="scene-illust">${sc.icon}</div>`;
+  if(sc.choices){
+    const qNum=G.history.length+1;
+    html+=`<div class="q-number-badge">PREGUNTA ${qNum}</div>`;
+  }
   if(sc.ch) html+=`<div class="chapter-tag">${sc.ch}</div>`;
   if(sc.title) html+=`<h2 class="scene-title">${sc.title}</h2>`;
   if(sc.narr) html+=`<div class="narrative">${sc.narr}</div>`;
@@ -940,15 +1029,37 @@ function makeChoice(idx){
   updateHUD();
   // Record
   G.history.push({scene:G.scene, choice:idx, money:ch.$, correct:!!ch.ok});
+  // Dopamine effects
+  if(ch.ok) {
+    const flash=document.createElement('div');
+    flash.className='screen-flash correct-flash';
+    document.body.appendChild(flash);
+    setTimeout(()=>flash.remove(),800);
+    G.streak=(G.streak||0)+1;
+    if(G.streak>=3){toast('\uD83D\uDD25 \u00A1RACHA DE '+G.streak+'! \u00A1Imparable!','success',3000)}
+  } else {
+    G.streak=0;
+    document.getElementById('currentScene')?.classList.add('shake-anim');
+    setTimeout(()=>document.getElementById('currentScene')?.classList.remove('shake-anim'),500);
+  }
   // Show feedback
   const fbDiv=document.createElement('div');
   fbDiv.className='feedback '+(ch.ok?'correct':'wrong');
-  fbDiv.innerHTML=`
-    <div class="fb-icon">${ch.ok?'✅':'❌'}</div>
+  fbDiv.innerHTML=ch.ok?`
+    <div class="fb-celebrate">
+      <div class="fb-icon-big">\u2705</div>
+      <div class="fb-title-correct">\u00A1CORRECTO!</div>
+    </div>
     <div class="fb-text">${ch.fb}</div>
-    <div class="fb-money" style="color:${ch.$>=0?'var(--green)':'var(--red)'}">${ch.$>=0?'+':''}${fmt$(ch.$)}</div>
+    <div class="fb-money-big pos">+${fmt$(ch.$)}</div>
     ${ch.react?dialogue(ch.react.c,ch.react.t):''}
-    <button class="btn-continue ${ch.ok?'success':'danger'}" onclick="goNext('${ch.nx}')">Continuar →</button>
+    <button class="btn-continue success" onclick="goNext('${ch.nx}')">Continuar \u2192</button>
+  `:`
+    <div class="fb-icon">\u274C</div>
+    <div class="fb-text">${ch.fb}</div>
+    <div class="fb-money" style="color:var(--red)">${fmt$(ch.$)}</div>
+    ${ch.react?dialogue(ch.react.c,ch.react.t):''}
+    <button class="btn-continue danger" onclick="goNext('${ch.nx}')">Continuar \u2192</button>
   `;
   document.getElementById('choices').after(fbDiv);
   fbDiv.scrollIntoView({behavior:'smooth',block:'nearest'});
