@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador Gerencial - Cómo se juega</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .hero {
+      text-align: center;
+      padding: 40px 20px 30px;
+    }
+    .hero .big-emoji {
+      font-size: 90px;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .hero h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #f97316, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .section {
+      margin-top: 36px;
+    }
+    .section-title {
+      font-size: 26px;
+      font-weight: 900;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title .num {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #f97316, #ec4899);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+    }
+
+    .phases-timeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+    @media (max-width: 780px) {
+      .phases-timeline { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .phases-timeline { grid-template-columns: 1fr; }
+    }
+    .phase-card {
+      background: var(--bg-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      text-align: center;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+    .phase-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+      box-shadow: 0 12px 30px rgba(249, 115, 22, 0.2);
+    }
+    .phase-card .icon {
+      font-size: 52px;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .phase-card .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    .phase-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .phase-card p {
+      color: var(--text-dim);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .phase-card .time {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--primary);
+      margin-top: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .example-box {
+      background: linear-gradient(180deg, rgba(30, 42, 82, 0.9), rgba(18, 25, 54, 0.9));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px;
+      margin-top: 14px;
+    }
+    .example-label {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1.5px solid var(--info);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--info);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+
+    .step-chat {
+      display: grid;
+      gap: 12px;
+    }
+    .chat-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--bg-2);
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--primary);
+    }
+    .chat-item .bubble-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+    .chat-item .bubble-body {
+      flex: 1;
+    }
+    .chat-item .bubble-title {
+      font-weight: 800;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .chat-item .bubble-text {
+      color: var(--text-dim);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .chat-item.alt { border-left-color: var(--pink); }
+    .chat-item.success { border-left-color: var(--success); }
+
+    .vote-viz {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .vote-bar {
+      background: var(--bg-2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+    .vote-bar.winner {
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.12);
+    }
+    .vote-bar .letter {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+    .vote-bar.winner .letter {
+      color: var(--success);
+    }
+    .vote-bar .votes {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+    .vote-bar .total {
+      font-size: 26px;
+      font-weight: 900;
+      margin-top: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rotation-viz {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      justify-content: center;
+    }
+    .rotation-node {
+      background: var(--bg-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      text-align: center;
+      min-width: 110px;
+      position: relative;
+    }
+    .rotation-node.active {
+      border-color: var(--primary);
+      background: rgba(249, 115, 22, 0.12);
+      box-shadow: 0 6px 20px rgba(249, 115, 22, 0.3);
+    }
+    .rotation-node .round-num {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+    .rotation-node .name {
+      font-weight: 800;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .rotation-node .role {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .rotation-arrow {
+      color: var(--primary);
+      font-size: 22px;
+      align-self: center;
+    }
+
+    .company-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .company-tile {
+      background: var(--bg-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 16px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .company-tile:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+    }
+    .company-tile .big-emoji {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .company-tile h4 {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .company-tile p {
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .rule-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .rule-card .rule-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+    .rule-card .rule-body h4 {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .rule-card .rule-body p {
+      color: var(--text-dim);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .cta-bar {
+      margin-top: 50px;
+      padding: 30px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(236, 72, 153, 0.1));
+      border: 2px solid var(--primary);
+      border-radius: var(--radius);
+      text-align: center;
+    }
+    .cta-bar h2 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    .cta-bar p {
+      color: var(--text-dim);
+      margin-bottom: 18px;
+      font-size: 15px;
+    }
+
+    .accent { color: var(--primary); font-weight: 800; }
+    .accent-pink { color: var(--pink); font-weight: 800; }
+    .accent-success { color: var(--success); font-weight: 800; }
+    .accent-danger { color: var(--danger); font-weight: 800; }
+
+    .dilemma-preview {
+      background: var(--bg-2);
+      border-left: 4px solid var(--primary);
+      padding: 18px 22px;
+      border-radius: var(--radius-sm);
+      margin-top: 14px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .dilemma-preview strong {
+      color: var(--primary);
+    }
+
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 20px 0 30px;
+      justify-content: center;
+    }
+    .toc a {
+      padding: 8px 14px;
+      background: var(--bg-2);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+    .toc a:hover {
+      border-color: var(--primary);
+      background: rgba(249, 115, 22, 0.12);
+    }
+
+    .math-box {
+      background: var(--bg-3);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+    .math-box strong { color: var(--warning); }
+  </style>
+</head>
+<body>
+  <div class="container-wide">
+
+    <!-- HERO -->
+    <div class="hero">
+      <span class="big-emoji">🎯</span>
+      <h1>Cómo se juega</h1>
+      <p>
+        Un simulador de decisiones empresariales donde compiten hasta 5 empresas
+        en una junta directiva. Tu equipo debe analizar, proponer, votar y ver
+        las consecuencias en tiempo real.
+      </p>
+    </div>
+
+    <!-- TOC -->
+    <div class="toc">
+      <a href="#resumen">📋 Resumen</a>
+      <a href="#empresas">🏢 Empresas</a>
+      <a href="#roles">🎩 Roles</a>
+      <a href="#fases">⏱️ Las 4 fases</a>
+      <a href="#ejemplo">🎬 Ejemplo completo</a>
+      <a href="#votacion">🗳️ Votación</a>
+      <a href="#rotacion">🔄 Rotación</a>
+      <a href="#reglas">📏 Reglas</a>
+    </div>
+
+    <!-- RESUMEN -->
+    <div id="resumen" class="section">
+      <div class="section-title">
+        <div class="num">📋</div>
+        Resumen en 30 segundos
+      </div>
+      <div class="card">
+        <div class="rules-grid">
+          <div class="rule-card">
+            <div class="rule-icon">👥</div>
+            <div class="rule-body">
+              <h4>Equipos de 4-5 personas</h4>
+              <p>Cada grupo es una <span class="accent">junta directiva</span>. Cada ronda, uno de los integrantes es el ponente.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">💰</div>
+            <div class="rule-body">
+              <h4>Arrancan con $500M</h4>
+              <p>Cada decisión les puede <span class="accent-success">ganar</span> o <span class="accent-danger">hacer perder</span> plata. Gana quien tenga más caja al final.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">🎲</div>
+            <div class="rule-body">
+              <h4>30 rondas · 85 minutos</h4>
+              <p>Cada ronda dura aproximadamente <span class="accent">2.5 minutos</span>. 30 dilemas distintos de operaciones, finanzas, marketing, talento y PL.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">🤔</div>
+            <div class="rule-body">
+              <h4>No hay opción perfecta</h4>
+              <p>Las 4 opciones (A, B, C, D) tienen <span class="accent">rangos aleatorios</span>. La mejor elección puede salir mal y viceversa — igual que en la vida real.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMPRESAS -->
+    <div id="empresas" class="section">
+      <div class="section-title">
+        <div class="num">🏢</div>
+        Las 5 empresas
+      </div>
+      <div class="card">
+        <p style="color: var(--text-dim); margin-bottom: 6px;">
+          Cada equipo elige una empresa. Todas compiten en el mismo simulador pero
+          con sectores distintos. Pueden usarse entre 1 y 5 empresas según los grupos que haya.
+        </p>
+        <div class="company-gallery">
+          <div class="company-tile">
+            <span class="big-emoji">☕</span>
+            <h4>Café Pereira Origen</h4>
+            <p>Cafetería boutique del centro</p>
+          </div>
+          <div class="company-tile">
+            <span class="big-emoji">🛵</span>
+            <h4>DomiYa</h4>
+            <p>App de domicilios local</p>
+          </div>
+          <div class="company-tile">
+            <span class="big-emoji">🪑</span>
+            <h4>Maderas del Otún</h4>
+            <p>Fábrica de muebles</p>
+          </div>
+          <div class="company-tile">
+            <span class="big-emoji">👗</span>
+            <h4>Risa Wear</h4>
+            <p>Ropa urbana paisa</p>
+          </div>
+          <div class="company-tile">
+            <span class="big-emoji">🏗️</span>
+            <h4>Constructora Nevado</h4>
+            <p>Vivienda VIS en Dosquebradas</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROLES -->
+    <div id="roles" class="section">
+      <div class="section-title">
+        <div class="num">🎩</div>
+        Los 5 sombreros gerenciales
+      </div>
+      <div class="card">
+        <p style="color: var(--text-dim); margin-bottom: 14px;">
+          Cada ronda llega un dilema que afecta a un área distinta del negocio. El ponente del turno
+          se pone un "sombrero" según el tipo de decisión. Los sombreros <strong>rotan</strong> ronda
+          a ronda — no son fijos por persona.
+        </p>
+        <div class="rules-grid">
+          <div class="rule-card" style="border-left: 4px solid #f97316;">
+            <div class="rule-icon">🏭</div>
+            <div class="rule-body">
+              <h4>COO · Operaciones</h4>
+              <p>Producción, capacidad, cuellos de botella, proveedores, calidad.</p>
+            </div>
+          </div>
+          <div class="rule-card" style="border-left: 4px solid #10b981;">
+            <div class="rule-icon">💰</div>
+            <div class="rule-body">
+              <h4>CFO · Finanzas</h4>
+              <p>Crédito, flujo de caja, cartera, impuestos, tipo de cambio.</p>
+            </div>
+          </div>
+          <div class="rule-card" style="border-left: 4px solid #ec4899;">
+            <div class="rule-icon">📢</div>
+            <div class="rule-body">
+              <h4>CMO · Marketing</h4>
+              <p>Precio, posicionamiento, reputación, publicidad, competencia.</p>
+            </div>
+          </div>
+          <div class="rule-card" style="border-left: 4px solid #8b5cf6;">
+            <div class="rule-icon">👥</div>
+            <div class="rule-body">
+              <h4>CHRO · Talento</h4>
+              <p>Sueldos, conflictos, cultura, trabajo remoto, retención.</p>
+            </div>
+          </div>
+          <div class="rule-card" style="border-left: 4px solid #06b6d4;">
+            <div class="rule-icon">📊</div>
+            <div class="rule-body">
+              <h4>Analista de Optimización</h4>
+              <p>Programación lineal, punto de equilibrio, pronósticos, asignación de recursos.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASES -->
+    <div id="fases" class="section">
+      <div class="section-title">
+        <div class="num">⏱️</div>
+        Cada ronda tiene 4 fases
+      </div>
+      <div class="card">
+        <p style="color: var(--text-dim); margin-bottom: 4px;">
+          Cada ronda dura alrededor de <span class="accent">2 minutos 30 segundos</span>.
+          Todos deben estar atentos porque las fases cambian solas.
+        </p>
+        <div class="phases-timeline">
+          <div class="phase-card">
+            <span class="icon">📖</span>
+            <span class="tag">Fase 1</span>
+            <h3>Análisis</h3>
+            <p>Todo el equipo lee el dilema y discute entre ellos. Es el momento de debatir en voz alta.</p>
+            <div class="time">60s</div>
+          </div>
+          <div class="phase-card">
+            <span class="icon">💡</span>
+            <span class="tag">Fase 2</span>
+            <h3>Propuesta</h3>
+            <p>Solo el <strong>ponente del turno</strong> ve los botones. Elige A/B/C/D y escribe una frase de justificación.</p>
+            <div class="time">45s</div>
+          </div>
+          <div class="phase-card">
+            <span class="icon">🗳️</span>
+            <span class="tag">Fase 3</span>
+            <h3>Votación</h3>
+            <p>Todos ven la propuesta del ponente y votan. Pueden apoyarla o vetarla eligiendo otra opción.</p>
+            <div class="time">30s</div>
+          </div>
+          <div class="phase-card">
+            <span class="icon">🎬</span>
+            <span class="tag">Fase 4</span>
+            <h3>Resultado</h3>
+            <p>La opción ganadora se aplica. Se muestra el impacto en plata y la narrativa del resultado.</p>
+            <div class="time">15s</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EJEMPLO COMPLETO -->
+    <div id="ejemplo" class="section">
+      <div class="section-title">
+        <div class="num">🎬</div>
+        Ejemplo completo de una ronda
+      </div>
+      <div class="card">
+        <div class="example-label">Ronda 1 · Empresa: ☕ Café Pereira Origen · Sombrero: 🏭 COO</div>
+
+        <div class="dilemma-preview">
+          <strong>Dilema:</strong> Tu único proveedor de café especial sube precios
+          <strong>40%</strong> de un día para otro. Tienes pedidos comprometidos para el próximo mes
+          y no hay tiempo de buscar alternativas formales. ¿Qué decide la junta?
+        </div>
+
+        <h3 style="margin-top: 24px; margin-bottom: 10px;">Las 4 opciones disponibles:</h3>
+        <div class="options">
+          <div class="option">
+            <div class="option-letter">A</div>
+            <div class="option-text">Aceptar el aumento y trasladarlo al cliente final</div>
+          </div>
+          <div class="option">
+            <div class="option-letter">B</div>
+            <div class="option-text">Negociar pago a 90 días a cambio del precio viejo</div>
+          </div>
+          <div class="option">
+            <div class="option-letter">C</div>
+            <div class="option-text">Buscar proveedor pirata más barato sin certificación</div>
+          </div>
+          <div class="option">
+            <div class="option-letter">D</div>
+            <div class="option-text">Reducir producción 30% mientras buscas alternativas</div>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 30px; margin-bottom: 10px;">Cómo se desarrolla la junta:</h3>
+        <div class="step-chat">
+          <div class="chat-item">
+            <div class="bubble-icon">📖</div>
+            <div class="bubble-body">
+              <div class="bubble-title">00:00 - 01:00 · Análisis en equipo</div>
+              <div class="bubble-text">
+                Los 4 integrantes de <strong>Café Pereira Origen</strong> discuten en voz alta:
+                "Si aceptamos el aumento perdemos clientes. Pero el pirata es muy arriesgado.
+                Yo creo que mejor reducimos producción..."
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-item alt">
+            <div class="bubble-icon">🎤</div>
+            <div class="bubble-body">
+              <div class="bubble-title">01:00 - 01:45 · Propuesta del ponente (María)</div>
+              <div class="bubble-text">
+                El turno le toca a <span class="accent-pink">María</span>. En su celular aparecen los
+                4 botones. Ella elige <strong class="accent">B</strong> y escribe:
+                <em>"Negociando ganamos tiempo sin perder calidad ni reputación."</em>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-item">
+            <div class="bubble-icon">🗳️</div>
+            <div class="bubble-body">
+              <div class="bubble-title">01:45 - 02:15 · Votación de toda la junta</div>
+              <div class="bubble-text">
+                Ahora los <strong>4 integrantes</strong> ven la propuesta de María en su celular.
+                Cada uno vota:
+              </div>
+              <div class="vote-viz">
+                <div class="vote-bar">
+                  <div class="letter">A</div>
+                  <div class="votes">0 votos</div>
+                  <div class="total">0</div>
+                </div>
+                <div class="vote-bar winner">
+                  <div class="letter">B ⭐</div>
+                  <div class="votes">María (×1.5) + Juan + Laura</div>
+                  <div class="total">3.5</div>
+                </div>
+                <div class="vote-bar">
+                  <div class="letter">C</div>
+                  <div class="votes">0 votos</div>
+                  <div class="total">0</div>
+                </div>
+                <div class="vote-bar">
+                  <div class="letter">D</div>
+                  <div class="votes">Andrés</div>
+                  <div class="total">1</div>
+                </div>
+              </div>
+              <div class="math-box">
+                <strong>Cálculo:</strong> B gana con 3.5 puntos (voto de la ponente vale 1.5x) vs D con 1 punto.
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-item success">
+            <div class="bubble-icon">🎬</div>
+            <div class="bubble-body">
+              <div class="bubble-title">02:15 - 02:30 · Resultado</div>
+              <div class="bubble-text">
+                La junta decidió: <strong class="accent">B - Negociar pago a 90 días</strong>
+              </div>
+              <div style="text-align: center; margin-top: 14px;">
+                <div style="font-size: 42px; font-weight: 900; color: var(--success);">+$18.400.000</div>
+              </div>
+              <div class="bubble-text" style="margin-top: 8px; font-style: italic;">
+                "El proveedor accede pero te exige garantía bancaria. Ganas margen pero te endeudas un poco."
+              </div>
+              <div style="margin-top: 12px;">
+                <strong>Caja de la empresa:</strong>
+                <span style="color: var(--success); font-weight: 900;">$500M → $518.4M</span> 🎉
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOTACION -->
+    <div id="votacion" class="section">
+      <div class="section-title">
+        <div class="num">🗳️</div>
+        Cómo funciona la votación
+      </div>
+      <div class="card">
+        <div class="rules-grid">
+          <div class="rule-card">
+            <div class="rule-icon">1️⃣</div>
+            <div class="rule-body">
+              <h4>Voto de cada integrante = 1 punto</h4>
+              <p>Cada miembro del equipo tiene un voto normal con peso 1.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">⭐</div>
+            <div class="rule-body">
+              <h4>Voto del ponente = 1.5 puntos</h4>
+              <p>El ponente del turno tiene voto ponderado porque es el "experto del momento".</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">🏆</div>
+            <div class="rule-body">
+              <h4>Gana la opción con más puntos</h4>
+              <p>Se suman los pesos de cada opción. El mayor gana.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">⚖️</div>
+            <div class="rule-body">
+              <h4>Empate → decide el ponente</h4>
+              <p>Si hay empate entre dos opciones, gana la opción por la que votó el ponente.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="example-box" style="margin-top: 20px;">
+          <div class="example-label">Ejemplo numérico</div>
+          <p style="margin-bottom: 10px;">Equipo de <strong>5 integrantes</strong>. El ponente <strong class="accent-pink">Carlos</strong> propone <strong class="accent">C</strong>.</p>
+          <div class="vote-viz">
+            <div class="vote-bar">
+              <div class="letter">A</div>
+              <div class="votes">Ana, Luis</div>
+              <div class="total">2.0</div>
+            </div>
+            <div class="vote-bar">
+              <div class="letter">B</div>
+              <div class="votes">0 votos</div>
+              <div class="total">0</div>
+            </div>
+            <div class="vote-bar winner">
+              <div class="letter">C ⭐</div>
+              <div class="votes">Carlos (×1.5) + Sofía</div>
+              <div class="total">2.5</div>
+            </div>
+            <div class="vote-bar">
+              <div class="letter">D</div>
+              <div class="votes">Felipe</div>
+              <div class="total">1.0</div>
+            </div>
+          </div>
+          <div class="math-box">
+            <strong>Resultado:</strong> Gana <strong>C</strong> con 2.5 puntos. Aunque A tuvo 2 personas votando, el peso del ponente hizo la diferencia.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROTACION -->
+    <div id="rotacion" class="section">
+      <div class="section-title">
+        <div class="num">🔄</div>
+        Rotación del ponente
+      </div>
+      <div class="card">
+        <p style="color: var(--text-dim); margin-bottom: 6px;">
+          El rol de ponente <strong>rota automáticamente</strong> cada ronda. Si son 4 integrantes,
+          cada uno es ponente 1 vez cada 4 rondas. Esto garantiza que <strong>todos participen</strong>
+          como líderes varias veces.
+        </p>
+
+        <div class="example-box">
+          <div class="example-label">Ejemplo: equipo de 4 personas</div>
+          <div class="rotation-viz">
+            <div class="rotation-node active">
+              <div class="round-num">Ronda 1</div>
+              <div class="name">👩 María</div>
+              <div class="role">🏭 COO</div>
+            </div>
+            <span class="rotation-arrow">→</span>
+            <div class="rotation-node">
+              <div class="round-num">Ronda 2</div>
+              <div class="name">👨 Juan</div>
+              <div class="role">💰 CFO</div>
+            </div>
+            <span class="rotation-arrow">→</span>
+            <div class="rotation-node">
+              <div class="round-num">Ronda 3</div>
+              <div class="name">👩 Laura</div>
+              <div class="role">📢 CMO</div>
+            </div>
+            <span class="rotation-arrow">→</span>
+            <div class="rotation-node">
+              <div class="round-num">Ronda 4</div>
+              <div class="name">👨 Andrés</div>
+              <div class="role">👥 CHRO</div>
+            </div>
+            <span class="rotation-arrow">→</span>
+            <div class="rotation-node">
+              <div class="round-num">Ronda 5</div>
+              <div class="name">👩 María</div>
+              <div class="role">📊 Analista</div>
+            </div>
+          </div>
+          <p style="color: var(--text-dim); margin-top: 14px; font-size: 13px;">
+            En la ronda 5 vuelve a empezar el ciclo por María, pero esta vez le toca sombrero de <strong>analista de optimización</strong>.
+            Así cada persona pasa por todos los roles a lo largo del juego.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGLAS -->
+    <div id="reglas" class="section">
+      <div class="section-title">
+        <div class="num">📏</div>
+        Reglas importantes
+      </div>
+      <div class="card">
+        <div class="rules-grid">
+          <div class="rule-card">
+            <div class="rule-icon">📱</div>
+            <div class="rule-body">
+              <h4>Cada estudiante con su celular</h4>
+              <p>Todos ingresan a la misma URL, cada uno elige su empresa y escribe su nombre.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">🚫</div>
+            <div class="rule-body">
+              <h4>No hay respuestas perfectas</h4>
+              <p>Cada opción tiene un rango min/max aleatorio. "Jugar seguro" no garantiza ganar.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">⏰</div>
+            <div class="rule-body">
+              <h4>El tiempo es inflexible</h4>
+              <p>Si el ponente no propone a tiempo, la ronda se tranca. El profesor puede forzar avance.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">💾</div>
+            <div class="rule-body">
+              <h4>Persistencia offline</h4>
+              <p>Si se cae internet o cierras la pestaña, puedes retomar donde ibas. Las decisiones se guardan local.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">📊</div>
+            <div class="rule-body">
+              <h4>Tu participación se mide</h4>
+              <p>El tablero muestra cuántos votos emitiste y cuántas veces fuiste ponente. No te quedes callado.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-icon">🏆</div>
+            <div class="rule-body">
+              <h4>Gana la empresa con más caja</h4>
+              <p>Al final de las 30 rondas, la empresa con mayor caja gana el simulador.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-bar">
+      <h2>🎮 ¿Listos para la junta directiva?</h2>
+      <p>Entra al simulador, elige tu empresa y espera a que el profesor inicie el juego.</p>
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <a href="index.html" class="btn btn-primary btn-lg">🚀 Entrar al simulador</a>
+        <a href="dashboard.html" class="btn btn-ghost btn-lg">🎓 Panel del profesor</a>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0 20px; color: var(--text-dim); font-size: 13px;">
+      Simulador Gerencial · Administración de Operaciones 2 · Pereira 2026
+    </div>
+  </div>
+</body>
+</html>
