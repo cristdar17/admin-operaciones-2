@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador Gerencial - Panel maestro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container-wide">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 22px; gap: 16px; flex-wrap: wrap;">
+      <div>
+        <h1 style="font-size: 30px;">🎓 Panel Maestro</h1>
+        <div style="color: var(--text-dim); font-size: 14px; margin-top: 4px;">
+          Simulador Gerencial · vista del profesor
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span class="status-pill" id="gameStatusPill">lobby</span>
+        <span class="mini-badge" id="lastUpdate">—</span>
+        <button class="btn btn-primary" id="refreshBtn">
+          🔄 Refrescar
+        </button>
+      </div>
+    </div>
+
+    <!-- Controles maestros -->
+    <div class="card" style="margin-bottom: 20px;">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🎮 Controles del juego</div>
+          <div class="card-subtitle">Inicia, avanza, pausa o reinicia el simulador</div>
+        </div>
+      </div>
+      <div class="master-controls">
+        <button class="btn btn-success" id="startBtn">▶ Iniciar juego</button>
+        <button class="btn btn-primary" id="nextBtn">⏭ Siguiente ronda</button>
+        <button class="btn btn-ghost" id="pauseBtn">⏸ Pausar / Reanudar</button>
+        <button class="btn btn-danger" id="resetBtn">🗑 Reiniciar todo</button>
+      </div>
+      <div class="stat-grid" style="margin-top: 18px;">
+        <div class="stat-box">
+          <div class="label">Ronda</div>
+          <div class="value" id="statRound">-/-</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Estudiantes</div>
+          <div class="value" id="statStudents">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Empresas activas</div>
+          <div class="value" id="statCompanies">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Decisiones tomadas</div>
+          <div class="value" id="statDecisions">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <!-- Ranking de empresas -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">🏆 Ranking de empresas</div>
+            <div class="card-subtitle">Ordenado por caja actual</div>
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Empresa</th>
+                <th style="text-align: right;">Caja</th>
+                <th style="text-align: right;">Decisiones</th>
+                <th style="text-align: right;">Integrantes</th>
+              </tr>
+            </thead>
+            <tbody id="companiesTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tabla de estudiantes -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">👥 Participación individual</div>
+            <div class="card-subtitle">Votos emitidos y turnos como ponente</div>
+          </div>
+        </div>
+        <div style="overflow-x: auto; max-height: 500px; overflow-y: auto;">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Empresa</th>
+                <th style="text-align: right;">Votos</th>
+                <th style="text-align: right;">Ponente</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa de decisiones recientes -->
+    <div class="card" style="margin-top: 20px;">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🗺️ Últimas decisiones por empresa</div>
+          <div class="card-subtitle">Las 5 rondas más recientes de cada empresa</div>
+        </div>
+      </div>
+      <div id="decisionsMap" style="display: grid; gap: 16px;"></div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="index.html" style="font-size: 13px; color: var(--text-dim);">
+        ← Volver al login de estudiantes
+      </a>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/sheets.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    let state = null;
+
+    (async function init() {
+      await Engine.loadScenarios();
+      document.getElementById('refreshBtn').addEventListener('click', refresh);
+      document.getElementById('startBtn').addEventListener('click', () => control('start', '¿Iniciar el juego?'));
+      document.getElementById('nextBtn').addEventListener('click', () => control('next', '¿Avanzar a la siguiente ronda?'));
+      document.getElementById('pauseBtn').addEventListener('click', () => control('pause', '¿Alternar pausa?'));
+      document.getElementById('resetBtn').addEventListener('click', () => control('reset', '⚠️ Esto BORRA todas las sesiones, votos y dinero. ¿Continuar?'));
+      refresh();
+    })();
+
+    async function refresh() {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Cargando…';
+      try {
+        const res = await Sheets.state();
+        if (!res.ok) throw new Error(res.error || 'error');
+        state = res;
+        render();
+        document.getElementById('lastUpdate').textContent = '✓ ' + new Date().toLocaleTimeString('es-CO');
+      } catch (err) {
+        UI.toast('Error cargando estado: ' + err.message, 'error', 5000);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 Refrescar';
+      }
+    }
+
+    async function control(action, confirmMsg) {
+      if (!confirm(confirmMsg)) return;
+      try {
+        const fn = Sheets[action];
+        if (!fn) throw new Error('accion no existe');
+        const res = await fn.call(Sheets);
+        if (!res.ok) throw new Error(res.error || 'error');
+        UI.toast('✅ Acción ejecutada', 'success');
+        setTimeout(refresh, 300);
+      } catch (err) {
+        UI.toast('Error: ' + err.message, 'error', 5000);
+      }
+    }
+
+    function render() {
+      if (!state) return;
+      const game = state.game || {};
+      const status = String(game.status || 'lobby');
+      const statusPill = document.getElementById('gameStatusPill');
+      statusPill.textContent = status;
+      statusPill.className = 'status-pill status-' + status;
+
+      const students = state.students || [];
+      const companies = state.companies || [];
+      const rounds = state.rounds || [];
+
+      document.getElementById('statRound').textContent = (game.round || 0) + '/' + window.SIM_CONFIG.TOTAL_ROUNDS;
+      document.getElementById('statStudents').textContent = students.length;
+      document.getElementById('statCompanies').textContent = new Set(students.map(s => s.company)).size;
+      document.getElementById('statDecisions').textContent = rounds.filter(r => r.phase === 'resolved').length;
+
+      // Ranking de empresas
+      const ranking = companies.slice().sort((a, b) => Number(b.cash) - Number(a.cash));
+      const compTbody = document.getElementById('companiesTable');
+      compTbody.innerHTML = ranking.map((c, i) => {
+        const members = students.filter(s => Number(s.company) === Number(c.id)).length;
+        const cashClass = Number(c.cash) >= window.SIM_CONFIG.INITIAL_CASH ? 'positive' : 'negative';
+        const medals = ['🥇', '🥈', '🥉', '🏅', '🏅'];
+        return `
+          <tr class="company-row">
+            <td class="rank-pos">${medals[i] || (i + 1)}</td>
+            <td>
+              <span class="emoji-col">${c.emoji || ''}</span>
+              <strong style="margin-left: 6px;">${escapeHtml(c.name)}</strong>
+            </td>
+            <td style="text-align: right;" class="cash-col ${cashClass}">${Engine.formatCOPFull(c.cash)}</td>
+            <td style="text-align: right;">${c.decisions || 0}</td>
+            <td style="text-align: right;">${members}</td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="5" class="empty"><span class="emoji">📊</span>Sin datos aún</td></tr>';
+
+      // Tabla de estudiantes
+      const studTbody = document.getElementById('studentsTable');
+      const sorted = students.slice().sort((a, b) => Number(b.votes_cast || 0) - Number(a.votes_cast || 0));
+      studTbody.innerHTML = sorted.map(s => {
+        const comp = companies.find(c => Number(c.id) === Number(s.company));
+        return `
+          <tr>
+            <td><strong>${escapeHtml(s.name)}</strong></td>
+            <td>${comp ? (comp.emoji + ' ' + escapeHtml(comp.name)) : '-'}</td>
+            <td style="text-align: right;">${s.votes_cast || 0}</td>
+            <td style="text-align: right;">${s.times_proponent || 0}</td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="4" class="empty"><span class="emoji">👥</span>Sin estudiantes aún</td></tr>';
+
+      // Mapa de decisiones recientes por empresa
+      const mapDiv = document.getElementById('decisionsMap');
+      mapDiv.innerHTML = companies.map(c => {
+        const compRounds = rounds
+          .filter(r => Number(r.company) === Number(c.id))
+          .sort((a, b) => Number(b.round) - Number(a.round))
+          .slice(0, 8);
+        return `
+          <div style="padding: 16px; background: var(--bg-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <div style="font-weight: 800; font-size: 16px;">${c.emoji} ${escapeHtml(c.name)}</div>
+              <div class="cash-col ${Number(c.cash) >= window.SIM_CONFIG.INITIAL_CASH ? 'positive' : 'negative'}" style="font-weight: 900;">${Engine.formatCOPFull(c.cash)}</div>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              ${compRounds.length === 0 ? '<span style="color: var(--text-dim); font-size: 13px;">Sin decisiones aún</span>' : compRounds.reverse().map(r => {
+                const delta = Number(r.delta || 0);
+                const bg = r.phase === 'resolved' ? (delta >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)') : 'var(--bg-3)';
+                const border = r.phase === 'resolved' ? (delta >= 0 ? 'var(--success)' : 'var(--danger)') : 'var(--border)';
+                const label = r.phase === 'resolved' ? (r.final_choice + ' ' + (delta >= 0 ? '+' : '') + Engine.formatCOP(delta)) : (r.phase || '…');
+                return `
+                  <div style="padding: 8px 12px; background: ${bg}; border: 1.5px solid ${border}; border-radius: 8px; font-size: 12px; font-weight: 700;" title="Ronda ${r.round}">
+                    R${r.round}: ${label}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador Gerencial - Junta directiva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="game-header" id="gameHeader">
+      <div class="left">
+        <div class="cash-label">Caja de la empresa</div>
+        <div class="cash-display" id="cashDisplay">$0</div>
+        <div id="companyLabel" style="font-size: 12px; color: var(--text-dim); margin-top: 2px;"></div>
+      </div>
+      <div class="center">
+        <div class="round-badge" id="roundBadge">Ronda -/-</div>
+        <div class="timer" id="timer">--:--</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;" id="phaseLabel">Esperando…</div>
+      </div>
+      <div class="right">
+        <div style="font-size: 12px; color: var(--text-dim);" id="playerLabel">—</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">
+          <span class="sync-dot" id="syncDot"></span><span id="syncText">online</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-top: 8px;" id="logoutBtn">Salir</button>
+      </div>
+    </div>
+
+    <div id="mainArea"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/sheets.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ui.js"></script>
+
+  <script>
+    // =====================================================
+    // Estado local
+    // =====================================================
+    const session = Storage.loadSession();
+    if (!session || !session.studentId) {
+      window.location.href = 'index.html';
+    }
+
+    let serverState = null;
+    let currentRound = 0;
+    let localPhase = 'waiting'; // waiting | analysis | propose | vote | result | ended
+    let phaseStartedAt = 0;
+    let lastRenderKey = '';
+    let pollTimer = null;
+    let tickTimer = null;
+    let resolving = false;
+
+    // =====================================================
+    // Init
+    // =====================================================
+    (async function init() {
+      await Engine.loadScenarios();
+      document.getElementById('playerLabel').textContent = '👤 ' + session.name;
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        if (confirm('¿Salir del simulador? Perderás tu sesión local.')) {
+          Storage.clearSession();
+          window.location.href = 'index.html';
+        }
+      });
+      startPolling();
+      startTick();
+      poll(); // inmediato
+    })();
+
+    function startPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(poll, window.SIM_CONFIG.POLL_INTERVAL);
+    }
+    function startTick() {
+      if (tickTimer) clearInterval(tickTimer);
+      tickTimer = setInterval(tick, 250);
+    }
+
+    async function poll() {
+      try {
+        const res = await Sheets.state(session.studentId);
+        if (!res.ok) throw new Error(res.error || 'error');
+        serverState = res;
+        setSyncStatus('online');
+        Storage.cacheState(res);
+        // Intentar flush de cola pendiente
+        Sheets.flushQueue().catch(() => {});
+        onStateUpdate();
+      } catch (err) {
+        setSyncStatus('offline');
+        const cached = Storage.loadCachedState();
+        if (cached && cached.state && !serverState) {
+          serverState = cached.state;
+          onStateUpdate();
+        }
+      }
+    }
+
+    function setSyncStatus(mode) {
+      const dot = document.getElementById('syncDot');
+      const txt = document.getElementById('syncText');
+      dot.className = 'sync-dot ' + (mode === 'offline' ? 'offline' : '');
+      txt.textContent = mode;
+    }
+
+    // =====================================================
+    // Cuando llega estado nuevo del servidor
+    // =====================================================
+    function onStateUpdate() {
+      const game = serverState.game || {};
+      const status = String(game.status || 'lobby');
+      const serverRound = parseInt(game.round, 10) || 0;
+
+      // Actualizar cash de la empresa
+      const myCompany = (serverState.companies || []).find(c => Number(c.id) === Number(session.company));
+      if (myCompany) {
+        const cashEl = document.getElementById('cashDisplay');
+        const current = parseFloat(cashEl.dataset.val || '0') || Number(myCompany.cash);
+        cashEl.dataset.val = myCompany.cash;
+        UI.animateNumber(cashEl, current, Number(myCompany.cash), 900, Engine.formatCOPFull);
+        document.getElementById('companyLabel').textContent = (myCompany.emoji || '') + ' ' + myCompany.name;
+      }
+
+      // Lobby / Paused / Ended
+      if (status === 'lobby') { renderLobby(); return; }
+      if (status === 'paused') { renderPaused(); return; }
+      if (status === 'ended') { renderEnded(); return; }
+
+      // Jugando
+      if (serverRound !== currentRound) {
+        currentRound = serverRound;
+        localPhase = 'analysis';
+        phaseStartedAt = Date.now();
+        Storage.saveLocalRound(currentRound, { phase: 'analysis', startedAt: phaseStartedAt });
+      }
+
+      // Revisar phase en servidor para esta ronda y empresa
+      const rr = (serverState.rounds || []).find(r =>
+        Number(r.company) === Number(session.company) && Number(r.round) === currentRound
+      );
+
+      if (rr && rr.phase === 'resolved') {
+        if (localPhase !== 'result') {
+          localPhase = 'result';
+          phaseStartedAt = Date.now();
+        }
+        renderResult(rr);
+        return;
+      }
+
+      if (rr && rr.phase === 'voting') {
+        if (localPhase !== 'vote') {
+          localPhase = 'vote';
+          phaseStartedAt = Date.now();
+        }
+        renderVote(rr);
+        // Si ya votaron todos -> triggear resolve
+        maybeResolve(rr);
+        return;
+      }
+
+      // No hay registro en servidor -> fase local analysis o propose
+      const elapsed = (Date.now() - phaseStartedAt) / 1000;
+      if (localPhase === 'analysis' && elapsed >= window.SIM_CONFIG.PHASE_ANALYSIS) {
+        localPhase = 'propose';
+        phaseStartedAt = Date.now();
+      }
+      if (localPhase === 'propose') {
+        renderPropose();
+      } else {
+        renderAnalysis();
+      }
+    }
+
+    // =====================================================
+    // Tick local (timers)
+    // =====================================================
+    function tick() {
+      if (!serverState) return;
+      const game = serverState.game || {};
+      if (String(game.status || '') !== 'playing') return;
+
+      const elapsed = (Date.now() - phaseStartedAt) / 1000;
+      let total = 0;
+      if (localPhase === 'analysis') total = window.SIM_CONFIG.PHASE_ANALYSIS;
+      else if (localPhase === 'propose') total = window.SIM_CONFIG.PHASE_PROPOSE;
+      else if (localPhase === 'vote') total = window.SIM_CONFIG.PHASE_VOTE;
+      else if (localPhase === 'result') total = window.SIM_CONFIG.PHASE_RESULT;
+
+      const remaining = total - elapsed;
+      const tEl = document.getElementById('timer');
+      if (total > 0) {
+        tEl.textContent = UI.formatTime(remaining);
+        tEl.classList.toggle('warn', remaining < 15 && remaining > 5);
+        tEl.classList.toggle('danger', remaining <= 5 && remaining > 0);
+      } else {
+        tEl.textContent = '--:--';
+        tEl.classList.remove('warn', 'danger');
+      }
+
+      // Transiciones locales
+      if (localPhase === 'analysis' && elapsed >= window.SIM_CONFIG.PHASE_ANALYSIS) {
+        localPhase = 'propose';
+        phaseStartedAt = Date.now();
+        onStateUpdate();
+      }
+
+      // Fallback: si el ponente no propuso a tiempo, cualquiera puede forzar
+      // (se maneja al renderizar)
+    }
+
+    // =====================================================
+    // Helpers
+    // =====================================================
+    function myCompanyStudents() {
+      return (serverState.students || []).filter(s => Number(s.company) === Number(session.company));
+    }
+
+    function currentProponent() {
+      return Engine.getProponent(myCompanyStudents(), currentRound);
+    }
+
+    function phaseLabel(p) {
+      return {
+        analysis: '📖 Análisis en equipo',
+        propose:  '💡 Propuesta del ponente',
+        vote:     '🗳️ Votación de la junta',
+        result:   '🎬 Resultado',
+      }[p] || '';
+    }
+
+    // =====================================================
+    // Renders
+    // =====================================================
+    function setRoundBadge() {
+      const badge = document.getElementById('roundBadge');
+      badge.textContent = 'Ronda ' + currentRound + '/' + window.SIM_CONFIG.TOTAL_ROUNDS;
+      document.getElementById('phaseLabel').textContent = phaseLabel(localPhase);
+    }
+
+    function renderLobby() {
+      document.getElementById('roundBadge').textContent = 'Esperando inicio';
+      document.getElementById('timer').textContent = '--:--';
+      document.getElementById('phaseLabel').textContent = '🚦 Lobby';
+      const myStudents = myCompanyStudents();
+      const key = 'lobby|' + myStudents.length;
+      if (key === lastRenderKey) return;
+      lastRenderKey = key;
+      const main = document.getElementById('mainArea');
+      main.innerHTML = `
+        <div class="card fade-in">
+          <h2 style="margin-bottom: 12px;">🧑‍🤝‍🧑 Tu equipo</h2>
+          <p style="color: var(--text-dim); margin-bottom: 18px;">
+            Esperando a que el profesor inicie el juego. Mientras tanto, conoce a tu equipo:
+          </p>
+          <div style="display: grid; gap: 10px;">
+            ${myStudents.length === 0 ? '<div class="empty"><span class="emoji">⌛</span>Aún no hay nadie más</div>' : ''}
+            ${myStudents.map((s, i) => `
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="width: 36px; height: 36px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900;">${i + 1}</div>
+                <div style="font-weight: 700; flex: 1;">${escapeHtml(s.name)}</div>
+                ${s.id === session.studentId ? '<span class="mini-badge" style="background: var(--success); color: white;">tú</span>' : ''}
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top: 20px; padding: 16px; background: rgba(249, 115, 22, 0.08); border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
+            <strong>📌 Cómo funciona:</strong><br />
+            <span style="color: var(--text-dim); font-size: 14px;">
+              Cada ronda aparece un dilema. Uno de ustedes (el <strong>ponente del turno</strong>)
+              analiza, propone una opción y la justifica. Todos votan. La mayoría decide.
+              El ponente rota cada ronda.
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPaused() {
+      const key = 'paused';
+      if (key === lastRenderKey) return;
+      lastRenderKey = key;
+      document.getElementById('mainArea').innerHTML = `
+        <div class="card fade-in waiting">
+          <span class="big-emoji">⏸️</span>
+          <h2>Juego en pausa</h2>
+          <p>El profesor puso el juego en pausa. Espera a que lo reanude.</p>
+        </div>
+      `;
+    }
+
+    function renderEnded() {
+      const key = 'ended';
+      if (key === lastRenderKey) return;
+      lastRenderKey = key;
+      const myCompany = (serverState.companies || []).find(c => Number(c.id) === Number(session.company));
+      const ranking = (serverState.companies || [])
+        .slice()
+        .sort((a, b) => Number(b.cash) - Number(a.cash));
+      const pos = ranking.findIndex(c => Number(c.id) === Number(session.company)) + 1;
+      const medals = ['🥇', '🥈', '🥉', '🏅', '🏅'];
+      document.getElementById('mainArea').innerHTML = `
+        <div class="card fade-in" style="text-align: center;">
+          <div style="font-size: 80px;">${medals[pos - 1] || '🎯'}</div>
+          <h2 style="font-size: 32px; margin: 10px 0;">¡Juego terminado!</h2>
+          <p style="color: var(--text-dim); margin-bottom: 18px;">
+            Tu empresa quedó en el puesto <strong>${pos}</strong>
+          </p>
+          <div class="cash-display" style="font-size: 42px;">${Engine.formatCOPFull(myCompany ? myCompany.cash : 0)}</div>
+          <div style="margin-top: 24px; text-align: left;">
+            <h3 style="margin-bottom: 10px;">🏆 Ranking final</h3>
+            ${ranking.map((c, i) => `
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: ${Number(c.id) === Number(session.company) ? 'rgba(249, 115, 22, 0.15)' : 'var(--bg-2)'}; border-radius: var(--radius-sm); margin-bottom: 8px; border: 1px solid var(--border);">
+                <div style="font-size: 22px;">${medals[i] || '🏅'}</div>
+                <div style="font-size: 20px;">${c.emoji || ''}</div>
+                <div style="flex: 1; font-weight: 700;">${escapeHtml(c.name)}</div>
+                <div style="font-weight: 900; font-family: monospace; color: ${Number(c.cash) >= window.SIM_CONFIG.INITIAL_CASH ? 'var(--success)' : 'var(--danger)'};">${Engine.formatCOPFull(c.cash)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      if (pos === 1) UI.confetti();
+    }
+
+    function renderAnalysis() {
+      setRoundBadge();
+      const dilemma = Engine.getDilemmaForRound(currentRound);
+      const prop = currentProponent();
+      const key = 'analysis|' + currentRound;
+      if (key === lastRenderKey) return;
+      lastRenderKey = key;
+      const isMe = prop && prop.id === session.studentId;
+      document.getElementById('mainArea').innerHTML = `
+        <div class="card fade-in">
+          <div class="role-tag">
+            <span class="emoji">${dilemma._roleInfo.emoji}</span>
+            ${dilemma._roleInfo.name} · Ronda ${currentRound}
+          </div>
+          <h1 class="dilemma-title">${escapeHtml(dilemma.title)}</h1>
+          <div class="dilemma-context">${escapeHtml(dilemma.context)}</div>
+          <div style="padding: 16px 20px; background: rgba(6, 182, 212, 0.1); border-radius: var(--radius-sm); border-left: 3px solid var(--info);">
+            <strong>📖 Fase de análisis.</strong><br />
+            <span style="color: var(--text-dim); font-size: 14px;">
+              Discutan la situación entre todos. El ponente del turno es
+              <strong style="color: var(--primary);">${prop ? escapeHtml(prop.name) : '...'}</strong>${isMe ? ' (¡eres tú!)' : ''}.
+              Cuando termine el tiempo, ${isMe ? 'deberás elegir una opción y justificarla' : 'el ponente propondrá una opción'}.
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPropose() {
+      setRoundBadge();
+      const dilemma = Engine.getDilemmaForRound(currentRound);
+      const prop = currentProponent();
+      const isMe = prop && prop.id === session.studentId;
+      const key = 'propose|' + currentRound + '|' + (isMe ? 'me' : 'wait');
+      if (key === lastRenderKey) return;
+      lastRenderKey = key;
+
+      if (!isMe) {
+        document.getElementById('mainArea').innerHTML = `
+          <div class="card fade-in waiting">
+            <span class="big-emoji">🤔</span>
+            <h2>${prop ? escapeHtml(prop.name) : 'El ponente'} está analizando…</h2>
+            <p>Está eligiendo una opción y preparando su justificación. En unos segundos podrán votar.</p>
+            <div class="role-tag" style="margin-top: 16px;">
+              <span class="emoji">${dilemma._roleInfo.emoji}</span>
+              ${escapeHtml(dilemma.title)}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Soy el ponente: mostrar formulario
+      const optionsHtml = ['A', 'B', 'C', 'D'].map(k => `
+        <button type="button" class="option" data-choice="${k}">
+          <div class="option-letter">${k}</div>
+          <div class="option-text">${escapeHtml(dilemma.options[k].label)}</div>
+        </button>
+      `).join('');
+
+      document.getElementById('mainArea').innerHTML = `
+        <div class="card fade-in">
+          <div class="role-tag" style="background: rgba(236, 72, 153, 0.15); border-color: var(--pink);">
+            🎤 Eres el ponente · ${dilemma._roleInfo.name}
+          </div>
+          <h1 class="dilemma-title">${escapeHtml(dilemma.title)}</h1>
+          <div class="dilemma-context">${escapeHtml(dilemma.context)}</div>
+          <h3 style="margin-bottom: 12px; font-size: 16px;">💡 Elige una opción:</h3>
+          <div class="options" id="proposeOptions">${optionsHtml}</div>
+          <div class="field" style="margin-top: 18px;">
+            <label>Justifica brevemente tu propuesta (una frase)</label>
+            <textarea id="justification" rows="2" placeholder="Ej: Creo que es la mejor opción porque..." maxlength="280"></textarea>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" id="submitProposal" disabled>
+            🚀 Presentar propuesta a la junta
+          </button>
+        </div>
+      `;
+
+      let selected = null;
+      document.querySelectorAll('#proposeOptions .option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          document.querySelectorAll('#proposeOptions .option').forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          selected = opt.dataset.choice;
+          document.getElementById('submitProposal').disabled = false;
+        });
+      });
+
+      document.getElementById('submitProposal').addEventListener('click', async () => {
+        const justification = document.getElementById('justification').value.trim();
+        if (!selected) return;
+        if (justification.length < 5) {
+          UI.toast('Escribe al menos una frase de justificación', 'error');
+          UI.shake(document.getElementById('justification'));
+          return;
+        }
+        const btn = document.getElementById('submitProposal');
+        btn.disabled = true;
+        btn.textContent = '⏳ Enviando…';
+        const payload = {
+          company: session.company,
+          round: currentRound,
+          role: dilemma._role,
+          dilemmaId: dilemma.id,
+          studentId: session.studentId,
+          choice: selected,
+          justification,
+        };
+        try {
+          const res = await Sheets.propose(payload);
+          if (!res.ok) throw new Error(res.error || 'error');
+          UI.toast('Propuesta enviada', 'success');
+          // Forzar poll inmediato
+          poll();
+        } catch (err) {
+          Storage.enqueue({ action: 'propose', payload });
+          UI.toast('Sin red, guardado local. Se reenvía al volver.', 'warning', 4000);
+          btn.disabled = false;
+          btn.textContent = '🚀 Presentar propuesta a la junta';
+        }
+      });
+    }
+
+    function renderVote(rr) {
+      setRoundBadge();
+      const dilemma = Engine.getDilemmaForRound(currentRound);
+      const prop = currentProponent();
+      const votes = rr.votes_json ? JSON.parse(rr.votes_json) : {};
+      const myVote = votes[session.studentId];
+      const totalMembers = myCompanyStudents().length;
+      const votesCount = Object.keys(votes).length;
+
+      const key = 'vote|' + currentRound + '|' + myVote + '|' + votesCount;
+      if (key === lastRenderKey) return;
+      lastRenderKey = key;
+
+      const optionsHtml = ['A', 'B', 'C', 'D'].map(k => {
+        const isProposal = rr.proposal === k;
+        const isMine = myVote === k;
+        const classes = ['option'];
+        if (isProposal) classes.push('highlighted');
+        if (isMine) classes.push('selected');
+        return `
+          <button type="button" class="${classes.join(' ')}" data-choice="${k}" ${myVote ? 'disabled' : ''}>
+            <div class="option-letter">${k}</div>
+            <div class="option-text">
+              ${escapeHtml(dilemma.options[k].label)}
+              ${isProposal ? '<div style="margin-top: 4px; font-size: 12px; color: var(--warning); font-weight: 700;">⭐ propuesta del ponente</div>' : ''}
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      document.getElementById('mainArea').innerHTML = `
+        <div class="card fade-in">
+          <div class="role-tag">
+            <span class="emoji">${dilemma._roleInfo.emoji}</span>
+            ${dilemma._roleInfo.name} · Ronda ${currentRound}
+          </div>
+          <h1 class="dilemma-title">${escapeHtml(dilemma.title)}</h1>
+          <div class="proponent-box">
+            <div class="who">🎤 Propone</div>
+            <div class="name">${prop ? escapeHtml(prop.name) : '-'}</div>
+            <div class="justification">"${escapeHtml(rr.justification || '')}"</div>
+          </div>
+          <h3 style="margin-bottom: 12px; font-size: 16px;">🗳️ Vota tu opción preferida:</h3>
+          <div class="options" id="voteOptions">${optionsHtml}</div>
+          <div style="margin-top: 18px; padding: 14px; background: var(--bg-2); border-radius: var(--radius-sm); text-align: center;">
+            <span style="font-size: 13px; color: var(--text-dim);">Votos recibidos:</span>
+            <strong style="font-size: 18px; margin-left: 6px;">${votesCount} / ${totalMembers}</strong>
+            ${myVote ? '<div style="margin-top: 8px; color: var(--success); font-size: 13px;">✅ Ya votaste por ' + myVote + '</div>' : ''}
+          </div>
+        </div>
+      `;
+
+      if (!myVote) {
+        document.querySelectorAll('#voteOptions .option').forEach(opt => {
+          opt.addEventListener('click', async () => {
+            const choice = opt.dataset.choice;
+            document.querySelectorAll('#voteOptions .option').forEach(o => { o.disabled = true; });
+            const payload = { company: session.company, round: currentRound, studentId: session.studentId, vote: choice };
+            try {
+              const res = await Sheets.vote(payload);
+              if (!res.ok) throw new Error(res.error || 'error');
+              UI.toast('Voto registrado', 'success', 1500);
+              poll();
+            } catch (err) {
+              Storage.enqueue({ action: 'vote', payload });
+              UI.toast('Voto guardado local (sin red)', 'warning');
+            }
+          });
+        });
+      }
+    }
+
+    async function maybeResolve(rr) {
+      if (resolving) return;
+      if (rr.phase === 'resolved') return;
+      const votes = rr.votes_json ? JSON.parse(rr.votes_json) : {};
+      const totalMembers = myCompanyStudents().length;
+      const elapsed = (Date.now() - phaseStartedAt) / 1000;
+      const votedAll = Object.keys(votes).length >= totalMembers;
+      const timedOut = elapsed >= window.SIM_CONFIG.PHASE_VOTE;
+      if (!votedAll && !timedOut) return;
+
+      resolving = true;
+      const dilemma = Engine.getDilemmaForRound(currentRound);
+      const { choice } = Engine.computeFinalChoice(votes, rr.proponent_id);
+      const option = dilemma.options[choice];
+      const delta = Engine.rollDelta(option);
+      const narrative = option.narrative;
+      const payload = {
+        company: session.company,
+        round: currentRound,
+        finalChoice: choice,
+        delta,
+        narrative,
+      };
+      try {
+        await Sheets.resolve(payload);
+        poll();
+      } catch (err) {
+        Storage.enqueue({ action: 'resolve', payload });
+      } finally {
+        setTimeout(() => { resolving = false; }, 2000);
+      }
+    }
+
+    function renderResult(rr) {
+      setRoundBadge();
+      const dilemma = Engine.getDilemmaForRound(currentRound);
+      const delta = Number(rr.delta) || 0;
+      const key = 'result|' + currentRound + '|' + rr.final_choice;
+      if (key === lastRenderKey) {
+        return;
+      }
+      lastRenderKey = key;
+
+      if (delta > 0) UI.confetti();
+      if (delta < 0) UI.redFlash();
+
+      const option = dilemma.options[rr.final_choice] || {};
+      document.getElementById('mainArea').innerHTML = `
+        <div class="card fade-in">
+          <div class="role-tag">
+            <span class="emoji">${dilemma._roleInfo.emoji}</span>
+            ${dilemma._roleInfo.name} · Ronda ${currentRound}
+          </div>
+          <h2 style="margin-bottom: 14px;">🎬 Resultado de la junta</h2>
+          <div style="padding: 14px 18px; background: var(--bg-2); border-radius: var(--radius-sm); margin-bottom: 14px;">
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">La junta decidió:</div>
+            <div style="font-weight: 800; font-size: 17px;">
+              <span style="display: inline-block; width: 30px; height: 30px; background: var(--success); color: white; border-radius: 50%; text-align: center; line-height: 30px; margin-right: 8px;">${rr.final_choice}</span>
+              ${escapeHtml(option.label || '')}
+            </div>
+          </div>
+          <div class="result-delta ${delta >= 0 ? 'positive' : 'negative'}">
+            ${delta >= 0 ? '+' : ''}${Engine.formatCOPFull(delta)}
+          </div>
+          <div class="narrative">${escapeHtml(rr.narrative || option.narrative || '')}</div>
+          <div style="margin-top: 18px; text-align: center; color: var(--text-dim); font-size: 13px;">
+            Esperando a que el profesor avance a la siguiente ronda…
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador Gerencial - Elige tu empresa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div style="text-align: center; margin: 40px 0 30px;">
+      <div style="font-size: 60px;">🎯</div>
+      <h1 style="font-size: 38px; margin-top: 8px;">Simulador Gerencial</h1>
+      <p style="color: var(--text-dim); font-size: 16px; margin-top: 6px;">
+        Toma decisiones en junta y lleva a tu empresa a la cima 💼
+      </p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Únete a tu empresa</div>
+          <div class="card-subtitle">Escoge la empresa de tu equipo y escribe tu nombre</div>
+        </div>
+        <span id="syncStatus" class="mini-badge">⏳ conectando…</span>
+      </div>
+
+      <div class="field">
+        <label>Tu nombre completo</label>
+        <input id="playerName" type="text" placeholder="Ej: María Gómez" maxlength="40" />
+      </div>
+
+      <div class="field">
+        <label>Elige tu empresa (1 por equipo)</label>
+        <div class="company-grid" id="companyGrid">
+          <button type="button" class="company-card" data-id="1">
+            <span class="emoji">☕</span>
+            <div class="name">Café Pereira Origen</div>
+            <div class="sector">Cafetería boutique</div>
+          </button>
+          <button type="button" class="company-card" data-id="2">
+            <span class="emoji">🛵</span>
+            <div class="name">DomiYa</div>
+            <div class="sector">App de domicilios</div>
+          </button>
+          <button type="button" class="company-card" data-id="3">
+            <span class="emoji">🪑</span>
+            <div class="name">Maderas del Otún</div>
+            <div class="sector">Fábrica de muebles</div>
+          </button>
+          <button type="button" class="company-card" data-id="4">
+            <span class="emoji">👗</span>
+            <div class="name">Risa Wear</div>
+            <div class="sector">Ropa urbana paisa</div>
+          </button>
+          <button type="button" class="company-card" data-id="5">
+            <span class="emoji">🏗️</span>
+            <div class="name">Constructora Nevado</div>
+            <div class="sector">Vivienda VIS</div>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-block" id="joinBtn">
+        🚀 Entrar al simulador
+      </button>
+
+      <div style="margin-top: 18px; text-align: center; font-size: 12px; color: var(--text-dim);">
+        💾 Tus decisiones se guardan localmente por si se cae internet
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 22px;">
+      <a href="dashboard.html" style="font-size: 13px; color: var(--text-dim);">
+        🎓 Soy el profesor / ver tablero maestro
+      </a>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/sheets.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    let selectedCompany = null;
+
+    // Si ya hay sesion, redirigir
+    const existing = Storage.loadSession();
+    if (existing && existing.studentId) {
+      window.location.href = 'game.html';
+    }
+
+    // Ping al backend
+    Sheets.ping().then(() => {
+      document.getElementById('syncStatus').innerHTML = '<span class="sync-dot"></span>conectado';
+    }).catch(() => {
+      document.getElementById('syncStatus').innerHTML = '<span class="sync-dot offline"></span>sin backend';
+      UI.toast('No hay conexión con el backend. Configura API_URL en js/config.js', 'error', 6000);
+    });
+
+    // Selector de empresas
+    document.querySelectorAll('.company-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.company-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedCompany = parseInt(card.dataset.id, 10);
+      });
+    });
+
+    // Submit
+    document.getElementById('joinBtn').addEventListener('click', async () => {
+      const name = document.getElementById('playerName').value.trim();
+      if (!name) {
+        UI.toast('Escribe tu nombre', 'error');
+        UI.shake(document.getElementById('playerName'));
+        return;
+      }
+      if (!selectedCompany) {
+        UI.toast('Selecciona una empresa', 'error');
+        UI.shake(document.getElementById('companyGrid'));
+        return;
+      }
+      const btn = document.getElementById('joinBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Ingresando…';
+      try {
+        const res = await Sheets.join(selectedCompany, name);
+        if (!res.ok) throw new Error(res.error || 'error');
+        Storage.saveSession({
+          studentId: res.studentId,
+          name,
+          company: selectedCompany,
+          joinedAt: new Date().toISOString(),
+        });
+        UI.confetti();
+        setTimeout(() => { window.location.href = 'game.html'; }, 600);
+      } catch (err) {
+        UI.toast('Error: ' + err.message, 'error', 5000);
+        btn.disabled = false;
+        btn.textContent = '🚀 Entrar al simulador';
+      }
+    });
+  </script>
+</body>
+</html>
