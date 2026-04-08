@@ -35,36 +35,52 @@ function doPost(e) {
   return handleRequest_(e);
 }
 
+// Acciones que NO requieren lock (solo lectura)
+const READ_ONLY_ACTIONS = ['state', 'ping'];
+
 function handleRequest_(e) {
-  const lock = LockService.getScriptLock();
   try {
-    lock.waitLock(15000);
-  } catch (err) {
-    return jsonOut_({ ok: false, error: 'Servidor ocupado, reintenta' });
-  }
-  try {
-    ensureSheets_();
     const params = parseParams_(e);
     const action = params.action || 'state';
-    let result;
-    switch (action) {
-      case 'join':    result = actionJoin_(params); break;
-      case 'state':   result = actionState_(params); break;
-      case 'propose': result = actionPropose_(params); break;
-      case 'vote':    result = actionVote_(params); break;
-      case 'resolve': result = actionResolve_(params); break;
-      case 'start':   result = actionStart_(params); break;
-      case 'next':    result = actionNext_(params); break;
-      case 'pause':   result = actionPause_(params); break;
-      case 'reset':   result = actionReset_(params); break;
-      case 'ping':    result = { ok: true, pong: new Date().toISOString() }; break;
-      default:        result = { ok: false, error: 'accion desconocida: ' + action };
+
+    // Lecturas: sin lock, ejecucion concurrente
+    if (READ_ONLY_ACTIONS.indexOf(action) >= 0) {
+      ensureSheets_();
+      let result;
+      if (action === 'ping') result = { ok: true, pong: new Date().toISOString() };
+      else if (action === 'state') result = actionState_(params);
+      return jsonOut_(result);
     }
-    return jsonOut_(result);
+
+    // Escrituras: con lock corto, reintentos silenciosos
+    const lock = LockService.getScriptLock();
+    let acquired = false;
+    try {
+      lock.waitLock(8000);
+      acquired = true;
+    } catch (_) {
+      return jsonOut_({ ok: false, error: 'Servidor ocupado, reintenta', retry: true });
+    }
+    try {
+      ensureSheets_();
+      let result;
+      switch (action) {
+        case 'join':    result = actionJoin_(params); break;
+        case 'propose': result = actionPropose_(params); break;
+        case 'vote':    result = actionVote_(params); break;
+        case 'resolve': result = actionResolve_(params); break;
+        case 'start':   result = actionStart_(params); break;
+        case 'next':    result = actionNext_(params); break;
+        case 'pause':   result = actionPause_(params); break;
+        case 'reset':   result = actionReset_(params); break;
+        default:        result = { ok: false, error: 'accion desconocida: ' + action };
+      }
+      return jsonOut_(result);
+    } finally {
+      if (acquired) { try { lock.releaseLock(); } catch (_) {} }
+    }
   } catch (err) {
     return jsonOut_({ ok: false, error: String((err && err.message) || err) });
-  } finally {
-    try { lock.releaseLock(); } catch (_) {}
   }
 }
 
@@ -206,24 +222,13 @@ function findRowById_(sh, id) {
 }
 
 function actionState_(p) {
-  const game = getGameMap_();
-  const students = readAll_(SHEET_NAMES.STUDENTS);
-  const companies = readAll_(SHEET_NAMES.COMPANIES);
-  const rounds = readAll_(SHEET_NAMES.ROUNDS);
-
-  // Heartbeat
-  if (p.studentId) {
-    const sh = getSheet_(SHEET_NAMES.STUDENTS);
-    const row = findRowById_(sh, p.studentId);
-    if (row > 0) sh.getRange(row, 7).setValue(new Date().toISOString());
-  }
-
+  // Solo lectura - sin heartbeat para evitar writes en cada poll
   return {
     ok: true,
-    game: game,
-    students: students,
-    companies: companies,
-    rounds: rounds,
+    game: getGameMap_(),
+    students: readAll_(SHEET_NAMES.STUDENTS),
+    companies: readAll_(SHEET_NAMES.COMPANIES),
+    rounds: readAll_(SHEET_NAMES.ROUNDS),
     serverTime: new Date().toISOString(),
   };
 }

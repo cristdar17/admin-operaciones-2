@@ -4,26 +4,28 @@
 // =====================================================
 (function () {
   const Sheets = {
-    async call(action, payload = {}) {
+    async call(action, payload = {}, attempt = 0) {
       const url = window.SIM_CONFIG.API_URL;
       if (!url || url.includes('PEGA_AQUI')) {
         throw new Error('Configura API_URL en js/config.js');
       }
       const body = JSON.stringify({ action, ...payload });
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body,
-          redirect: 'follow',
-        });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        return data;
-      } catch (err) {
-        throw err;
+      const res = await fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body,
+        redirect: 'follow',
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      // Reintento automatico si el servidor dice "retry" (lock busy)
+      if (data && data.retry && attempt < 3) {
+        const delay = 500 + Math.floor(Math.random() * 1500) + attempt * 800;
+        await new Promise(r => setTimeout(r, delay));
+        return this.call(action, payload, attempt + 1);
       }
+      return data;
     },
 
     join(company, name) {

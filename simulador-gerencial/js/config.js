@@ -18,7 +18,7 @@ window.SIM_CONFIG = {
   PHASE_VOTE:     30,   // resto vota
   PHASE_RESULT:   15,   // se muestra el resultado
 
-  POLL_INTERVAL: 2500,  // ms entre polls al servidor durante el juego
+  POLL_INTERVAL: 4000,  // ms entre polls al servidor durante el juego
   TOTAL_ROUNDS: 30,
   INITIAL_CASH: 500000000,
 };
