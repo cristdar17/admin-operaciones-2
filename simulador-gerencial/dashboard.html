@@ -42,7 +42,8 @@
         <button class="btn btn-success" id="startBtn">▶ Iniciar juego</button>
         <button class="btn btn-primary" id="nextBtn">⏭ Siguiente ronda</button>
         <button class="btn btn-ghost" id="pauseBtn">⏸ Pausar / Reanudar</button>
-        <button class="btn btn-primary" id="eventBtn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">🎲 Lanzar evento sorpresa</button>
+        <button class="btn btn-primary" id="eventBtn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">🎲 Evento sorpresa</button>
+        <button class="btn btn-primary" id="sabotageBtn" style="background: linear-gradient(135deg, #7c2d12, #ef4444);">💀 Ronda de sabotaje</button>
         <button class="btn btn-danger" id="resetBtn">🗑 Reiniciar todo</button>
       </div>
       <div style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
@@ -182,6 +183,7 @@
       document.getElementById('pauseBtn').addEventListener('click', () => control('pause', '¿Alternar pausa?'));
       document.getElementById('resetBtn').addEventListener('click', () => control('reset', '⚠️ Esto BORRA todas las sesiones, votos y dinero. ¿Continuar?'));
       document.getElementById('eventBtn').addEventListener('click', launchEvent);
+      document.getElementById('sabotageBtn').addEventListener('click', launchSabotage);
       document.getElementById('modShieldBtn').addEventListener('click', () => setMod('shield', '🛡️ Escudo activado: pérdidas de la siguiente resolución se reducen a la mitad'));
       document.getElementById('modDoubleBtn').addEventListener('click', () => setMod('double', '💥 Doble o nada: la siguiente resolución se multiplica x2'));
       document.getElementById('modLuckyBtn').addEventListener('click', () => setMod('lucky', '🍀 Ronda de suerte: se suma un bonus aleatorio extra'));
@@ -269,6 +271,22 @@
     }
 
     // =====================================================
+    // Sabotaje cruzado
+    // =====================================================
+    async function launchSabotage() {
+      if (!confirm('💀 Lanzar ronda de sabotaje?\n\nCada empresa podrá sabotear a UNA rival por 90 segundos:\n- Atacante: +$10M\n- Víctima: -$22M\n\n¿Continuar?')) return;
+      try {
+        const res = await Sheets.startSabotage(90);
+        if (!res.ok) throw new Error(res.error);
+        UI.toast('💀 Ronda de sabotaje ACTIVA por 90 segundos', 'error', 4500);
+        Sounds.alert();
+        setTimeout(refresh, 300);
+      } catch (err) {
+        UI.toast('Error: ' + err.message, 'error');
+      }
+    }
+
+    // =====================================================
     // Evento sorpresa
     // =====================================================
     async function launchEvent() {
@@ -311,14 +329,13 @@
       if (!state) return;
       const cfg = window.SIM_CONFIG;
 
-      // Evento sorpresa recien llegado
+      // Evento sorpresa recien llegado (excluye sabotaje, que tiene su propia UI)
       let ev = null;
       try { if (state.game && state.game.last_event) ev = JSON.parse(state.game.last_event); } catch (_) {}
-      if (ev && ev.id) {
+      if (ev && ev.id && ev.id !== 'sabotage') {
         const eventKey = ev.id + '|' + ev.at;
         if (eventKey !== lastEventId) {
           lastEventId = eventKey;
-          // Solo mostrar si es reciente (menos de 30s)
           const evAt = ev.at ? new Date(ev.at).getTime() : 0;
           if (Date.now() - evAt < 30000) {
             showEventBanner(ev);

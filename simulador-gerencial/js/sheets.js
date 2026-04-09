@@ -152,6 +152,23 @@
       try { await rpc('game_reset'); return { ok: true }; }
       catch (err) { return { ok: false, error: err.message }; }
     },
+    async startSabotage(duration = 90) {
+      try { await rpc('start_sabotage', { p_duration_seconds: duration }); return { ok: true }; }
+      catch (err) { return { ok: false, error: err.message }; }
+    },
+    async endSabotage() {
+      try { await rpc('end_sabotage', {}); return { ok: true }; }
+      catch (err) { return { ok: false, error: err.message }; }
+    },
+    async doSabotage(attacker, victim) {
+      try {
+        const result = await rpc('do_sabotage', { p_attacker: Number(attacker), p_victim: Number(victim) });
+        return { ok: true, success: result === true };
+      } catch (err) {
+        return { ok: false, error: err.message };
+      }
+    },
+
     async setModifier(mod) {
       try {
         await rpc('set_modifier', { p_modifier: String(mod || 'none') });
