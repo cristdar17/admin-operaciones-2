@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Empresarial - Juego</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .game-layout { display: grid; grid-template-columns: 320px 1fr; gap: 16px; min-height: calc(100vh - 120px); }
+    .sidebar { display: flex; flex-direction: column; gap: 12px; }
+    .main-content { display: flex; flex-direction: column; gap: 16px; }
+    @media (max-width: 900px) {
+      .game-layout { grid-template-columns: 1fr; }
+      .sidebar { order: 2; }
+      .main-content { order: 1; }
+    }
+    .gerente-area-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 600px) { .gerente-area-grid { grid-template-columns: 1fr; } }
+    .gerente-area-card { padding: 12px; cursor: pointer; transition: all var(--transition); border: 2px solid transparent; }
+    .gerente-area-card:hover { border-color: var(--color-primary); transform: translateY(-2px); }
+    .gerente-area-card .area-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .gerente-area-card .area-header .icon { font-size: 1.5rem; }
+    .gerente-area-card .area-header .name { font-weight: 700; font-size: 0.9rem; }
+    .gerente-area-card .decided-badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; }
+    .notification-bar { padding: 10px 16px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; font-size: 0.85rem; animation: slideUp 0.3s ease-out; }
+    .notification-bar.cross-effect { background: rgba(255,149,0,0.12); border: 1px solid rgba(255,149,0,0.3); }
+    .notification-bar.event { background: rgba(88,86,214,0.12); border: 1px solid rgba(88,86,214,0.3); }
+    .bsc-value { font-size: 0.75rem; font-weight: 700; min-width: 28px; text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="header-company" style="font-size:1.5rem"></span>
+        <div>
+          <div id="header-name" style="font-weight:800;font-size:1.1rem;color:white"></div>
+          <div id="header-role" style="font-size:0.8rem;color:rgba(255,255,255,0.7)"></div>
+        </div>
+      </div>
+      <div class="glass day-badge">
+        <span>📅 Día</span>
+        <span class="day-number" id="current-day">0</span>
+        <span style="font-size:0.8rem;opacity:0.6">/ 45</span>
+      </div>
+      <div class="glass" style="padding:8px 16px;border-radius:12px">
+        <div class="timer-ring" id="day-timer">2:00</div>
+        <div class="timer-label" style="text-align:center">Próximo día</div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notifications" style="margin-bottom:12px"></div>
+
+    <!-- Game layout -->
+    <div class="game-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Company cash -->
+        <div class="glass card">
+          <div class="card-title">💵 Caja de la empresa</div>
+          <div class="card-value" id="company-cash" style="color:var(--color-success)">$0</div>
+          <div style="display:flex;gap:12px;margin-top:8px">
+            <div><small style="color:var(--text-tertiary)">Ingresos</small><div id="company-revenue" style="font-weight:700;font-size:0.85rem;color:var(--color-success)">$0</div></div>
+            <div><small style="color:var(--text-tertiary)">Gastos</small><div id="company-costs" style="font-weight:700;font-size:0.85rem;color:var(--color-danger)">$0</div></div>
+          </div>
+          <div style="margin-top:8px">
+            <small style="color:var(--text-tertiary)">Utilidad Neta</small>
+            <div id="company-profit" style="font-weight:800;font-size:1.1rem">$0</div>
+          </div>
+        </div>
+
+        <!-- Area budget -->
+        <div class="glass card">
+          <div class="card-title" id="area-budget-title">📊 Mi Área</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div><small style="color:var(--text-tertiary)">Presupuesto</small><div id="area-budget" style="font-weight:700;font-size:0.85rem">$0</div></div>
+            <div><small style="color:var(--text-tertiary)">Gastado</small><div id="area-spent" style="font-weight:700;font-size:0.85rem">$0</div></div>
+            <div><small style="color:var(--text-tertiary)">Generado</small><div id="area-revenue" style="font-weight:700;font-size:0.85rem">$0</div></div>
+            <div><small style="color:var(--text-tertiary)">Disponible</small><div id="area-remaining" style="font-weight:800;font-size:0.85rem">$0</div></div>
+          </div>
+          <div style="margin-top:8px;height:6px;background:rgba(0,0,0,0.06);border-radius:3px">
+            <div id="area-budget-bar" style="height:100%;border-radius:3px;transition:width 0.5s ease;background:var(--color-success)"></div>
+          </div>
+        </div>
+
+        <!-- BSC Area -->
+        <div class="glass card">
+          <div class="card-title">📈 BSC de mi Área</div>
+          <div id="area-bsc"></div>
+        </div>
+
+        <!-- BSC Company -->
+        <div class="glass card">
+          <div class="card-title">🏢 BSC de la Empresa</div>
+          <div id="company-bsc"></div>
+        </div>
+
+        <!-- Team -->
+        <div class="glass card">
+          <div class="card-title">👥 Mi equipo de área</div>
+          <div id="team-list" style="font-size:0.85rem"></div>
+        </div>
+
+        <!-- Decision History -->
+        <div class="glass card">
+          <div class="card-title">📜 Historial de decisiones</div>
+          <div id="decision-history" style="max-height:200px;overflow-y:auto"></div>
+        </div>
+      </div>
+
+      <!-- Main content -->
+      <div class="main-content">
+        <!-- Decision panel -->
+        <div id="decision-area"></div>
+
+        <!-- Gerente overview (only for gerente role) -->
+        <div id="gerente-overview" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: config, api, storage, ui, engine, bsc, trees -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="data/tree-operations.js"></script>
+  <script src="data/tree-finance.js"></script>
+  <script src="data/tree-marketing.js"></script>
+  <script src="data/tree-hr.js"></script>
+  <script src="data/tree-logistics.js"></script>
+  <script src="data/tree-innovation.js"></script>
+  <script src="data/tree-gerente.js"></script>
+  <script src="data/events.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/bsc.js"></script>
+  <script>
+    // --- Game State ---
+    let session = null;
+    let gameData = null;
+    let pollTimer = null;
+    let dayTimer = null;
+    let selectedOptions = []; // for multi-select
+    let hasDecidedToday = false;
+
+    // --- Init ---
+    (function init() {
+      session = Storage.load();
+      if (!session || !session.id) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Set header
+      const company = CONFIG.COMPANIES.find(c => c.id === session.company);
+      const areaInfo = session.area === 'gerente' ?
+        { icon: '👔', name: 'Gerente General' } :
+        CONFIG.AREAS.find(a => a.code === session.area) || { icon: '❓', name: session.area };
+
+      document.getElementById('header-company').textContent = company.emoji;
+      document.getElementById('header-name').textContent = `${company.name}`;
+      document.getElementById('header-role').textContent = `${areaInfo.icon} ${areaInfo.name} — ${session.name}`;
+      document.getElementById('area-budget-title').textContent = `📊 ${areaInfo.icon} ${areaInfo.name}`;
+
+      startPolling();
+    })();
+
+    // --- Polling ---
+    async function startPolling() {
+      await refreshState();
+      pollTimer = setInterval(refreshState, CONFIG.POLL_INTERVAL);
+    }
+
+    async function refreshState() {
+      try {
+        gameData = await API.fetchAll();
+
+        if (gameData.state.status === 'ended') {
+          renderEnded();
+          clearInterval(pollTimer);
+          return;
+        }
+        if (gameData.state.status === 'lobby') {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        updateUI();
+      } catch (e) {
+        console.error('Poll error:', e);
+      }
+    }
+
+    // --- Update UI ---
+    function updateUI() {
+      const day = parseInt(gameData.state.day) || 0;
+      const company = gameData.companies.find(c => c.id === session.company);
+      const myAreas = gameData.areas.filter(a => a.company_id === session.company);
+      const myArea = myAreas.find(a => a.area_code === session.area);
+      const myTeam = gameData.students.filter(s => s.company_id === session.company && s.area_code === session.area);
+
+      // Day & timer
+      document.getElementById('current-day').textContent = day;
+      updateTimer();
+
+      // Company financials
+      if (company) {
+        document.getElementById('company-cash').textContent = UI.formatCOP(company.total_cash);
+        document.getElementById('company-revenue').textContent = UI.formatCOP(company.total_revenue);
+        document.getElementById('company-costs').textContent = UI.formatCOP(company.total_costs);
+        const profit = company.total_revenue - company.total_costs;
+        const profitEl = document.getElementById('company-profit');
+        profitEl.textContent = UI.formatCOP(profit);
+        profitEl.style.color = profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)';
+
+        // Company BSC
+        document.getElementById('company-bsc').innerHTML = renderBscMini(company);
+      }
+
+      // Area financials
+      if (myArea && session.area !== 'gerente') {
+        document.getElementById('area-budget').textContent = UI.formatCOP(myArea.budget);
+        document.getElementById('area-spent').textContent = UI.formatCOP(myArea.spent);
+        document.getElementById('area-revenue').textContent = UI.formatCOP(myArea.revenue);
+        const remaining = myArea.budget - myArea.spent + myArea.revenue;
+        document.getElementById('area-remaining').textContent = UI.formatCOP(remaining);
+        document.getElementById('area-remaining').style.color = remaining > 0 ? 'var(--color-success)' : 'var(--color-danger)';
+        const pct = Math.max(0, Math.min(100, (remaining / myArea.budget) * 100));
+        const bar = document.getElementById('area-budget-bar');
+        bar.style.width = pct + '%';
+        bar.style.background = pct > 50 ? 'var(--color-success)' : pct > 25 ? 'var(--color-warning)' : 'var(--color-danger)';
+
+        // Area BSC
+        document.getElementById('area-bsc').innerHTML = renderBscMini(myArea);
+      }
+
+      // Team
+      document.getElementById('team-list').innerHTML = myTeam.map(s => {
+        const isMe = s.id === session.id;
+        const isDecider = Engine.getDecisionMaker(session.area, session.company, gameData.students, day)?.id === s.id;
+        return `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${isMe ? 'font-weight:700' : ''}">
+            <span class="status-dot ${isDecider ? 'active' : ''}"></span>
+            ${s.name} ${isMe ? '(tú)' : ''} ${isDecider ? '<span class="pill pill-sm" style="background:rgba(0,122,255,0.1);color:var(--color-primary)">Decide hoy</span>' : ''}
+            <span style="margin-left:auto;font-size:0.72rem;color:var(--text-tertiary)">${s.decisions_made} dec.</span>
+          </div>
+        `;
+      }).join('') || '<span style="color:var(--text-tertiary)">Sin equipo aún</span>';
+
+      // Decision history
+      const myDecisions = gameData.decisions
+        .filter(d => d.company_id === session.company && d.area_code === session.area)
+        .sort((a, b) => b.day - a.day)
+        .slice(0, 5);
+      document.getElementById('decision-history').innerHTML = myDecisions.map(d => {
+        const net = (d.revenue_amount || 0) - (d.cost_amount || 0);
+        return `
+          <div class="history-item">
+            <div class="history-day">${d.day}</div>
+            <div class="history-content">
+              <div class="history-title">${d.node_id}</div>
+              <div class="history-narrative">${d.narrative || ''}</div>
+            </div>
+            <span class="history-delta ${net >= 0 ? 'positive' : 'negative'}">${UI.formatCOP(net)}</span>
+          </div>
+        `;
+      }).join('') || '<span style="color:var(--text-tertiary);font-size:0.85rem">Sin decisiones aún</span>';
+
+      // Render decision or gerente view
+      renderMainContent(day);
+
+      // Notifications
+      renderNotifications(day);
+    }
+
+    // --- Timer ---
+    function updateTimer() {
+      if (gameData.state.status !== 'playing') {
+        document.getElementById('day-timer').textContent = gameData.state.status === 'paused' ? '⏸️' : '--:--';
+        return;
+      }
+      const started = new Date(gameData.state.day_started_at).getTime();
+      const elapsed = (Date.now() - started) / 1000;
+      const remaining = Math.max(0, CONFIG.SECONDS_PER_DAY - elapsed);
+      const timerEl = document.getElementById('day-timer');
+      timerEl.textContent = UI.formatTimer(Math.round(remaining));
+      if (remaining < 30) timerEl.classList.add('urgent');
+      else timerEl.classList.remove('urgent');
+    }
+
+    // --- Main decision content ---
+    function renderMainContent(day) {
+      const el = document.getElementById('decision-area');
+      const gerenteEl = document.getElementById('gerente-overview');
+
+      if (session.area === 'gerente') {
+        el.style.display = 'none';
+        gerenteEl.style.display = 'block';
+        renderGerenteView(day);
+        return;
+      }
+
+      gerenteEl.style.display = 'none';
+      el.style.display = 'block';
+
+      // Check if already decided today
+      const alreadyDecided = gameData.decisions.some(
+        d => d.company_id === session.company && d.area_code === session.area && d.day === day
+      );
+
+      if (alreadyDecided) {
+        const dec = gameData.decisions.find(
+          d => d.company_id === session.company && d.area_code === session.area && d.day === day
+        );
+        el.innerHTML = `
+          <div class="glass card decision-panel">
+            <div class="decision-type-badge choice">✅ Decisión tomada</div>
+            <div class="decision-title">Día ${day} — Decisión registrada</div>
+            <div class="narrative-box">${dec?.narrative || 'Decisión procesada.'}</div>
+            <div style="margin-top:12px;display:flex;gap:12px">
+              <span class="pill ${(dec?.revenue_amount || 0) - (dec?.cost_amount || 0) >= 0 ? 'positive' : 'negative'}"
+                    style="background:${(dec?.revenue_amount || 0) - (dec?.cost_amount || 0) >= 0 ? 'rgba(52,199,89,0.1)' : 'rgba(255,59,48,0.1)'};
+                           color:${(dec?.revenue_amount || 0) - (dec?.cost_amount || 0) >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">
+                Impacto: ${UI.formatCOP((dec?.revenue_amount || 0) - (dec?.cost_amount || 0))}
+              </span>
+            </div>
+            <div class="waiting-state" style="padding:20px">
+              <div class="waiting-icon">⏳</div>
+              <div class="waiting-text">Esperando al siguiente día...</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Check if resting
+      if (Engine.shouldRest(session.area, session.company, gameData.students, gameData.decisions)) {
+        el.innerHTML = `
+          <div class="glass card">
+            <div class="resting-overlay">
+              <div class="resting-icon">😴</div>
+              <div class="resting-title">Día de descanso</div>
+              <div class="resting-desc">Tu área descansa hoy para equilibrar la carga de trabajo. Aprovecha para revisar el BSC y planificar tu próxima jugada.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Check if I'm the decision maker today
+      const decider = Engine.getDecisionMaker(session.area, session.company, gameData.students, day);
+      const isMyTurn = decider?.id === session.id;
+
+      // Get current node
+      const myArea = gameData.areas.find(a => a.company_id === session.company && a.area_code === session.area);
+      const node = Engine.getCurrentNode(session.area, myArea?.current_node);
+
+      if (!node || node.day > day) {
+        el.innerHTML = `
+          <div class="glass card">
+            <div class="waiting-state">
+              <div class="waiting-icon">📋</div>
+              <div class="waiting-text">No hay decisiones pendientes para tu área hoy.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Render decision
+      const typeLabel = node.type === 'binary' ? 'Decisión binaria' :
+        node.type === 'multi' ? `Selección múltiple (elige hasta ${node.multiMax || 2})` : 'Elige una opción';
+      const colsClass = node.options.length === 2 ? 'cols-2' :
+        node.options.length === 3 ? 'cols-3' : 'cols-4';
+
+      el.innerHTML = `
+        <div class="glass card decision-panel slide-up">
+          <div class="decision-type-badge ${node.type}">${typeLabel}</div>
+          <div class="decision-title">${node.title}</div>
+          <div class="decision-context">${node.context}</div>
+
+          ${!isMyTurn ? `
+            <div class="notification-bar cross-effect" style="margin-bottom:16px">
+              <span>👀</span>
+              <span>Es el turno de <strong>${decider?.name || '???'}</strong> para decidir. Puedes discutir con tu equipo.</span>
+            </div>
+          ` : `
+            <div class="notification-bar event" style="margin-bottom:16px">
+              <span>🎯</span>
+              <span><strong>¡Es tu turno!</strong> Elige sabiamente — tu decisión afecta a toda la empresa.</span>
+            </div>
+          `}
+
+          <div class="options-grid ${colsClass}" id="options-container">
+            ${node.options.map(opt => renderOption(opt, node.type, isMyTurn)).join('')}
+          </div>
+
+          ${isMyTurn ? `
+            <div style="margin-top:20px;text-align:center">
+              <button class="btn btn-primary btn-lg" id="btn-confirm" onclick="confirmDecision()" disabled>
+                ✅ Confirmar decisión
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      selectedOptions = [];
+    }
+
+    function renderOption(opt, type, clickable) {
+      const costNet = (opt.revenue || 0) - (opt.cost || 0);
+      const costClass = costNet > 0 ? 'positive' : costNet < 0 ? 'negative' : 'neutral';
+      const costLabel = costNet > 0 ? `+${UI.formatCOP(costNet)}` :
+        costNet < 0 ? UI.formatCOP(costNet) : 'Neutro';
+
+      return `
+        <div class="option-card ${clickable ? '' : 'disabled'}"
+             id="opt-${opt.id}"
+             onclick="${clickable ? `selectOption('${opt.id}', '${type}')` : ''}"
+             style="${!clickable ? 'cursor:default;opacity:0.85' : ''}">
+          <div class="option-id">${opt.id}</div>
+          <div class="option-label">${opt.label}</div>
+          <div class="option-desc">${opt.description}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+            <span class="option-cost ${costClass}">${costLabel}</span>
+            ${opt.crossEffects && opt.crossEffects.length > 0 ?
+              `<span class="pill pill-sm" style="background:rgba(255,149,0,0.1);color:var(--color-warning)">⚡ Afecta otras áreas</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // --- Option selection ---
+    function selectOption(optId, type) {
+      if (type === 'multi') {
+        const myArea = gameData.areas.find(a => a.company_id === session.company && a.area_code === session.area);
+        const node = Engine.getCurrentNode(session.area, myArea?.current_node);
+        const maxSel = node?.multiMax || 2;
+
+        const idx = selectedOptions.indexOf(optId);
+        if (idx >= 0) {
+          selectedOptions.splice(idx, 1);
+        } else if (selectedOptions.length < maxSel) {
+          selectedOptions.push(optId);
+        } else {
+          UI.toast(`Máximo ${maxSel} opciones`, 'warning');
+          return;
+        }
+      } else {
+        selectedOptions = [optId];
+      }
+
+      // Update visual
+      document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
+      selectedOptions.forEach(id => {
+        const el = document.getElementById(`opt-${id}`);
+        if (el) el.classList.add('selected');
+      });
+
+      const btn = document.getElementById('btn-confirm');
+      if (btn) btn.disabled = selectedOptions.length === 0;
+    }
+
+    // --- Confirm decision ---
+    async function confirmDecision() {
+      if (selectedOptions.length === 0) return;
+
+      const btn = document.getElementById('btn-confirm');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0 auto"></div>';
+
+      try {
+        const day = parseInt(gameData.state.day);
+        const myArea = gameData.areas.find(a => a.company_id === session.company && a.area_code === session.area);
+        const node = Engine.getCurrentNode(session.area, myArea?.current_node);
+
+        let effects;
+        let choiceStr;
+        if (node.type === 'multi') {
+          const opts = selectedOptions.map(id => node.options.find(o => o.id === id));
+          effects = Engine.calculateMultiEffects(opts);
+          choiceStr = selectedOptions.join(',');
+        } else {
+          const opt = node.options.find(o => o.id === selectedOptions[0]);
+          effects = Engine.calculateEffects(opt);
+          choiceStr = selectedOptions[0];
+        }
+
+        // Make decision via API
+        await API.makeDecision(
+          session.company, session.area, day,
+          myArea?.current_node || Engine.getTree(session.area).startNode,
+          choiceStr, session.id,
+          effects.cost, effects.revenue,
+          effects.bsc,
+          JSON.stringify(effects.crossEffects),
+          JSON.stringify(effects.tags),
+          effects.narrative,
+          effects.next
+        );
+
+        // Apply cross effects
+        for (const ce of effects.crossEffects) {
+          await API.applyCrossEffect(session.company, ce.area, ce.bsc || {}, ce.cost || 0);
+        }
+
+        // Recalc company BSC
+        await API.recalcBSC(session.company);
+
+        UI.toast('¡Decisión registrada!', 'success');
+        await refreshState();
+      } catch (e) {
+        console.error(e);
+        UI.toast('Error al registrar decisión: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.textContent = '✅ Confirmar decisión';
+      }
+    }
+
+    // --- Gerente View ---
+    function renderGerenteView(day) {
+      const el = document.getElementById('gerente-overview');
+      const overview = Engine.getGerenteOverview(session.company, gameData.areas, gameData.decisions, day);
+
+      // Gerente's own decision
+      const gerenteDecided = gameData.decisions.some(
+        d => d.company_id === session.company && d.area_code === 'gerente' && d.day === day
+      );
+      const gerenteArea = gameData.areas.find(a => a.company_id === session.company && a.area_code === 'gerente');
+      const gerenteNode = Engine.getCurrentNode('gerente', gerenteArea?.current_node);
+
+      el.innerHTML = `
+        <!-- Gerente Dashboard -->
+        <div class="glass card" style="margin-bottom:16px">
+          <div class="card-title">👔 Panel del Gerente General</div>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px">
+            Supervisas todas las áreas. Ve cómo van, qué decidieron, y toma decisiones estratégicas que afectan toda la empresa.
+          </p>
+
+          <!-- Area overview grid -->
+          <div class="gerente-area-grid">
+            ${overview.map(a => {
+              const health = BSC.areaHealth(a);
+              return `
+                <div class="glass gerente-area-card">
+                  <div class="area-header">
+                    <span class="icon">${a.icon}</span>
+                    <span class="name">${a.area_name}</span>
+                    <span class="decided-badge" style="margin-left:auto;
+                      background:${a.hasDecided ? 'rgba(52,199,89,0.1)' : a.pendingDecision ? 'rgba(255,149,0,0.1)' : 'rgba(0,0,0,0.05)'};
+                      color:${a.hasDecided ? 'var(--color-success)' : a.pendingDecision ? 'var(--color-warning)' : 'var(--text-tertiary)'}">
+                      ${a.hasDecided ? '✅ Decidió' : a.pendingDecision ? '⏳ Pendiente' : '— Sin decisión'}
+                    </span>
+                  </div>
+                  <div style="display:flex;gap:8px;font-size:0.78rem;margin-bottom:6px">
+                    <span>${health.emoji} ${UI.formatCOP(health.remaining)} disp.</span>
+                    <span style="color:var(--text-tertiary)">(${health.percentage}%)</span>
+                  </div>
+                  <div style="font-size:0.72rem">
+                    ${BSC.renderCompact(a.bsc ? { bsc_financial: a.bsc.financial, bsc_customer: a.bsc.customer, bsc_internal: a.bsc.internal, bsc_learning: a.bsc.learning } : {})}
+                  </div>
+                  ${a.lastDecision ? `<div style="font-size:0.72rem;color:var(--text-tertiary);margin-top:6px;border-top:1px solid rgba(0,0,0,0.05);padding-top:6px">Día ${a.lastDecision.day}: ${a.lastDecision.narrative?.substring(0, 80) || 'Sin narrativa'}...</div>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Gerente's own decision -->
+        ${gerenteNode && gerenteNode.day <= day && !gerenteDecided ? `
+          <div class="glass card decision-panel slide-up">
+            <div class="decision-type-badge ${gerenteNode.type}">👔 Decisión Gerencial</div>
+            <div class="decision-title">${gerenteNode.title}</div>
+            <div class="decision-context">${gerenteNode.context}</div>
+            <div class="options-grid ${gerenteNode.options.length === 2 ? 'cols-2' : gerenteNode.options.length === 3 ? 'cols-3' : 'cols-4'}">
+              ${gerenteNode.options.map(opt => renderOption(opt, gerenteNode.type, true)).join('')}
+            </div>
+            <div style="margin-top:20px;text-align:center">
+              <button class="btn btn-primary btn-lg" id="btn-confirm" onclick="confirmGerenteDecision()" disabled>
+                👔 Confirmar decisión gerencial
+              </button>
+            </div>
+          </div>
+        ` : gerenteDecided ? `
+          <div class="glass card" style="text-align:center;padding:30px">
+            <div style="font-size:2rem;margin-bottom:8px">✅</div>
+            <div style="font-weight:700">Decisión gerencial del día registrada</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:4px">Monitorea las áreas y prepárate para el siguiente día.</div>
+          </div>
+        ` : `
+          <div class="glass card" style="text-align:center;padding:30px">
+            <div style="font-size:2rem;margin-bottom:8px">📋</div>
+            <div style="font-weight:700">Sin decisión gerencial hoy</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:4px">Monitorea tus áreas y asegúrate de que todas tomen buenas decisiones.</div>
+          </div>
+        `}
+      `;
+    }
+
+    async function confirmGerenteDecision() {
+      // Reuse the same flow but for gerente area
+      const prevArea = session.area;
+      session.area = 'gerente';
+      await confirmDecision();
+      session.area = prevArea;
+    }
+
+    // --- Notifications ---
+    function renderNotifications(day) {
+      const el = document.getElementById('notifications');
+      const notifications = [];
+
+      // Check for cross effects that affected my area today
+      const todayDecisions = gameData.decisions.filter(d =>
+        d.company_id === session.company && d.day === day && d.area_code !== session.area
+      );
+      todayDecisions.forEach(d => {
+        try {
+          const cross = JSON.parse(d.cross_effects || '[]');
+          cross.forEach(ce => {
+            if (ce.area === session.area) {
+              notifications.push({
+                type: 'cross-effect',
+                icon: '⚡',
+                message: ce.message || `El área de ${d.area_code} tomó una decisión que te afecta.`
+              });
+            }
+          });
+        } catch (e) {}
+      });
+
+      // Check for events
+      const todayEvents = gameData.events.filter(e => e.day === day);
+      todayEvents.forEach(ev => {
+        if (!ev.target_company || ev.target_company === session.company) {
+          if (!ev.target_area || ev.target_area === session.area) {
+            notifications.push({
+              type: 'event',
+              icon: '🔔',
+              message: `${ev.title}: ${ev.description}`
+            });
+          }
+        }
+      });
+
+      el.innerHTML = notifications.map(n => `
+        <div class="notification-bar ${n.type}">
+          <span>${n.icon}</span>
+          <span>${n.message}</span>
+        </div>
+      `).join('');
+    }
+
+    // --- BSC Mini renderer ---
+    function renderBscMini(data) {
+      return BSC.PERSPECTIVES.map(p => {
+        const val = data[`bsc_${p.key}`] || 50;
+        return `
+          <div class="bsc-row">
+            <span class="bsc-label">${p.icon} ${p.label}</span>
+            <div class="bsc-bar"><div class="bsc-fill" style="width:${val}%;background:${p.color}"></div></div>
+            <span class="bsc-value" style="color:${p.color}">${val}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- Game ended ---
+    function renderEnded() {
+      const company = gameData.companies.find(c => c.id === session.company);
+      const score = Engine.calculateFinalScore(company, gameData.areas);
+      document.querySelector('.game-layout').innerHTML = `
+        <div class="glass card" style="grid-column:1/-1;text-align:center;padding:40px">
+          <div style="font-size:4rem;margin-bottom:16px">🏁</div>
+          <h1 style="margin-bottom:8px">¡Juego terminado!</h1>
+          <h2 style="color:var(--text-secondary)">${company.emoji} ${company.name}</h2>
+          <div style="font-size:2.5rem;font-weight:900;margin:20px 0;color:${score.netProfit >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">
+            Utilidad Neta: ${UI.formatCOP(score.netProfit)}
+          </div>
+          <div style="font-size:1.5rem;font-weight:700;margin-bottom:20px">
+            Score Final: ${score.finalScore}/100
+          </div>
+          ${BSC.renderFull(company, 'BSC Final')}
+        </div>
+      `;
+    }
+
+    // Periodic timer update
+    setInterval(updateTimer, 1000);
+  </script>
+</body>
+</html>

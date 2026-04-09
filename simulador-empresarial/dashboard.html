@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Simulador Empresarial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 800px) { .dash-grid { grid-template-columns: 1fr; } }
+    .control-bar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 16px; margin-bottom: 16px; justify-content: center;
+    }
+    .live-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+      background: var(--color-success); animation: pulse 2s infinite; margin-right: 4px; }
+    .event-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px); display: none; align-items: center;
+      justify-content: center; z-index: 1000; padding: 20px; }
+    .event-modal.show { display: flex; }
+    .event-modal-content { width: 100%; max-width: 550px; padding: 28px; animation: slideUp 0.3s ease-out; }
+    .timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.82rem; }
+    .timeline-day { min-width: 36px; font-weight: 800; color: var(--color-primary); }
+    .progress-ring { width: 120px; height: 120px; position: relative; margin: 0 auto; }
+    .progress-ring svg { transform: rotate(-90deg); }
+    .progress-ring .value { position: absolute; inset: 0; display: flex; align-items: center;
+      justify-content: center; font-size: 1.8rem; font-weight: 900; }
+    .area-status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    @media (max-width: 600px) { .area-status-grid { grid-template-columns: 1fr 1fr; } }
+    .area-status-card { padding: 10px; text-align: center; font-size: 0.78rem; }
+    .area-status-card .icon { font-size: 1.5rem; }
+    .area-status-card .name { font-weight: 700; margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <div class="app-container" style="max-width:1600px">
+    <!-- Header -->
+    <div class="app-header">
+      <h1>🎮 Simulador Empresarial — Control</h1>
+      <p><span class="live-dot"></span> Dashboard en vivo — Admin. de Operaciones II</p>
+    </div>
+
+    <!-- Control bar (teacher only) -->
+    <div class="glass control-bar" id="controls">
+      <button class="btn btn-success" onclick="startGame()" id="btn-start">▶ Iniciar</button>
+      <button class="btn btn-primary" onclick="advanceDay()" id="btn-advance">⏭ Siguiente día</button>
+      <button class="btn btn-warning" onclick="togglePause()" id="btn-pause">⏸ Pausar</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmReset()" id="btn-reset">🗑 Reset</button>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">
+          <input type="checkbox" id="auto-advance" onchange="toggleAutoAdvance()"> Auto-avance
+        </label>
+        <div class="glass day-badge" style="padding:8px 14px">
+          📅 Día <span id="current-day" style="font-weight:900;font-size:1.2rem">0</span>/45
+        </div>
+        <div class="glass" style="padding:6px 12px;border-radius:10px;font-family:var(--font-mono);font-weight:700" id="timer-display">0:00</div>
+      </div>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="glass card scoreboard" style="margin-bottom:20px" id="scoreboard"></div>
+
+    <!-- Event buttons -->
+    <div class="glass card" style="margin-bottom:20px">
+      <div class="section-header">
+        <div class="section-title">🎭 Eventos del Docente</div>
+        <span style="font-size:0.75rem;color:var(--text-secondary)">Lanza eventos que afectan a las empresas</span>
+      </div>
+      <div class="event-grid" id="event-buttons"></div>
+    </div>
+
+    <!-- Two-column company details -->
+    <div class="dash-grid">
+      <div id="company-1-detail"></div>
+      <div id="company-2-detail"></div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="glass card" style="margin-top:16px">
+      <div class="section-header">
+        <div class="section-title">📜 Timeline de eventos</div>
+      </div>
+      <div id="timeline" style="max-height:300px;overflow-y:auto"></div>
+    </div>
+
+    <!-- Players table -->
+    <div class="glass card" style="margin-top:16px">
+      <div class="section-header">
+        <div class="section-title">👥 Jugadores</div>
+        <span id="player-count" style="font-size:0.85rem;color:var(--text-secondary)"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="players-table">
+          <thead><tr><th>Nombre</th><th>Empresa</th><th>Área</th><th>Decisiones</th></tr></thead>
+          <tbody id="players-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Modal -->
+  <div class="event-modal" id="event-modal" onclick="if(event.target===this)closeEventModal()">
+    <div class="glass event-modal-content" id="event-modal-content"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="data/events.js"></script>
+  <script src="data/tree-operations.js"></script>
+  <script src="data/tree-finance.js"></script>
+  <script src="data/tree-marketing.js"></script>
+  <script src="data/tree-hr.js"></script>
+  <script src="data/tree-logistics.js"></script>
+  <script src="data/tree-innovation.js"></script>
+  <script src="data/tree-gerente.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/bsc.js"></script>
+  <script>
+    let gameData = null;
+    let pollTimer = null;
+    let autoAdvanceTimer = null;
+
+    // --- Init ---
+    (async function init() {
+      renderEventButtons();
+      await refresh();
+      pollTimer = setInterval(refresh, CONFIG.POLL_INTERVAL);
+      setInterval(updateTimerDisplay, 1000);
+    })();
+
+    // --- Refresh ---
+    async function refresh() {
+      try {
+        gameData = await API.fetchAll();
+        renderAll();
+      } catch (e) { console.error('Refresh error:', e); }
+    }
+
+    // --- Render everything ---
+    function renderAll() {
+      const day = parseInt(gameData.state.day) || 0;
+      const c1 = gameData.companies.find(c => c.id === 1);
+      const c2 = gameData.companies.find(c => c.id === 2);
+
+      document.getElementById('current-day').textContent = day;
+
+      // Status-dependent controls
+      const status = gameData.state.status;
+      document.getElementById('btn-start').disabled = status !== 'lobby';
+      document.getElementById('btn-advance').disabled = status !== 'playing';
+      document.getElementById('btn-pause').textContent = status === 'paused' ? '▶ Reanudar' : '⏸ Pausar';
+
+      // Scoreboard
+      renderScoreboard(c1, c2);
+
+      // Company details
+      renderCompanyDetail(1, c1);
+      renderCompanyDetail(2, c2);
+
+      // Timeline
+      renderTimeline();
+
+      // Players
+      renderPlayers();
+
+      // Player count
+      document.getElementById('player-count').textContent = `${gameData.students.length} jugadores`;
+    }
+
+    // --- Scoreboard ---
+    function renderScoreboard(c1, c2) {
+      const profit1 = c1.total_revenue - c1.total_costs;
+      const profit2 = c2.total_revenue - c2.total_costs;
+      const leader = profit1 > profit2 ? 1 : profit2 > profit1 ? 2 : 0;
+
+      document.getElementById('scoreboard').innerHTML = `
+        <div class="score-company company-1" style="border-left:4px solid var(--company-1);border-radius:var(--radius-md)">
+          <div style="font-size:3rem">${c1.emoji}</div>
+          <div class="score-name" style="color:var(--company-1)">${c1.name} ${leader === 1 ? '👑' : ''}</div>
+          <div class="score-cash">${UI.formatCOP(c1.total_cash)}</div>
+          <div class="score-profit" style="color:${profit1 >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">
+            Utilidad: ${UI.formatCOP(profit1)}
+          </div>
+          <div style="margin-top:8px">${BSC.renderCompact(c1)}</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="score-company company-2" style="border-left:4px solid var(--company-2);border-radius:var(--radius-md)">
+          <div style="font-size:3rem">${c2.emoji}</div>
+          <div class="score-name" style="color:var(--company-2)">${c2.name} ${leader === 2 ? '👑' : ''}</div>
+          <div class="score-cash">${UI.formatCOP(c2.total_cash)}</div>
+          <div class="score-profit" style="color:${profit2 >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">
+            Utilidad: ${UI.formatCOP(profit2)}
+          </div>
+          <div style="margin-top:8px">${BSC.renderCompact(c2)}</div>
+        </div>
+      `;
+    }
+
+    // --- Company detail ---
+    function renderCompanyDetail(id, company) {
+      const areas = gameData.areas.filter(a => a.company_id === id);
+      const students = gameData.students.filter(s => s.company_id === id);
+      const color = id === 1 ? 'var(--company-1)' : 'var(--company-2)';
+      const day = parseInt(gameData.state.day) || 0;
+
+      document.getElementById(`company-${id}-detail`).innerHTML = `
+        <div class="glass card" style="border-top:3px solid ${color}">
+          <div class="section-header">
+            <div class="section-title">${company.emoji} ${company.name}</div>
+            <span style="font-size:0.78rem;color:var(--text-secondary)">${students.length} jugadores</span>
+          </div>
+
+          <!-- Areas status -->
+          <div class="area-status-grid">
+            ${areas.map(a => {
+              const health = BSC.areaHealth(a);
+              const members = students.filter(s => s.area_code === a.area_code);
+              const decided = gameData.decisions.some(d => d.company_id === id && d.area_code === a.area_code && d.day === day);
+              return `
+                <div class="glass area-status-card">
+                  <div class="icon">${CONFIG.AREAS.find(x => x.code === a.area_code)?.icon || '❓'}</div>
+                  <div class="name">${a.area_name}</div>
+                  <div style="color:${health.status === 'healthy' ? 'var(--color-success)' : health.status === 'warning' ? 'var(--color-warning)' : 'var(--color-danger)'}">
+                    ${health.emoji} ${UI.formatCOP(health.remaining)}
+                  </div>
+                  <div style="color:var(--text-tertiary)">${members.length} persona${members.length !== 1 ? 's' : ''}</div>
+                  <div class="pill pill-sm" style="margin-top:4px;
+                    background:${decided ? 'rgba(52,199,89,0.1)' : 'rgba(255,149,0,0.1)'};
+                    color:${decided ? 'var(--color-success)' : 'var(--color-warning)'}">
+                    ${decided ? '✅' : '⏳'}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+            ${(() => {
+              const gerente = students.find(s => s.area_code === 'gerente');
+              const gerenteDecided = gameData.decisions.some(d => d.company_id === id && d.area_code === 'gerente' && d.day === day);
+              return `
+                <div class="glass area-status-card" style="border:1px solid rgba(88,86,214,0.2)">
+                  <div class="icon">👔</div>
+                  <div class="name">Gerente</div>
+                  <div style="font-size:0.72rem">${gerente?.name || 'Sin asignar'}</div>
+                  <div class="pill pill-sm" style="margin-top:4px;
+                    background:${gerenteDecided ? 'rgba(52,199,89,0.1)' : 'rgba(88,86,214,0.1)'};
+                    color:${gerenteDecided ? 'var(--color-success)' : 'var(--color-indigo)'}">
+                    ${gerenteDecided ? '✅' : gerente ? '⏳' : '—'}
+                  </div>
+                </div>
+              `;
+            })()}
+          </div>
+
+          <!-- BSC -->
+          <div style="margin-top:12px">
+            ${BSC.renderFull(company, 'BSC Empresa')}
+          </div>
+        </div>
+      `;
+    }
+
+    // --- Event Buttons ---
+    function renderEventButtons() {
+      const categories = [
+        { key: 'sabotage',    label: '💀 Sabotaje', color: 'var(--color-danger)' },
+        { key: 'taxes',       label: '🏛️ Impuestos', color: 'var(--color-warning)' },
+        { key: 'crisis',      label: '🌪️ Crisis', color: 'var(--color-purple)' },
+        { key: 'opportunity', label: '🌟 Oportunidad', color: 'var(--color-success)' },
+        { key: 'random',      label: '🎲 Aleatorio', color: 'var(--color-primary)' }
+      ];
+
+      document.getElementById('event-buttons').innerHTML = categories.map(cat => {
+        const events = GAME_EVENTS[cat.key] || [];
+        return events.map(ev => `
+          <div class="event-btn" onclick="openEventModal('${cat.key}', '${ev.id}')">
+            <div class="event-emoji">${ev.emoji}</div>
+            <div class="event-name">${ev.name}</div>
+            <div class="event-desc">${ev.desc}</div>
+          </div>
+        `).join('');
+      }).join('');
+    }
+
+    // --- Event Modal ---
+    function openEventModal(category, eventId) {
+      const events = GAME_EVENTS[category] || [];
+      const ev = events.find(e => e.id === eventId);
+      if (!ev) return;
+
+      const isSabotage = category === 'sabotage';
+      const day = parseInt(gameData.state.day) || 0;
+
+      document.getElementById('event-modal-content').innerHTML = `
+        <div style="text-align:center;font-size:3rem;margin-bottom:12px">${ev.emoji}</div>
+        <h2 style="text-align:center;margin-bottom:8px">${ev.name}</h2>
+        <p style="text-align:center;color:var(--text-secondary);margin-bottom:20px">${ev.desc}</p>
+
+        ${isSabotage ? `
+          <div class="input-group">
+            <label>Empresa atacante</label>
+            <select class="input" id="modal-attacker">
+              <option value="1">🍗 Fritanga Express</option>
+              <option value="2">🥩 Parrilla & CO</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div class="glass card" style="text-align:center;padding:12px">
+              <div style="font-size:0.75rem;color:var(--text-secondary)">Atacante paga</div>
+              <div style="font-weight:700;color:var(--color-danger)">${UI.formatCOP(ev.attackerCash || 0)}</div>
+            </div>
+            <div class="glass card" style="text-align:center;padding:12px">
+              <div style="font-size:0.75rem;color:var(--text-secondary)">Víctima pierde</div>
+              <div style="font-weight:700;color:var(--color-danger)">${UI.formatCOP(ev.victimCash || 0)}</div>
+            </div>
+          </div>
+        ` : `
+          <div class="input-group">
+            <label>Aplicar a</label>
+            <select class="input" id="modal-target">
+              <option value="">Ambas empresas</option>
+              <option value="1">🍗 Solo Fritanga Express</option>
+              <option value="2">🥩 Solo Parrilla & CO</option>
+            </select>
+          </div>
+          <div class="glass card" style="text-align:center;padding:12px;margin-bottom:16px">
+            <div style="font-size:0.75rem;color:var(--text-secondary)">Impacto financiero</div>
+            <div style="font-weight:700;color:${ev.cashDelta >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">${UI.formatCOP(ev.cashDelta)}</div>
+          </div>
+        `}
+
+        <div style="padding:12px;border-radius:var(--radius-sm);background:rgba(0,0,0,0.04);margin-bottom:16px;font-size:0.85rem;font-style:italic">
+          "${ev.narrative}"
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-ghost" onclick="closeEventModal()" style="color:var(--text-primary)">Cancelar</button>
+          <button class="btn ${ev.cashDelta >= 0 && !isSabotage ? 'btn-success' : 'btn-danger'}"
+                  onclick="executeEvent('${category}', '${ev.id}')">
+            ${isSabotage ? '💀 Ejecutar sabotaje' : '⚡ Aplicar evento'}
+          </button>
+        </div>
+      `;
+
+      document.getElementById('event-modal').classList.add('show');
+    }
+
+    function closeEventModal() {
+      document.getElementById('event-modal').classList.remove('show');
+    }
+
+    async function executeEvent(category, eventId) {
+      const events = GAME_EVENTS[category] || [];
+      const ev = events.find(e => e.id === eventId);
+      if (!ev) return;
+
+      const day = parseInt(gameData.state.day) || 0;
+      const isSabotage = category === 'sabotage';
+
+      try {
+        if (isSabotage) {
+          const attackerId = parseInt(document.getElementById('modal-attacker').value);
+          const victimId = attackerId === 1 ? 2 : 1;
+
+          // Apply to victim
+          await API.applyEvent(day, 'sabotage', ev.name, ev.narrative,
+            victimId, ev.targetArea, ev.victimCash, ev.victimBsc || {});
+
+          // Cost to attacker
+          if (ev.attackerCash) {
+            await API.applyEvent(day, 'sabotage_cost', `Costo de ${ev.name}`, 'Costo del sabotaje',
+              attackerId, null, ev.attackerCash, ev.attackerBsc || {});
+          }
+
+          UI.toast(`💀 Sabotaje ejecutado contra empresa ${victimId}`, 'warning');
+        } else {
+          const targetEl = document.getElementById('modal-target');
+          const target = targetEl?.value ? parseInt(targetEl.value) : null;
+
+          await API.applyEvent(day, category, ev.name, ev.narrative,
+            target, ev.targetArea, ev.cashDelta, ev.bsc || {});
+
+          // Recalc BSC
+          if (target) {
+            await API.recalcBSC(target);
+          } else {
+            await Promise.all([API.recalcBSC(1), API.recalcBSC(2)]);
+          }
+
+          UI.toast(`⚡ Evento "${ev.name}" aplicado`, 'success');
+        }
+
+        closeEventModal();
+        await refresh();
+      } catch (e) {
+        console.error(e);
+        UI.toast('Error al aplicar evento: ' + e.message, 'error');
+      }
+    }
+
+    // --- Timeline ---
+    function renderTimeline() {
+      const items = [
+        ...gameData.decisions.map(d => ({
+          day: d.day, type: 'decision',
+          icon: CONFIG.AREAS.find(a => a.code === d.area_code)?.icon || (d.area_code === 'gerente' ? '👔' : '❓'),
+          company: d.company_id,
+          text: `${d.area_code}: ${d.narrative || d.choice}`,
+          time: d.created_at
+        })),
+        ...gameData.events.map(e => ({
+          day: e.day, type: 'event',
+          icon: '⚡',
+          company: e.target_company,
+          text: `${e.title}: ${e.description}`,
+          time: e.created_at
+        }))
+      ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 20);
+
+      document.getElementById('timeline').innerHTML = items.length > 0 ? items.map(i => {
+        const companyEmoji = i.company === 1 ? '🍗' : i.company === 2 ? '🥩' : '🌐';
+        return `
+          <div class="timeline-item">
+            <div class="timeline-day">${i.day}</div>
+            <span>${companyEmoji}</span>
+            <span>${i.icon}</span>
+            <span style="flex:1">${i.text}</span>
+          </div>
+        `;
+      }).join('') : '<p style="color:var(--text-tertiary);text-align:center;padding:20px">Sin eventos aún</p>';
+    }
+
+    // --- Players ---
+    function renderPlayers() {
+      document.getElementById('players-body').innerHTML = gameData.students.map(s => {
+        const company = CONFIG.COMPANIES.find(c => c.id === s.company_id);
+        const areaInfo = s.area_code === 'gerente' ? { icon: '👔', name: 'Gerente' } :
+          CONFIG.AREAS.find(a => a.code === s.area_code) || { icon: '❓', name: s.area_code };
+        return `
+          <tr>
+            <td style="font-weight:600">${s.name}</td>
+            <td><span style="color:${company?.color || '#000'}">${company?.emoji || ''} ${company?.name || ''}</span></td>
+            <td>${areaInfo.icon} ${areaInfo.name}</td>
+            <td style="text-align:center;font-weight:700">${s.decisions_made}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // --- Controls ---
+    async function startGame() {
+      try {
+        await API.startGame();
+        UI.toast('🎮 ¡Juego iniciado!', 'success');
+        await refresh();
+      } catch (e) { UI.toast('Error: ' + e.message, 'error'); }
+    }
+
+    async function advanceDay() {
+      try {
+        const newDay = await API.advanceDay();
+        UI.toast(`📅 Día ${newDay}`, 'info');
+        await refresh();
+      } catch (e) { UI.toast('Error: ' + e.message, 'error'); }
+    }
+
+    async function togglePause() {
+      try {
+        const result = await API.togglePause();
+        UI.toast(result === 'paused' ? '⏸ Juego pausado' : '▶ Juego reanudado', 'info');
+        await refresh();
+      } catch (e) { UI.toast('Error: ' + e.message, 'error'); }
+    }
+
+    function confirmReset() {
+      if (confirm('¿Reiniciar TODO el juego? Se perderán todos los datos.')) {
+        API.resetGame().then(() => {
+          UI.toast('🗑 Juego reiniciado', 'warning');
+          refresh();
+        });
+      }
+    }
+
+    // --- Auto-advance ---
+    function toggleAutoAdvance() {
+      const checked = document.getElementById('auto-advance').checked;
+      if (checked) {
+        autoAdvanceTimer = setInterval(async () => {
+          if (gameData?.state?.status === 'playing') {
+            await advanceDay();
+          }
+        }, CONFIG.SECONDS_PER_DAY * 1000);
+        UI.toast('⏩ Auto-avance activado', 'info');
+      } else {
+        clearInterval(autoAdvanceTimer);
+        autoAdvanceTimer = null;
+        UI.toast('⏹ Auto-avance desactivado', 'info');
+      }
+    }
+
+    // --- Timer display ---
+    function updateTimerDisplay() {
+      if (!gameData || gameData.state.status !== 'playing') {
+        document.getElementById('timer-display').textContent = '--:--';
+        return;
+      }
+      const started = new Date(gameData.state.day_started_at).getTime();
+      const elapsed = (Date.now() - started) / 1000;
+      const remaining = Math.max(0, CONFIG.SECONDS_PER_DAY - elapsed);
+      const el = document.getElementById('timer-display');
+      el.textContent = UI.formatTimer(Math.round(remaining));
+      el.style.color = remaining < 30 ? 'var(--color-danger)' : 'var(--text-primary)';
+    }
+  </script>
+</body>
+</html>

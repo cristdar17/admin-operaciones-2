@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Empresarial - Unirse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-container join-container">
+
+    <!-- Header -->
+    <div class="app-header">
+      <h1>🏢 Simulador Empresarial</h1>
+      <p>Competencia de Gestión Empresarial — Admin. Operaciones II</p>
+    </div>
+
+    <!-- Step 1: Nombre -->
+    <div id="step-name" class="glass card slide-up" style="margin-bottom:20px">
+      <div class="card-title">Paso 1 — Tu nombre</div>
+      <div class="input-group">
+        <label for="player-name">Nombre completo</label>
+        <input type="text" id="player-name" class="input" placeholder="Ej: Valentina López" maxlength="40" autofocus>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width:100%" onclick="goToStep2()" id="btn-step1">
+        Continuar →
+      </button>
+    </div>
+
+    <!-- Step 2: Empresa -->
+    <div id="step-company" class="glass card slide-up" style="display:none;margin-bottom:20px">
+      <div class="card-title">Paso 2 — Elige tu empresa</div>
+      <div class="company-selector" id="company-list"></div>
+      <button class="btn btn-primary btn-lg" style="width:100%" onclick="goToStep3()" id="btn-step2" disabled>
+        Continuar →
+      </button>
+    </div>
+
+    <!-- Step 3: Área -->
+    <div id="step-area" class="glass card slide-up" style="display:none;margin-bottom:20px">
+      <div class="card-title">Paso 3 — Elige tu área funcional</div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px">
+        Cada área necesita al menos 1 integrante. El <strong>Gerente General</strong> supervisa toda la empresa.
+      </p>
+      <div class="grid-3" id="area-list" style="margin-bottom:16px"></div>
+      <div id="area-warnings" style="margin-bottom:12px"></div>
+      <button class="btn btn-success btn-lg" style="width:100%" onclick="joinGame()" id="btn-join" disabled>
+        🚀 Unirme al juego
+      </button>
+    </div>
+
+    <!-- Lobby (post-join) -->
+    <div id="step-lobby" class="glass card" style="display:none;text-align:center;padding:40px">
+      <div style="font-size:4rem;margin-bottom:16px">✅</div>
+      <h2 style="margin-bottom:8px" id="lobby-title">¡Listo!</h2>
+      <p style="color:var(--text-secondary);margin-bottom:24px" id="lobby-desc"></p>
+
+      <div class="glass card" style="margin-bottom:20px">
+        <div class="card-title">Jugadores conectados</div>
+        <div id="lobby-players" style="font-size:0.85rem"></div>
+      </div>
+
+      <div class="waiting-state" id="lobby-waiting">
+        <div class="waiting-icon">⏳</div>
+        <div class="waiting-text">Esperando que el docente inicie el juego...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    let selectedCompany = null;
+    let selectedArea = null;
+    let playerName = '';
+    let playerId = null;
+    let pollTimer = null;
+
+    // --- Render empresas ---
+    function renderCompanies() {
+      const el = document.getElementById('company-list');
+      el.innerHTML = CONFIG.COMPANIES.map(c => `
+        <div class="glass company-option" onclick="selectCompany(${c.id})" id="company-${c.id}"
+             style="--accent:${c.color}">
+          <div class="company-emoji">${c.emoji}</div>
+          <div class="company-name" style="color:${c.color}">${c.name}</div>
+          <div class="company-slogan">${c.slogan}</div>
+          <div id="company-count-${c.id}" style="margin-top:8px;font-size:0.78rem;color:var(--text-tertiary)"></div>
+        </div>
+      `).join('');
+    }
+
+    // --- Render áreas ---
+    async function renderAreas() {
+      const el = document.getElementById('area-list');
+      const students = await API.getStudents();
+      const myCompanyStudents = students.filter(s => s.company_id === selectedCompany);
+
+      const areas = [
+        ...CONFIG.AREAS,
+        { code: 'gerente', name: 'Gerente General', icon: '👔', budget: 0 }
+      ];
+
+      el.innerHTML = areas.map(a => {
+        const count = myCompanyStudents.filter(s => s.area_code === a.code).length;
+        const maxLabel = a.code === 'gerente' ? '(máx. 1)' : '';
+        const disabled = a.code === 'gerente' && count >= 1;
+        return `
+          <div class="glass area-card ${disabled ? 'disabled' : ''}"
+               onclick="${disabled ? '' : `selectArea('${a.code}')`}"
+               id="area-${a.code}"
+               style="${disabled ? 'opacity:0.4;cursor:not-allowed' : ''}">
+            <div class="area-icon">${a.icon}</div>
+            <div class="area-name">${a.name}</div>
+            <div class="area-members">${count} persona${count !== 1 ? 's' : ''} ${maxLabel}</div>
+            ${a.budget > 0 ? `<div style="font-size:0.7rem;color:var(--text-tertiary);margin-top:4px">Presupuesto: ${UI.formatCOP(a.budget)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- Selecciones ---
+    function selectCompany(id) {
+      selectedCompany = id;
+      document.querySelectorAll('.company-option').forEach(el => el.classList.remove('selected'));
+      document.getElementById(`company-${id}`).classList.add('selected');
+      document.getElementById('btn-step2').disabled = false;
+    }
+
+    function selectArea(code) {
+      selectedArea = code;
+      document.querySelectorAll('.area-card').forEach(el => el.classList.remove('selected'));
+      document.getElementById(`area-${code}`).classList.add('selected');
+      document.getElementById('btn-join').disabled = false;
+    }
+
+    // --- Steps ---
+    function goToStep2() {
+      playerName = document.getElementById('player-name').value.trim();
+      if (!playerName) { UI.toast('Escribe tu nombre', 'warning'); return; }
+      document.getElementById('step-name').style.display = 'none';
+      document.getElementById('step-company').style.display = 'block';
+      renderCompanies();
+      loadCounts();
+    }
+
+    async function goToStep3() {
+      if (!selectedCompany) return;
+      document.getElementById('step-company').style.display = 'none';
+      document.getElementById('step-area').style.display = 'block';
+      await renderAreas();
+    }
+
+    // --- Join ---
+    async function joinGame() {
+      if (!selectedArea) return;
+      const btn = document.getElementById('btn-join');
+      btn.disabled = true;
+      btn.textContent = 'Uniéndose...';
+
+      try {
+        playerId = UI.uid();
+        await API.joinGame(playerId, playerName, selectedCompany, selectedArea);
+
+        // Guardar sesión
+        Storage.save({ id: playerId, name: playerName, company: selectedCompany, area: selectedArea });
+
+        // Mostrar lobby
+        const companyData = CONFIG.COMPANIES.find(c => c.id === selectedCompany);
+        const areaName = selectedArea === 'gerente' ? 'Gerente General' :
+          CONFIG.AREAS.find(a => a.code === selectedArea)?.name || selectedArea;
+
+        document.getElementById('step-area').style.display = 'none';
+        document.getElementById('step-lobby').style.display = 'block';
+        document.getElementById('lobby-title').textContent = `¡Bienvenido, ${playerName}!`;
+        document.getElementById('lobby-desc').innerHTML =
+          `${companyData.emoji} <strong>${companyData.name}</strong> — ${areaName}`;
+
+        UI.toast('Te uniste al juego', 'success');
+        startLobbyPoll();
+      } catch (e) {
+        console.error(e);
+        UI.toast('Error al unirse: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.textContent = '🚀 Unirme al juego';
+      }
+    }
+
+    // --- Lobby polling ---
+    async function startLobbyPoll() {
+      const poll = async () => {
+        try {
+          const [state, students] = await Promise.all([API.getState(), API.getStudents()]);
+
+          // Render players
+          const el = document.getElementById('lobby-players');
+          const byCompany = CONFIG.COMPANIES.map(c => {
+            const members = students.filter(s => s.company_id === c.id);
+            return `
+              <div style="margin-bottom:12px">
+                <strong>${c.emoji} ${c.name}</strong> (${members.length})
+                <div style="margin-top:4px">
+                  ${members.map(m => {
+                    const areaIcon = m.area_code === 'gerente' ? '👔' :
+                      CONFIG.AREAS.find(a => a.code === m.area_code)?.icon || '❓';
+                    return `<span class="pill" style="margin:2px;background:rgba(0,0,0,0.05)">${areaIcon} ${m.name}</span>`;
+                  }).join('')}
+                </div>
+              </div>
+            `;
+          });
+          el.innerHTML = byCompany.join('');
+
+          // Check if game started
+          if (state.status === 'playing') {
+            clearInterval(pollTimer);
+            window.location.href = 'game.html';
+          }
+        } catch (e) { console.error('Poll error:', e); }
+      };
+
+      await poll();
+      pollTimer = setInterval(poll, CONFIG.POLL_INTERVAL);
+    }
+
+    // --- Cargar conteos ---
+    async function loadCounts() {
+      try {
+        const students = await API.getStudents();
+        CONFIG.COMPANIES.forEach(c => {
+          const count = students.filter(s => s.company_id === c.id).length;
+          const el = document.getElementById(`company-count-${c.id}`);
+          if (el) el.textContent = `${count} jugador${count !== 1 ? 'es' : ''}`;
+        });
+      } catch (e) {}
+    }
+
+    // --- Init ---
+    (function init() {
+      // Check existing session
+      const session = Storage.load();
+      if (session && session.id) {
+        playerId = session.id;
+        playerName = session.name;
+        selectedCompany = session.company;
+        selectedArea = session.area;
+
+        // Go directly to lobby
+        document.getElementById('step-name').style.display = 'none';
+        document.getElementById('step-lobby').style.display = 'block';
+
+        const companyData = CONFIG.COMPANIES.find(c => c.id === selectedCompany);
+        const areaName = selectedArea === 'gerente' ? 'Gerente General' :
+          CONFIG.AREAS.find(a => a.code === selectedArea)?.name || selectedArea;
+
+        document.getElementById('lobby-title').textContent = `¡Bienvenido de vuelta, ${playerName}!`;
+        document.getElementById('lobby-desc').innerHTML =
+          `${companyData.emoji} <strong>${companyData.name}</strong> — ${areaName}`;
+
+        startLobbyPoll();
+      }
+
+      // Enter key on name input
+      document.getElementById('player-name').addEventListener('keypress', e => {
+        if (e.key === 'Enter') goToStep2();
+      });
+    })();
+  </script>
+</body>
+</html>

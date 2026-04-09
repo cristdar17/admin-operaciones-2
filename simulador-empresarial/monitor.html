@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor — Simulador Empresarial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .monitor-header { display:flex; align-items:center; justify-content:space-between; padding:12px 0; flex-wrap:wrap; gap:8px; }
+    .company-toggle { display:flex; gap:8px; }
+    .company-toggle button { padding:10px 18px; border-radius:var(--radius-sm); border:2px solid transparent;
+      font-weight:700; font-size:0.85rem; cursor:pointer; font-family:var(--font); transition:all var(--transition);
+      background:rgba(255,255,255,0.2); color:white; }
+    .company-toggle button.active-1 { background:var(--company-1); border-color:var(--company-1); }
+    .company-toggle button.active-2 { background:var(--company-2); border-color:var(--company-2); }
+
+    /* Tree visualization */
+    .tree-svg-container { width:100%; overflow-x:auto; overflow-y:auto; padding:16px; -webkit-overflow-scrolling:touch; }
+    .tree-svg-container svg { min-width:800px; }
+    .tree-svg-container svg text { font-family:var(--font); }
+
+    /* Mini scorecards */
+    .mini-score { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+    .mini-score-card { padding:14px; text-align:center; }
+    .mini-score-value { font-size:1.6rem; font-weight:900; }
+    .mini-score-label { font-size:0.72rem; color:var(--text-secondary); margin-top:2px; }
+
+    /* Area tabs */
+    .area-tabs { display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:12px; }
+    .area-tab { padding:8px 16px; border-radius:var(--radius-sm); border:none; font-family:var(--font);
+      font-weight:600; font-size:0.8rem; cursor:pointer; white-space:nowrap; transition:all var(--transition);
+      background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); }
+    .area-tab.active { background:rgba(255,255,255,0.85); color:var(--text-primary); }
+
+    /* Tree node tooltip */
+    .tree-tooltip { position:fixed; padding:12px 16px; border-radius:var(--radius-sm); font-size:0.8rem;
+      max-width:280px; z-index:100; pointer-events:none; display:none; }
+    .tree-tooltip.show { display:block; }
+
+    /* Decision path list */
+    .path-list { margin-top:12px; }
+    .path-step { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .path-step .step-num { min-width:28px; height:28px; border-radius:50%; display:flex; align-items:center;
+      justify-content:center; font-weight:800; font-size:0.75rem; flex-shrink:0; }
+    .path-step .step-num.done { background:var(--color-primary); color:white; }
+    .path-step .step-num.current { background:var(--color-warning); color:white; animation:pulse 2s infinite; }
+    .path-step .step-num.future { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4); }
+    .path-step .step-info { font-size:0.78rem; }
+    .path-step .step-title { font-weight:600; }
+    .path-step .step-choice { font-size:0.72rem; opacity:0.6; margin-top:2px; }
+
+    /* Comparison bar */
+    .compare-metric { display:flex; align-items:center; gap:8px; margin:8px 0; font-size:0.8rem; }
+    .compare-bar-container { flex:1; height:10px; border-radius:5px; background:rgba(255,255,255,0.1); position:relative; overflow:hidden; }
+    .compare-bar-1 { position:absolute; left:0; top:0; height:100%; border-radius:5px 0 0 5px; background:var(--company-1); transition:width 0.5s ease; }
+    .compare-bar-2 { position:absolute; right:0; top:0; height:100%; border-radius:0 5px 5px 0; background:var(--company-2); transition:width 0.5s ease; }
+  </style>
+</head>
+<body>
+  <div class="app-container" style="max-width:900px">
+    <!-- Header -->
+    <div class="monitor-header">
+      <div style="color:white">
+        <div style="font-weight:800;font-size:1.1rem">📱 Monitor del Docente</div>
+        <div style="font-size:0.8rem;opacity:0.7">Día <span id="current-day">0</span>/45 — <span id="game-status">lobby</span></div>
+      </div>
+      <div class="glass" style="padding:6px 14px;border-radius:10px;font-family:var(--font-mono);font-weight:700;font-size:1.2rem" id="timer">--:--</div>
+    </div>
+
+    <!-- Quick scores -->
+    <div class="mini-score">
+      <div class="glass-dark mini-score-card">
+        <div style="font-size:1.5rem;margin-bottom:4px">🍗</div>
+        <div class="mini-score-value" id="score-1" style="color:var(--company-1)">$0</div>
+        <div class="mini-score-label">Fritanga Express</div>
+        <div id="profit-1" style="font-size:0.82rem;font-weight:700;margin-top:4px">$0</div>
+      </div>
+      <div class="glass-dark mini-score-card">
+        <div style="font-size:1.5rem;margin-bottom:4px">🥩</div>
+        <div class="mini-score-value" id="score-2" style="color:var(--company-2)">$0</div>
+        <div class="mini-score-label">Parrilla & CO</div>
+        <div id="profit-2" style="font-size:0.82rem;font-weight:700;margin-top:4px">$0</div>
+      </div>
+    </div>
+
+    <!-- Company toggle -->
+    <div class="company-toggle" style="margin-bottom:12px">
+      <button onclick="setCompany(1)" id="toggle-1" class="active-1">🍗 Fritanga Express</button>
+      <button onclick="setCompany(2)" id="toggle-2">🥩 Parrilla & CO</button>
+      <button onclick="setCompany(0)" id="toggle-0" style="margin-left:auto;font-size:0.78rem">📊 Comparar</button>
+    </div>
+
+    <!-- Area tabs -->
+    <div class="area-tabs" id="area-tabs"></div>
+
+    <!-- Content -->
+    <div id="monitor-content"></div>
+
+    <!-- Tree tooltip -->
+    <div class="glass tree-tooltip" id="tree-tooltip"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="data/tree-operations.js"></script>
+  <script src="data/tree-finance.js"></script>
+  <script src="data/tree-marketing.js"></script>
+  <script src="data/tree-hr.js"></script>
+  <script src="data/tree-logistics.js"></script>
+  <script src="data/tree-innovation.js"></script>
+  <script src="data/tree-gerente.js"></script>
+  <script src="data/events.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/bsc.js"></script>
+  <script>
+    let gameData = null;
+    let selectedCompany = 1;
+    let selectedArea = 'operations';
+    let pollTimer = null;
+
+    const ALL_AREAS = [
+      ...CONFIG.AREAS,
+      { code: 'gerente', name: 'Gerente', icon: '👔' }
+    ];
+
+    // --- Init ---
+    (async function init() {
+      renderAreaTabs();
+      await refresh();
+      pollTimer = setInterval(refresh, CONFIG.POLL_INTERVAL);
+      setInterval(updateTimer, 1000);
+    })();
+
+    // --- Area tabs ---
+    function renderAreaTabs() {
+      document.getElementById('area-tabs').innerHTML = ALL_AREAS.map(a =>
+        `<button class="area-tab ${a.code === selectedArea ? 'active' : ''}"
+                 onclick="setArea('${a.code}')">${a.icon} ${a.name}</button>`
+      ).join('');
+    }
+
+    function setArea(code) {
+      selectedArea = code;
+      renderAreaTabs();
+      renderContent();
+    }
+
+    function setCompany(id) {
+      selectedCompany = id;
+      document.getElementById('toggle-1').className = id === 1 ? 'active-1' : '';
+      document.getElementById('toggle-2').className = id === 2 ? 'active-2' : '';
+      document.getElementById('toggle-0').style.background = id === 0 ? 'rgba(255,255,255,0.4)' : '';
+      renderContent();
+    }
+
+    // --- Refresh ---
+    async function refresh() {
+      try {
+        gameData = await API.fetchAll();
+        updateHeader();
+        renderContent();
+      } catch (e) { console.error('Refresh error:', e); }
+    }
+
+    function updateHeader() {
+      const day = parseInt(gameData.state.day) || 0;
+      document.getElementById('current-day').textContent = day;
+      document.getElementById('game-status').textContent = gameData.state.status;
+
+      const c1 = gameData.companies.find(c => c.id === 1);
+      const c2 = gameData.companies.find(c => c.id === 2);
+
+      document.getElementById('score-1').textContent = UI.formatCOP(c1?.total_cash || 0);
+      document.getElementById('score-2').textContent = UI.formatCOP(c2?.total_cash || 0);
+
+      const p1 = (c1?.total_revenue || 0) - (c1?.total_costs || 0);
+      const p2 = (c2?.total_revenue || 0) - (c2?.total_costs || 0);
+      const el1 = document.getElementById('profit-1');
+      const el2 = document.getElementById('profit-2');
+      el1.textContent = `Utilidad: ${UI.formatCOP(p1)}`;
+      el1.style.color = p1 >= 0 ? 'var(--color-success)' : 'var(--color-danger)';
+      el2.textContent = `Utilidad: ${UI.formatCOP(p2)}`;
+      el2.style.color = p2 >= 0 ? 'var(--color-success)' : 'var(--color-danger)';
+    }
+
+    function updateTimer() {
+      if (!gameData || gameData.state.status !== 'playing') {
+        document.getElementById('timer').textContent = '--:--';
+        return;
+      }
+      const started = new Date(gameData.state.day_started_at).getTime();
+      const elapsed = (Date.now() - started) / 1000;
+      const remaining = Math.max(0, CONFIG.SECONDS_PER_DAY - elapsed);
+      document.getElementById('timer').textContent = UI.formatTimer(Math.round(remaining));
+    }
+
+    // --- Render content ---
+    function renderContent() {
+      if (!gameData) return;
+      const el = document.getElementById('monitor-content');
+
+      if (selectedCompany === 0) {
+        renderComparison(el);
+        return;
+      }
+
+      renderTreeView(el, selectedCompany, selectedArea);
+    }
+
+    // --- Tree visualization ---
+    function renderTreeView(container, companyId, areaCode) {
+      const tree = Engine.getTree(areaCode);
+      if (!tree) {
+        container.innerHTML = '<div class="glass-dark card" style="text-align:center;padding:30px;color:var(--text-on-dark)">Árbol no disponible</div>';
+        return;
+      }
+
+      const progress = Engine.getTreeProgress(areaCode, companyId, gameData.decisions);
+      const nodes = Object.entries(tree.nodes).sort((a, b) => a[1].day - b[1].day);
+      const day = parseInt(gameData.state.day) || 0;
+
+      // Build SVG tree
+      const nodeMap = {};
+      const levels = {};
+
+      // Group nodes by day for layout
+      nodes.forEach(([id, node]) => {
+        const d = node.day;
+        if (!levels[d]) levels[d] = [];
+        levels[d].push(id);
+        nodeMap[id] = node;
+      });
+
+      const sortedDays = Object.keys(levels).map(Number).sort((a, b) => a - b);
+      const svgWidth = Math.max(800, sortedDays.length * 100);
+      const maxNodesPerLevel = Math.max(...Object.values(levels).map(l => l.length));
+      const svgHeight = Math.max(300, maxNodesPerLevel * 80 + 60);
+
+      // Calculate positions
+      const positions = {};
+      sortedDays.forEach((d, xi) => {
+        const nodesAtDay = levels[d];
+        nodesAtDay.forEach((id, yi) => {
+          positions[id] = {
+            x: 60 + xi * (svgWidth / (sortedDays.length + 1)),
+            y: 40 + yi * (svgHeight / (maxNodesPerLevel + 1)) + (svgHeight / (maxNodesPerLevel + 1)) / 2
+          };
+        });
+      });
+
+      // Draw edges
+      let edgesSvg = '';
+      nodes.forEach(([id, node]) => {
+        if (!positions[id]) return;
+        const from = positions[id];
+        node.options.forEach(opt => {
+          if (opt.next && positions[opt.next]) {
+            const to = positions[opt.next];
+            const isVisitedEdge = progress.path.some(p => p.to === id || p.from === id);
+            edgesSvg += `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"
+              stroke="${isVisitedEdge ? '#007AFF' : 'rgba(255,255,255,0.15)'}"
+              stroke-width="${isVisitedEdge ? 3 : 1.5}"
+              stroke-linecap="round"/>`;
+          }
+        });
+      });
+
+      // Draw nodes
+      let nodesSvg = '';
+      nodes.forEach(([id, node]) => {
+        if (!positions[id]) return;
+        const p = positions[id];
+        const isVisited = progress.visited.includes(id);
+        const isCurrent = progress.currentId === id;
+        const isFuture = node.day > day;
+
+        let fill = 'rgba(255,255,255,0.2)';
+        let stroke = 'rgba(255,255,255,0.3)';
+        let textFill = 'rgba(255,255,255,0.4)';
+        let r = 16;
+
+        if (isVisited) { fill = '#007AFF'; stroke = '#007AFF'; textFill = 'white'; }
+        if (isCurrent) { fill = '#FF9500'; stroke = '#FF9500'; textFill = 'white'; r = 20; }
+        if (isFuture && !isCurrent && !isVisited) { fill = 'rgba(255,255,255,0.08)'; }
+
+        nodesSvg += `
+          <g class="tree-node-g" data-id="${id}" style="cursor:pointer"
+             onmouseenter="showTooltip(event,'${id}')" onmouseleave="hideTooltip()"
+             onclick="showTooltip(event,'${id}')">
+            ${isCurrent ? `<circle cx="${p.x}" cy="${p.y}" r="${r + 6}" fill="none" stroke="${stroke}" stroke-width="2" opacity="0.4">
+              <animate attributeName="r" values="${r+4};${r+10};${r+4}" dur="2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.4;0.1;0.4" dur="2s" repeatCount="indefinite"/>
+            </circle>` : ''}
+            <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
+            <text x="${p.x}" y="${p.y + 4}" text-anchor="middle" fill="${textFill}" font-size="10" font-weight="700">${node.day}</text>
+          </g>
+        `;
+      });
+
+      // Decision path list
+      const pathHtml = nodes.map(([id, node]) => {
+        const isVisited = progress.visited.includes(id);
+        const isCurrent = progress.currentId === id;
+        const decision = gameData.decisions.find(d => d.company_id === companyId && d.area_code === areaCode && d.node_id === id);
+
+        return `
+          <div class="path-step">
+            <div class="step-num ${isVisited ? 'done' : isCurrent ? 'current' : 'future'}">${node.day}</div>
+            <div class="step-info" style="color:${isVisited || isCurrent ? 'var(--text-on-dark)' : 'rgba(255,255,255,0.35)'}">
+              <div class="step-title">${node.title}</div>
+              ${decision ? `<div class="step-choice">Eligió: ${decision.choice} — ${decision.narrative?.substring(0, 60) || ''}...</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const companyInfo = CONFIG.COMPANIES.find(c => c.id === companyId);
+      const areaInfo = ALL_AREAS.find(a => a.code === areaCode);
+
+      container.innerHTML = `
+        <div class="glass-dark card" style="margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <span style="font-size:1.5rem">${companyInfo?.emoji || ''}</span>
+            <span style="font-weight:800;font-size:1rem">${companyInfo?.name || ''}</span>
+            <span style="opacity:0.5">→</span>
+            <span>${areaInfo?.icon || ''} ${areaInfo?.name || ''}</span>
+          </div>
+
+          <!-- Tree SVG -->
+          <div class="tree-svg-container">
+            <svg width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+              ${edgesSvg}
+              ${nodesSvg}
+            </svg>
+          </div>
+        </div>
+
+        <!-- Decision path -->
+        <div class="glass-dark card">
+          <div style="font-weight:700;margin-bottom:10px;font-size:0.9rem">📍 Camino de decisiones</div>
+          <div class="path-list">${pathHtml}</div>
+        </div>
+      `;
+    }
+
+    // --- Comparison view ---
+    function renderComparison(container) {
+      const c1 = gameData.companies.find(c => c.id === 1);
+      const c2 = gameData.companies.find(c => c.id === 2);
+      const areas1 = gameData.areas.filter(a => a.company_id === 1);
+      const areas2 = gameData.areas.filter(a => a.company_id === 2);
+
+      const metrics = [
+        { label: '💰 Cash total', v1: c1.total_cash, v2: c2.total_cash },
+        { label: '📈 Ingresos', v1: c1.total_revenue, v2: c2.total_revenue },
+        { label: '📉 Gastos', v1: c1.total_costs, v2: c2.total_costs },
+        { label: '💵 Utilidad', v1: c1.total_revenue - c1.total_costs, v2: c2.total_revenue - c2.total_costs },
+      ];
+
+      const bscMetrics = BSC.PERSPECTIVES.map(p => ({
+        label: `${p.icon} ${p.label}`,
+        v1: c1[`bsc_${p.key}`] || 50,
+        v2: c2[`bsc_${p.key}`] || 50,
+        max: 100
+      }));
+
+      container.innerHTML = `
+        <div class="glass-dark card" style="margin-bottom:12px">
+          <div style="font-weight:800;margin-bottom:16px;font-size:1rem">📊 Comparativa</div>
+
+          ${metrics.map(m => {
+            const max = Math.max(Math.abs(m.v1), Math.abs(m.v2), 1);
+            return `
+              <div class="compare-metric">
+                <span style="min-width:100px;font-weight:600;font-size:0.78rem">${m.label}</span>
+                <span style="font-weight:700;color:var(--company-1);min-width:70px;text-align:right;font-size:0.78rem">${UI.formatCOP(m.v1)}</span>
+                <div class="compare-bar-container">
+                  <div class="compare-bar-1" style="width:${Math.abs(m.v1)/max*50}%"></div>
+                  <div class="compare-bar-2" style="width:${Math.abs(m.v2)/max*50}%"></div>
+                </div>
+                <span style="font-weight:700;color:var(--company-2);min-width:70px;font-size:0.78rem">${UI.formatCOP(m.v2)}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="glass-dark card" style="margin-bottom:12px">
+          <div style="font-weight:800;margin-bottom:12px;font-size:0.9rem">📈 BSC Comparado</div>
+          ${bscMetrics.map(m => `
+            <div class="compare-metric">
+              <span style="min-width:120px;font-weight:600;font-size:0.78rem">${m.label}</span>
+              <span style="font-weight:700;color:var(--company-1);min-width:30px;text-align:right">${m.v1}</span>
+              <div class="compare-bar-container">
+                <div class="compare-bar-1" style="width:${m.v1/m.max*50}%"></div>
+                <div class="compare-bar-2" style="width:${m.v2/m.max*50}%"></div>
+              </div>
+              <span style="font-weight:700;color:var(--company-2);min-width:30px">${m.v2}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="glass-dark card">
+          <div style="font-weight:800;margin-bottom:12px;font-size:0.9rem">🏢 Áreas por empresa</div>
+          ${CONFIG.AREAS.map(a => {
+            const a1 = areas1.find(x => x.area_code === a.code);
+            const a2 = areas2.find(x => x.area_code === a.code);
+            const h1 = a1 ? BSC.areaHealth(a1) : { remaining: 0, emoji: '❓' };
+            const h2 = a2 ? BSC.areaHealth(a2) : { remaining: 0, emoji: '❓' };
+            return `
+              <div class="compare-metric" style="padding:4px 0">
+                <span style="min-width:100px;font-weight:600;font-size:0.78rem">${a.icon} ${a.name}</span>
+                <span style="font-size:0.72rem;color:var(--company-1)">${h1.emoji} ${UI.formatCOP(h1.remaining)}</span>
+                <div style="flex:1"></div>
+                <span style="font-size:0.72rem;color:var(--company-2)">${h2.emoji} ${UI.formatCOP(h2.remaining)}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // --- Tooltip ---
+    function showTooltip(event, nodeId) {
+      const tree = Engine.getTree(selectedArea);
+      if (!tree || !tree.nodes[nodeId]) return;
+      const node = tree.nodes[nodeId];
+      const tooltip = document.getElementById('tree-tooltip');
+
+      tooltip.innerHTML = `
+        <div style="font-weight:700;margin-bottom:4px">Día ${node.day}: ${node.title}</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.4">${node.context.substring(0, 150)}...</div>
+        <div style="margin-top:6px;font-size:0.72rem">
+          ${node.options.map(o => `<div>• ${o.id}: ${o.label}</div>`).join('')}
+        </div>
+      `;
+
+      const rect = event.target.getBoundingClientRect ? event.target.getBoundingClientRect() :
+        event.currentTarget.getBoundingClientRect();
+      tooltip.style.left = Math.min(rect.left, window.innerWidth - 300) + 'px';
+      tooltip.style.top = (rect.bottom + 8) + 'px';
+      tooltip.classList.add('show');
+    }
+
+    function hideTooltip() {
+      document.getElementById('tree-tooltip').classList.remove('show');
+    }
+  </script>
+</body>
+</html>
