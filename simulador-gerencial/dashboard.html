@@ -42,6 +42,7 @@
         <button class="btn btn-success" id="startBtn">▶ Iniciar juego</button>
         <button class="btn btn-primary" id="nextBtn">⏭ Siguiente ronda</button>
         <button class="btn btn-ghost" id="pauseBtn">⏸ Pausar / Reanudar</button>
+        <button class="btn btn-primary" id="eventBtn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">🎲 Lanzar evento sorpresa</button>
         <button class="btn btn-danger" id="resetBtn">🗑 Reiniciar todo</button>
       </div>
       <div class="stat-grid" style="margin-top: 18px;">
@@ -147,10 +148,17 @@
   <script src="js/sheets.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/narrator.js"></script>
   <script>
     let state = null;
+    let prevState = null;
     let autoRefreshTimer = null;
     let tickTimer = null;
+    let lastLeaderId = null;
+    let shownStreaks = {}; // companyId -> max streak already announced
+    let lastEventId = null;
+    let lastEventBannerAt = 0;
 
     (async function init() {
       await Engine.loadScenarios();
@@ -159,6 +167,7 @@
       document.getElementById('nextBtn').addEventListener('click', () => control('next', '¿Avanzar a la siguiente ronda?'));
       document.getElementById('pauseBtn').addEventListener('click', () => control('pause', '¿Alternar pausa?'));
       document.getElementById('resetBtn').addEventListener('click', () => control('reset', '⚠️ Esto BORRA todas las sesiones, votos y dinero. ¿Continuar?'));
+      document.getElementById('eventBtn').addEventListener('click', launchEvent);
       document.getElementById('autoRefreshToggle').addEventListener('change', (e) => {
         if (e.target.checked) startAutoRefresh(); else stopAutoRefresh();
       });
@@ -211,6 +220,139 @@
       } catch (err) {
         UI.toast('Error: ' + err.message, 'error', 5000);
       }
+    }
+
+    // =====================================================
+    // Evento sorpresa
+    // =====================================================
+    async function launchEvent() {
+      const ev = Narrator.randomEvent();
+      const delta = Narrator.rollDelta(ev);
+      const pretty = Engine.formatCOPFull(delta);
+      if (!confirm('🎲 Evento: ' + ev.title + '\n\n' + ev.desc + '\n\nImpacto en todas las empresas: ' + (delta >= 0 ? '+' : '') + pretty + '\n\n¿Lanzar?')) return;
+      try {
+        const res = await Sheets.applyEvent(ev, delta);
+        if (!res.ok) throw new Error(res.error);
+        UI.toast('🎲 Evento lanzado: ' + ev.title, 'success', 3500);
+        Sounds.event();
+        setTimeout(refresh, 300);
+      } catch (err) {
+        UI.toast('Error lanzando evento: ' + err.message, 'error', 5000);
+      }
+    }
+
+    function showEventBanner(ev) {
+      if (!ev) return;
+      const delta = Number(ev.delta) || 0;
+      const existing = document.getElementById('eventBanner');
+      if (existing) existing.remove();
+      const div = document.createElement('div');
+      div.id = 'eventBanner';
+      div.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #8b5cf6, #ec4899); padding: 20px 30px; border-radius: 16px; box-shadow: 0 20px 60px rgba(139,92,246,0.5); z-index: 9999; max-width: 520px; text-align: center; border: 2px solid rgba(255,255,255,0.3); animation: fadeIn 0.4s ease;';
+      div.innerHTML =
+        '<div style="font-size: 48px;">' + (ev.emoji || '🎲') + '</div>' +
+        '<div style="font-size: 22px; font-weight: 900; color: white; margin: 6px 0;">' + escapeHtml(ev.title) + '</div>' +
+        '<div style="font-size: 13px; color: rgba(255,255,255,0.92); line-height: 1.4; margin-bottom: 10px;">' + escapeHtml(ev.description) + '</div>' +
+        '<div style="font-size: 28px; font-weight: 900; color: ' + (delta >= 0 ? '#10f59d' : '#ffcccc') + ';">' + (delta >= 0 ? '+' : '') + Engine.formatCOPFull(delta) + '</div>';
+      document.body.appendChild(div);
+      setTimeout(() => { div.style.transition = 'opacity 0.5s'; div.style.opacity = '0'; setTimeout(() => div.remove(), 500); }, 6000);
+    }
+
+    // =====================================================
+    // Deteccion de cambios narrativos (leader, rachas, etc)
+    // =====================================================
+    function detectNarrativeEvents() {
+      if (!state) return;
+      const cfg = window.SIM_CONFIG;
+
+      // Evento sorpresa recien llegado
+      let ev = null;
+      try { if (state.game && state.game.last_event) ev = JSON.parse(state.game.last_event); } catch (_) {}
+      if (ev && ev.id) {
+        const eventKey = ev.id + '|' + ev.at;
+        if (eventKey !== lastEventId) {
+          lastEventId = eventKey;
+          // Solo mostrar si es reciente (menos de 30s)
+          const evAt = ev.at ? new Date(ev.at).getTime() : 0;
+          if (Date.now() - evAt < 30000) {
+            showEventBanner(ev);
+            Sounds.event();
+          }
+        }
+      }
+
+      // Cambio de lider
+      const ranking = (state.companies || []).slice().sort((a, b) => Number(b.cash) - Number(a.cash));
+      const leader = ranking[0];
+      if (leader && lastLeaderId !== null && Number(leader.id) !== lastLeaderId) {
+        const phrase = Narrator.pick('takeLead', leader.name);
+        if (phrase) {
+          UI.toast('👑 ' + phrase, 'success', 4000);
+          Sounds.fanfare();
+        }
+      }
+      if (leader) lastLeaderId = Number(leader.id);
+
+      // Rachas por empresa
+      (state.companies || []).forEach(c => {
+        const streak = Narrator.computeStreak(state.rounds, c.id);
+        const prev = shownStreaks[c.id] || 0;
+        if (streak >= 7 && prev < 7) {
+          UI.toast('👑 ' + Narrator.pick('streak7', c.name), 'success', 5000);
+          Sounds.fire();
+        } else if (streak >= 5 && prev < 5) {
+          UI.toast('🔥🔥 ' + Narrator.pick('streak5', c.name), 'success', 4500);
+          Sounds.fire();
+        } else if (streak >= 3 && prev < 3) {
+          UI.toast('🔥 ' + Narrator.pick('streak3', c.name), 'info', 3500);
+          Sounds.tick();
+        }
+        shownStreaks[c.id] = streak;
+      });
+
+      // Cambios grandes en caja (vs snapshot anterior)
+      if (prevState) {
+        (state.companies || []).forEach(c => {
+          const prevC = (prevState.companies || []).find(x => Number(x.id) === Number(c.id));
+          if (!prevC) return;
+          const diff = Number(c.cash) - Number(prevC.cash);
+          if (diff > 50000000) {
+            const phrase = Narrator.pick('bigWin', c.name);
+            if (phrase) UI.toast('💰 ' + phrase, 'success', 3500);
+          } else if (diff < -50000000) {
+            const phrase = Narrator.pick('bigLoss', c.name);
+            if (phrase) UI.toast('💀 ' + phrase, 'error', 3500);
+          }
+        });
+
+        // Quiebra inminente
+        (state.companies || []).forEach(c => {
+          const prevC = (prevState.companies || []).find(x => Number(x.id) === Number(c.id));
+          if (!prevC) return;
+          if (Number(c.cash) < 100000000 && Number(prevC.cash) >= 100000000) {
+            UI.toast('💀 ' + Narrator.pick('bankrupt', c.name), 'error', 5000);
+            Sounds.buzzer();
+          }
+        });
+
+        // Ultima ronda: unanimidad o contrarian
+        (state.rounds || []).forEach(r => {
+          if (r.phase !== 'resolved') return;
+          const wasPrev = (prevState.rounds || []).find(pr =>
+            Number(pr.company) === Number(r.company) && Number(pr.round) === Number(r.round) && pr.phase === 'resolved'
+          );
+          if (wasPrev) return; // ya lo vimos
+          const comp = (state.companies || []).find(x => Number(x.id) === Number(r.company));
+          if (!comp) return;
+          if (Narrator.wasUnanimous(r)) {
+            UI.toast('🤝 ' + Narrator.pick('unanimous', comp.name), 'info', 3500);
+          } else if (Narrator.wasContrarian(r)) {
+            UI.toast('😈 ' + Narrator.pick('contrarian', comp.name), 'warning', 3500);
+          }
+        });
+      }
+
+      prevState = JSON.parse(JSON.stringify(state));
     }
 
     // =====================================================
@@ -321,6 +463,10 @@
         }
 
         const stuckBadge = ph.stuck ? '<span class="mini-badge" style="background: var(--danger); color: white;">⚠ atascada</span>' : '';
+        const streak = Narrator.computeStreak(state.rounds, c.id);
+        const streakBadge = streak >= 3
+          ? '<span class="mini-badge" style="background: linear-gradient(135deg, #f97316, #ef4444); color: white;">🔥 x' + streak + '</span>'
+          : '';
         const barPct = ph.phase === 'analysis' ? Math.min(100, ((cfg.PHASE_ANALYSIS - ph.remaining) / cfg.PHASE_ANALYSIS) * 100)
                     : ph.phase === 'propose'  ? Math.min(100, ((cfg.PHASE_PROPOSE - ph.remaining) / cfg.PHASE_PROPOSE) * 100)
                     : ph.phase === 'vote'     ? Math.min(100, ((cfg.PHASE_VOTE - ph.remaining) / cfg.PHASE_VOTE) * 100)
@@ -333,7 +479,7 @@
                 <span style="font-size: 22px;">${c.emoji || ''}</span>
                 <span style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(c.name)}</span>
               </div>
-              ${stuckBadge}
+              <div style="display: flex; gap: 4px;">${streakBadge}${stuckBadge}</div>
             </div>
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
               <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: ${info.color}22; border: 1px solid ${info.color}; border-radius: 999px; font-size: 11px; font-weight: 800; color: ${info.color}; text-transform: uppercase; letter-spacing: 0.05em;">
@@ -358,6 +504,7 @@
 
     function render() {
       if (!state) return;
+      detectNarrativeEvents();
       renderLiveProgress();
       const game = state.game || {};
       const status = String(game.status || 'lobby');

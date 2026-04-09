@@ -38,6 +38,8 @@
   <script src="js/sheets.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/narrator.js"></script>
 
   <script>
     // =====================================================
@@ -56,6 +58,8 @@
     let pollTimer = null;
     let tickTimer = null;
     let resolving = false;
+    let lastTickSec = -1;
+    let lastEventKey = null;
 
     // =====================================================
     // Init
@@ -69,6 +73,9 @@
           window.location.href = 'index.html';
         }
       });
+      // Desbloqueo de audio (requerido en iOS/Android)
+      document.body.addEventListener('click', () => Sounds.unlock(), { once: true });
+      document.body.addEventListener('touchstart', () => Sounds.unlock(), { once: true });
       startTick();
       // Stagger: primer poll entre 0-2s aleatorio para evitar stampede
       setTimeout(() => {
@@ -138,10 +145,28 @@
 
       // Jugando
       if (serverRound !== currentRound) {
+        const wasInGame = currentRound > 0;
         currentRound = serverRound;
         localPhase = 'analysis';
         phaseStartedAt = Date.now();
+        lastTickSec = -1;
         Storage.saveLocalRound(currentRound, { phase: 'analysis', startedAt: phaseStartedAt });
+        if (wasInGame) Sounds.newRound();
+      }
+
+      // Banner de evento sorpresa
+      let ev = null;
+      try { if (game.last_event) ev = JSON.parse(game.last_event); } catch (_) {}
+      if (ev && ev.id && ev.at) {
+        const key = ev.id + '|' + ev.at;
+        if (key !== lastEventKey) {
+          lastEventKey = key;
+          const evAt = new Date(ev.at).getTime();
+          if (Date.now() - evAt < 30000) {
+            showEventBanner(ev);
+            Sounds.event();
+          }
+        }
       }
 
       // Revisar phase en servidor para esta ronda y empresa
@@ -182,6 +207,22 @@
       }
     }
 
+    function showEventBanner(ev) {
+      const existing = document.getElementById('eventBanner');
+      if (existing) existing.remove();
+      const delta = Number(ev.delta) || 0;
+      const div = document.createElement('div');
+      div.id = 'eventBanner';
+      div.style.cssText = 'position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #8b5cf6, #ec4899); padding: 18px 24px; border-radius: 16px; box-shadow: 0 20px 60px rgba(139,92,246,0.6); z-index: 9999; max-width: 90vw; width: 420px; text-align: center; border: 2px solid rgba(255,255,255,0.3);';
+      div.innerHTML =
+        '<div style="font-size: 44px;">' + (ev.emoji || '🎲') + '</div>' +
+        '<div style="font-size: 20px; font-weight: 900; color: white; margin: 4px 0;">' + escapeHtml(ev.title) + '</div>' +
+        '<div style="font-size: 12px; color: rgba(255,255,255,0.92); line-height: 1.4; margin-bottom: 8px;">' + escapeHtml(ev.description) + '</div>' +
+        '<div style="font-size: 24px; font-weight: 900; color: ' + (delta >= 0 ? '#10f59d' : '#ffcccc') + ';">' + (delta >= 0 ? '+' : '') + Engine.formatCOPFull(delta) + '</div>';
+      document.body.appendChild(div);
+      setTimeout(() => { div.style.transition = 'opacity 0.5s'; div.style.opacity = '0'; setTimeout(() => div.remove(), 500); }, 5500);
+    }
+
     // =====================================================
     // Tick local (timers)
     // =====================================================
@@ -203,6 +244,16 @@
         tEl.textContent = UI.formatTime(remaining);
         tEl.classList.toggle('warn', remaining < 15 && remaining > 5);
         tEl.classList.toggle('danger', remaining <= 5 && remaining > 0);
+
+        // Tick sonoro en los ultimos 10 segundos (solo una vez por segundo)
+        const intSec = Math.ceil(remaining);
+        if (intSec !== lastTickSec) {
+          if (intSec > 0 && intSec <= 10 && remaining > 0) {
+            if (intSec <= 3) Sounds.alert();
+            else Sounds.tick();
+          }
+          lastTickSec = intSec;
+        }
       } else {
         tEl.textContent = '--:--';
         tEl.classList.remove('warn', 'danger');
@@ -441,6 +492,7 @@
           choice: selected,
           justification,
         };
+        Sounds.fanfare();
         try {
           const res = await Sheets.propose(payload);
           if (!res.ok) throw new Error(res.error || 'error');
@@ -514,6 +566,7 @@
             const choice = opt.dataset.choice;
             document.querySelectorAll('#voteOptions .option').forEach(o => { o.disabled = true; });
             const payload = { company: session.company, round: currentRound, studentId: session.studentId, vote: choice };
+            Sounds.vote();
             try {
               const res = await Sheets.vote(payload);
               if (!res.ok) throw new Error(res.error || 'error');
@@ -571,8 +624,9 @@
       }
       lastRenderKey = key;
 
-      if (delta > 0) UI.confetti();
-      if (delta < 0) UI.redFlash();
+      if (delta > 0) { UI.confetti(); Sounds.chaching(); }
+      else if (delta < 0) { UI.redFlash(); Sounds.buzzer(); }
+      else Sounds.bell();
 
       const option = dilemma.options[rr.final_choice] || {};
       document.getElementById('mainArea').innerHTML = `

@@ -152,6 +152,20 @@
       try { await rpc('game_reset'); return { ok: true }; }
       catch (err) { return { ok: false, error: err.message }; }
     },
+    async applyEvent(ev, delta) {
+      try {
+        await rpc('apply_market_event', {
+          p_event_id: String(ev.id),
+          p_emoji: String(ev.emoji || ''),
+          p_title: String(ev.title),
+          p_description: String(ev.desc || ''),
+          p_delta: Math.round(Number(delta) || 0),
+        });
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err.message };
+      }
+    },
     async ping() { return { ok: true, pong: new Date().toISOString() }; },
 
     async flushQueue() {
