@@ -20,6 +20,10 @@
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <span class="status-pill" id="gameStatusPill">lobby</span>
         <span class="mini-badge" id="lastUpdate">—</span>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim); cursor: pointer;">
+          <input type="checkbox" id="autoRefreshToggle" checked style="width: 16px; height: 16px; cursor: pointer;" />
+          Auto 3s
+        </label>
         <button class="btn btn-primary" id="refreshBtn">
           🔄 Refrescar
         </button>
@@ -58,6 +62,17 @@
           <div class="value" id="statDecisions">0</div>
         </div>
       </div>
+    </div>
+
+    <!-- Progreso en vivo por empresa -->
+    <div class="card" style="margin-bottom: 20px;">
+      <div class="card-head">
+        <div>
+          <div class="card-title">⏱️ Progreso en vivo</div>
+          <div class="card-subtitle">Fase actual y tiempo restante de cada empresa</div>
+        </div>
+      </div>
+      <div id="liveProgress" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;"></div>
     </div>
 
     <div class="dash-grid">
@@ -134,21 +149,42 @@
   <script src="js/ui.js"></script>
   <script>
     let state = null;
+    let autoRefreshTimer = null;
+    let tickTimer = null;
 
     (async function init() {
       await Engine.loadScenarios();
-      document.getElementById('refreshBtn').addEventListener('click', refresh);
+      document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
       document.getElementById('startBtn').addEventListener('click', () => control('start', '¿Iniciar el juego?'));
       document.getElementById('nextBtn').addEventListener('click', () => control('next', '¿Avanzar a la siguiente ronda?'));
       document.getElementById('pauseBtn').addEventListener('click', () => control('pause', '¿Alternar pausa?'));
       document.getElementById('resetBtn').addEventListener('click', () => control('reset', '⚠️ Esto BORRA todas las sesiones, votos y dinero. ¿Continuar?'));
+      document.getElementById('autoRefreshToggle').addEventListener('change', (e) => {
+        if (e.target.checked) startAutoRefresh(); else stopAutoRefresh();
+      });
+      startAutoRefresh();
+      startTick();
       refresh();
     })();
 
-    async function refresh() {
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      autoRefreshTimer = setInterval(refresh, 3000);
+    }
+    function stopAutoRefresh() {
+      if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+    }
+    function startTick() {
+      if (tickTimer) clearInterval(tickTimer);
+      tickTimer = setInterval(renderLiveProgress, 250);
+    }
+
+    let refreshInFlight = false;
+    async function refresh(manual) {
+      if (refreshInFlight) return;
+      refreshInFlight = true;
       const btn = document.getElementById('refreshBtn');
-      btn.disabled = true;
-      btn.textContent = '⏳ Cargando…';
+      if (manual) { btn.disabled = true; btn.textContent = '⏳ Cargando…'; }
       try {
         const res = await Sheets.state();
         if (!res.ok) throw new Error(res.error || 'error');
@@ -156,10 +192,10 @@
         render();
         document.getElementById('lastUpdate').textContent = '✓ ' + new Date().toLocaleTimeString('es-CO');
       } catch (err) {
-        UI.toast('Error cargando estado: ' + err.message, 'error', 5000);
+        if (manual) UI.toast('Error cargando estado: ' + err.message, 'error', 5000);
       } finally {
-        btn.disabled = false;
-        btn.textContent = '🔄 Refrescar';
+        refreshInFlight = false;
+        if (manual) { btn.disabled = false; btn.textContent = '🔄 Refrescar'; }
       }
     }
 
@@ -177,8 +213,152 @@
       }
     }
 
+    // =====================================================
+    // Progreso en vivo por empresa (con timers locales)
+    // =====================================================
+    function computeCompanyPhase(companyId, currentRound, roundStartedAtMs) {
+      const rr = (state.rounds || []).find(r =>
+        Number(r.company) === Number(companyId) && Number(r.round) === currentRound
+      );
+      const cfg = window.SIM_CONFIG;
+      if (rr && rr.phase === 'resolved') {
+        return { phase: 'result', remaining: 0, round: rr, stuck: false };
+      }
+      if (rr && rr.phase === 'voting') {
+        const phaseStart = rr.phase_started_at ? new Date(rr.phase_started_at).getTime() : Date.now();
+        const elapsed = (Date.now() - phaseStart) / 1000;
+        const remaining = cfg.PHASE_VOTE - elapsed;
+        return { phase: 'vote', remaining, round: rr, stuck: remaining < -10 };
+      }
+      // No hay registro: analysis o propose local
+      if (!roundStartedAtMs) return { phase: 'waiting', remaining: 0, round: null, stuck: false };
+      const elapsed = (Date.now() - roundStartedAtMs) / 1000;
+      if (elapsed < cfg.PHASE_ANALYSIS) {
+        return { phase: 'analysis', remaining: cfg.PHASE_ANALYSIS - elapsed, round: null, stuck: false };
+      }
+      const proposeRemaining = (cfg.PHASE_ANALYSIS + cfg.PHASE_PROPOSE) - elapsed;
+      return { phase: 'propose', remaining: proposeRemaining, round: null, stuck: proposeRemaining < -10 };
+    }
+
+    function phaseInfo(phase) {
+      return {
+        analysis: { label: 'Análisis', emoji: '📖', color: '#06b6d4' },
+        propose:  { label: 'Proponiendo', emoji: '💡', color: '#ec4899' },
+        vote:     { label: 'Votando', emoji: '🗳️', color: '#facc15' },
+        result:   { label: 'Resuelto', emoji: '🎬', color: '#10b981' },
+        waiting:  { label: 'Esperando', emoji: '⏸️', color: '#94a3b8' },
+      }[phase] || { label: phase, emoji: '—', color: '#94a3b8' };
+    }
+
+    function fmtTimer(sec) {
+      const s = Math.max(0, Math.ceil(sec));
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return m + ':' + (r < 10 ? '0' : '') + r;
+    }
+
+    function renderLiveProgress() {
+      if (!state) return;
+      const game = state.game || {};
+      const status = String(game.status || 'lobby');
+      const cfg = window.SIM_CONFIG;
+      const container = document.getElementById('liveProgress');
+
+      if (status === 'lobby') {
+        container.innerHTML = '<div class="empty" style="grid-column: 1/-1;"><span class="emoji">🚦</span>Juego en lobby. Inicia para ver el progreso en vivo.</div>';
+        return;
+      }
+      if (status === 'ended') {
+        container.innerHTML = '<div class="empty" style="grid-column: 1/-1;"><span class="emoji">🏁</span>Juego terminado.</div>';
+        return;
+      }
+
+      const currentRound = parseInt(game.round, 10) || 0;
+      const roundStartedAtMs = game.round_started_at ? new Date(game.round_started_at).getTime() : null;
+
+      // Solo empresas con integrantes
+      const activeCompanies = (state.companies || []).filter(c =>
+        (state.students || []).some(s => Number(s.company) === Number(c.id))
+      );
+
+      if (activeCompanies.length === 0) {
+        container.innerHTML = '<div class="empty" style="grid-column: 1/-1;"><span class="emoji">👥</span>Sin empresas activas.</div>';
+        return;
+      }
+
+      container.innerHTML = activeCompanies.map(c => {
+        const members = (state.students || []).filter(s => Number(s.company) === Number(c.id));
+        const ph = computeCompanyPhase(c.id, currentRound, roundStartedAtMs);
+        const info = phaseInfo(ph.phase);
+
+        // Proponente del turno
+        const sortedMembers = members.slice().sort((a, b) =>
+          String(a.joined_at).localeCompare(String(b.joined_at))
+        );
+        const proponent = sortedMembers[(currentRound - 1) % sortedMembers.length];
+
+        let extraInfo = '';
+        if (ph.phase === 'vote' && ph.round) {
+          let votes = {};
+          try { votes = ph.round.votes_json ? JSON.parse(ph.round.votes_json) : {}; } catch (_) {}
+          const votesCount = Object.keys(votes).length;
+          extraInfo = `
+            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+              Propuesta: <strong style="color: var(--warning);">${ph.round.proposal || '—'}</strong>
+              · Votos: <strong>${votesCount}/${members.length}</strong>
+            </div>
+          `;
+        }
+        if (ph.phase === 'result' && ph.round) {
+          const delta = Number(ph.round.delta) || 0;
+          const color = delta >= 0 ? 'var(--success)' : 'var(--danger)';
+          extraInfo = `
+            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+              Decidió <strong>${ph.round.final_choice || '—'}</strong>
+              · <strong style="color: ${color};">${delta >= 0 ? '+' : ''}${Engine.formatCOP(delta)}</strong>
+            </div>
+          `;
+        }
+
+        const stuckBadge = ph.stuck ? '<span class="mini-badge" style="background: var(--danger); color: white;">⚠ atascada</span>' : '';
+        const barPct = ph.phase === 'analysis' ? Math.min(100, ((cfg.PHASE_ANALYSIS - ph.remaining) / cfg.PHASE_ANALYSIS) * 100)
+                    : ph.phase === 'propose'  ? Math.min(100, ((cfg.PHASE_PROPOSE - ph.remaining) / cfg.PHASE_PROPOSE) * 100)
+                    : ph.phase === 'vote'     ? Math.min(100, ((cfg.PHASE_VOTE - ph.remaining) / cfg.PHASE_VOTE) * 100)
+                    : 100;
+
+        return `
+          <div style="padding: 16px 18px; background: var(--bg-2); border-radius: var(--radius); border: 1.5px solid ${info.color}; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+              <div style="font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 22px;">${c.emoji || ''}</span>
+                <span style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(c.name)}</span>
+              </div>
+              ${stuckBadge}
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
+              <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: ${info.color}22; border: 1px solid ${info.color}; border-radius: 999px; font-size: 11px; font-weight: 800; color: ${info.color}; text-transform: uppercase; letter-spacing: 0.05em;">
+                ${info.emoji} ${info.label}
+              </div>
+              <div style="font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; color: ${ph.remaining < 10 && ph.remaining > 0 ? 'var(--warning)' : 'var(--text)'};">
+                ${ph.phase === 'result' ? '✓' : fmtTimer(ph.remaining)}
+              </div>
+            </div>
+            <div style="height: 6px; background: var(--bg-3); border-radius: 999px; overflow: hidden; margin: 6px 0;">
+              <div style="height: 100%; width: ${barPct}%; background: ${info.color}; transition: width 0.25s ease;"></div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+              Ronda ${currentRound}/${cfg.TOTAL_ROUNDS} · 🎤 ${proponent ? escapeHtml(proponent.name) : '—'}
+              · 💰 <strong style="color: ${Number(c.cash) >= cfg.INITIAL_CASH ? 'var(--success)' : 'var(--danger)'};">${Engine.formatCOP(c.cash)}</strong>
+            </div>
+            ${extraInfo}
+          </div>
+        `;
+      }).join('');
+    }
+
     function render() {
       if (!state) return;
+      renderLiveProgress();
       const game = state.game || {};
       const status = String(game.status || 'lobby');
       const statusPill = document.getElementById('gameStatusPill');
