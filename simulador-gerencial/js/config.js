@@ -9,8 +9,8 @@
 // (La anon key es publica por diseno, Supabase usa Row Level Security)
 
 window.SIM_CONFIG = {
-  SUPABASE_URL: 'PEGA_AQUI_https://TU_PROJECT.supabase.co',
-  SUPABASE_KEY: 'PEGA_AQUI_LA_ANON_KEY',
+  SUPABASE_URL: 'https://omfxfiwkwcontpzmneut.supabase.co',
+  SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tZnhmaXdrd2NvbnRwem1uZXV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2OTM0NTUsImV4cCI6MjA5MTI2OTQ1NX0.heBWQrCn5xXPdNLNHyzx38FqKqEh5U_JVQa41gJxgk4',
 
   // Duracion de cada fase en segundos
   PHASE_ANALYSIS: 60,   // todos leen el dilema
