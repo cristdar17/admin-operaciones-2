@@ -15,10 +15,10 @@
         <div class="cash-label">Caja de la empresa</div>
         <div class="cash-display" id="cashDisplay">$0</div>
         <div id="companyLabel" style="font-size: 12px; color: var(--text-dim); margin-top: 2px;"></div>
-        <div style="margin-top: 6px; width: 140px;">
+        <div style="margin-top: 6px; width: 140px;" title="Moral de la empresa (0-100). Sube con ganancias y cae con pérdidas. Es indicador visual, no afecta el juego.">
           <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim);">
             <span id="moralLabel">😐 Moral 50</span>
-            <span id="streakBadge"></span>
+            <span id="streakBadge" title="Decisiones positivas consecutivas"></span>
           </div>
           <div style="height: 4px; background: var(--bg-3); border-radius: 999px; overflow: hidden; margin-top: 2px;">
             <div id="moralBar" style="height: 100%; width: 50%; background: #facc15; transition: width 0.4s ease;"></div>
@@ -35,11 +35,114 @@
         <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">
           <span class="sync-dot" id="syncDot"></span><span id="syncText">online</span>
         </div>
-        <button class="btn btn-ghost btn-sm" style="margin-top: 8px;" id="logoutBtn">Salir</button>
+        <div style="display: flex; gap: 6px; margin-top: 8px; justify-content: flex-end;">
+          <button class="btn btn-ghost btn-sm" id="helpBtn" title="Ver cómo se juega">❓ Ayuda</button>
+          <button class="btn btn-ghost btn-sm" id="logoutBtn">Salir</button>
+        </div>
       </div>
     </div>
 
     <div id="mainArea"></div>
+  </div>
+
+  <!-- Modal de ayuda -->
+  <div id="helpModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto;">
+    <div style="background: var(--bg-2); border: 1.5px solid var(--border); border-radius: 16px; max-width: 640px; width: 100%; padding: 28px; margin: 20px auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
+        <h2 style="font-size: 24px;">❓ Cómo se juega</h2>
+        <button class="btn btn-ghost btn-sm" id="closeHelpBtn">✕ Cerrar</button>
+      </div>
+
+      <div style="display: grid; gap: 20px; font-size: 14px; line-height: 1.55;">
+
+        <div style="padding: 14px 18px; background: var(--bg-3); border-radius: 10px; border-left: 4px solid var(--primary);">
+          <strong style="color: var(--primary);">🎯 Objetivo</strong><br>
+          Tu empresa arranca con <strong>$500 millones</strong>. Al final de las 30 rondas, gana la empresa con más caja.
+        </div>
+
+        <div>
+          <strong style="font-size: 16px;">⏱️ Cada ronda tiene 4 fases</strong>
+          <ol style="margin-left: 20px; margin-top: 8px; color: var(--text-dim);">
+            <li><strong style="color: var(--text);">Análisis (60s)</strong> — Todo el equipo lee el dilema y discute en voz alta. Sin botones aún.</li>
+            <li><strong style="color: var(--text);">Propuesta (45s)</strong> — Solo el <em>ponente del turno</em> ve los botones A/B/C/D. Elige una y la justifica en una frase.</li>
+            <li><strong style="color: var(--text);">Votación (30s)</strong> — Todos ven la propuesta. Pueden apoyarla votando por ella, o vetarla votando otra.</li>
+            <li><strong style="color: var(--text);">Resultado (15s)</strong> — Se muestra cuánto ganaron o perdieron y la narrativa.</li>
+          </ol>
+        </div>
+
+        <div>
+          <strong style="font-size: 16px;">🎤 Rotación del ponente</strong>
+          <p style="color: var(--text-dim); margin-top: 4px;">
+            Cada ronda, <strong style="color: var(--text);">uno distinto</strong> del equipo es el ponente del turno — rota automáticamente por orden de entrada. Si son 4, cada uno es ponente 1 de cada 4 rondas. <strong>Nadie puede quedarse callado</strong>.
+          </p>
+        </div>
+
+        <div>
+          <strong style="font-size: 16px;">🗳️ Cómo funciona la votación</strong>
+          <ul style="margin-left: 20px; margin-top: 4px; color: var(--text-dim);">
+            <li>Cada voto normal = <strong style="color: var(--text);">1 punto</strong></li>
+            <li>El voto del ponente = <strong style="color: var(--text);">1.5 puntos</strong> (es el "experto del turno")</li>
+            <li>Gana la opción con más puntos</li>
+            <li>En empate, <strong style="color: var(--text);">decide el ponente</strong></li>
+          </ul>
+        </div>
+
+        <div style="padding: 14px 18px; background: rgba(239, 68, 68, 0.08); border-radius: 10px; border-left: 4px solid var(--danger);">
+          <strong style="color: var(--danger);">⚠️ MUY IMPORTANTE: no hay opciones perfectas</strong><br>
+          <span style="color: var(--text-dim);">
+            Cada opción tiene un <strong style="color: var(--text);">rango aleatorio</strong> (ejemplo: entre -$25M y +$40M). Lo que toca al resolver es suerte dentro de ese rango. La opción "segura" puede salir mal, y la "arriesgada" puede salir muy bien. <strong style="color: var(--text);">Hay mejores opciones, no opciones correctas</strong>.
+          </span>
+        </div>
+
+        <div>
+          <strong style="font-size: 16px;">😎 Barra de moral</strong>
+          <p style="color: var(--text-dim); margin-top: 4px;">
+            La barra de moral (0-100) combina tu caja actual con las últimas 3 decisiones. <strong style="color: var(--text);">Es solo indicador visual</strong> — no afecta el juego, solo muestra cómo está el ánimo del equipo.
+          </p>
+        </div>
+
+        <div>
+          <strong style="font-size: 16px;">🔥 Rachas</strong>
+          <p style="color: var(--text-dim); margin-top: 4px;">
+            Si tienen 3 decisiones positivas seguidas → 🔥 en racha. A los 5 → 🔥🔥 imparable. A los 7 → 👑 god mode. No dan puntos, solo bragging rights.
+          </p>
+        </div>
+
+        <div>
+          <strong style="font-size: 16px;">⚡ Modificadores del profesor</strong>
+          <p style="color: var(--text-dim); margin-top: 4px;">
+            Cuando vean una barra de color en la parte de arriba, significa que el profesor activó un efecto especial para todas las empresas:
+          </p>
+          <ul style="margin-left: 20px; margin-top: 4px; color: var(--text-dim);">
+            <li><strong style="color: #06b6d4;">🛡️ Escudo</strong> — las pérdidas de la próxima resolución se reducen a la mitad</li>
+            <li><strong style="color: #dc2626;">💥 Doble o nada</strong> — lo que salga se multiplica ×2 (riesgo puro)</li>
+            <li><strong style="color: #10b981;">🍀 Ronda de suerte</strong> — se suma un bonus aleatorio extra</li>
+          </ul>
+        </div>
+
+        <div>
+          <strong style="font-size: 16px;">🎲 Eventos sorpresa</strong>
+          <p style="color: var(--text-dim); margin-top: 4px;">
+            El profesor puede lanzar eventos del mercado que afectan a todas las empresas (crisis, boom navideño, apagón, etc.). Aparecen como banner grande y todos reciben el mismo impacto en caja.
+          </p>
+        </div>
+
+        <div style="padding: 14px 18px; background: rgba(16, 185, 129, 0.08); border-radius: 10px; border-left: 4px solid var(--success);">
+          <strong style="color: var(--success);">💡 Tips de estrategia</strong>
+          <ul style="margin-left: 20px; margin-top: 6px; color: var(--text-dim);">
+            <li><strong style="color: var(--text);">Lee bien los rangos</strong>: una opción que dice min=-$90M max=+$70M es muy arriesgada; una con min=+$5M max=+$30M es segura pero lenta.</li>
+            <li><strong style="color: var(--text);">Usa el voto del ponente</strong>: si eres ponente y estás seguro, tu 1.5× puede inclinar la balanza.</li>
+            <li><strong style="color: var(--text);">Apuesten cuando vayan perdiendo</strong>: si ya están abajo, jugar seguro no los sacará del hueco.</li>
+            <li><strong style="color: var(--text);">Jueguen seguro cuando vayan ganando</strong>: mantener ventaja es más fácil que remontar.</li>
+            <li><strong style="color: var(--text);">Discutan en la fase de análisis</strong>: son 60 segundos para convencerse. El ponente no tiene que decidir solo.</li>
+            <li><strong style="color: var(--text);">Si los modificadores están activos</strong>, piensen el riesgo doble. Con "💥 Doble o nada", una opción arriesgada puede matarlos o salvarlos.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <button class="btn btn-primary btn-block" id="closeHelpBtn2" style="margin-top: 20px;">Entendido, a jugar 🚀</button>
+    </div>
   </div>
 
   <script src="js/config.js"></script>
@@ -86,6 +189,22 @@
       // Desbloqueo de audio (requerido en iOS/Android)
       document.body.addEventListener('click', () => Sounds.unlock(), { once: true });
       document.body.addEventListener('touchstart', () => Sounds.unlock(), { once: true });
+
+      // Help modal
+      document.getElementById('helpBtn').addEventListener('click', () => openHelp());
+      document.getElementById('closeHelpBtn').addEventListener('click', () => closeHelp());
+      document.getElementById('closeHelpBtn2').addEventListener('click', () => closeHelp());
+      document.getElementById('helpModal').addEventListener('click', (e) => {
+        if (e.target.id === 'helpModal') closeHelp();
+      });
+
+      // Onboarding: primera vez que entra al juego
+      if (!localStorage.getItem('sim_onboarding_done')) {
+        setTimeout(() => {
+          openHelp();
+          localStorage.setItem('sim_onboarding_done', '1');
+        }, 400);
+      }
       startTick();
       // Stagger: primer poll entre 0-2s aleatorio para evitar stampede
       setTimeout(() => {
@@ -249,6 +368,15 @@
       } else {
         renderAnalysis();
       }
+    }
+
+    function openHelp() {
+      document.getElementById('helpModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeHelp() {
+      document.getElementById('helpModal').style.display = 'none';
+      document.body.style.overflow = '';
     }
 
     function showEventBanner(ev) {
@@ -444,11 +572,13 @@
           <h1 class="dilemma-title">${escapeHtml(dilemma.title)}</h1>
           <div class="dilemma-context">${escapeHtml(dilemma.context)}</div>
           <div style="padding: 16px 20px; background: rgba(6, 182, 212, 0.1); border-radius: var(--radius-sm); border-left: 3px solid var(--info);">
-            <strong>📖 Fase de análisis.</strong><br />
+            <strong>📖 Fase 1 de 4: Análisis en equipo (60s)</strong><br />
             <span style="color: var(--text-dim); font-size: 14px;">
-              Discutan la situación entre todos. El ponente del turno es
+              <strong style="color: var(--text);">Discutan en voz alta</strong> con todo el equipo qué opción creen que es la mejor. El ponente del turno es
               <strong style="color: var(--primary);">${prop ? escapeHtml(prop.name) : '...'}</strong>${isMe ? ' (¡eres tú!)' : ''}.
-              Cuando termine el tiempo, ${isMe ? 'deberás elegir una opción y justificarla' : 'el ponente propondrá una opción'}.
+              Cuando termine el tiempo, ${isMe ? '<strong style="color: var(--text);">tú elegirás</strong> una opción y la justificarás' : 'el ponente propondrá una opción'}.
+              <br><br>
+              <em>💡 Recuerda: no hay opción perfecta. Lean bien los rangos cuando aparezcan.</em>
             </span>
           </div>
         </div>
@@ -480,12 +610,24 @@
       }
 
       // Soy el ponente: mostrar formulario
-      const optionsHtml = ['A', 'B', 'C', 'D'].map(k => `
-        <button type="button" class="option" data-choice="${k}">
-          <div class="option-letter">${k}</div>
-          <div class="option-text">${escapeHtml(dilemma.options[k].label)}</div>
-        </button>
-      `).join('');
+      const optionsHtml = ['A', 'B', 'C', 'D'].map(k => {
+        const opt = dilemma.options[k];
+        const rangeColor = opt.max > 0 && opt.min >= 0 ? '#10b981'
+                         : opt.min < 0 && opt.max <= 0 ? '#ef4444'
+                         : '#facc15';
+        return `
+          <button type="button" class="option" data-choice="${k}">
+            <div class="option-letter">${k}</div>
+            <div class="option-text">
+              ${escapeHtml(opt.label)}
+              <div style="margin-top: 6px; font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 8px;">
+                <span>📊 Rango posible:</span>
+                <span style="color: ${rangeColor}; font-weight: 800;">${Engine.formatCOP(opt.min)} → ${Engine.formatCOP(opt.max)}</span>
+              </div>
+            </div>
+          </button>
+        `;
+      }).join('');
 
       document.getElementById('mainArea').innerHTML = `
         <div class="card fade-in">
@@ -494,6 +636,11 @@
           </div>
           <h1 class="dilemma-title">${escapeHtml(dilemma.title)}</h1>
           <div class="dilemma-context">${escapeHtml(dilemma.context)}</div>
+          <div style="padding: 12px 16px; background: rgba(236, 72, 153, 0.1); border-radius: var(--radius-sm); border-left: 3px solid var(--pink); margin-bottom: 16px; font-size: 13px; color: var(--text-dim);">
+            <strong style="color: var(--text);">📝 Fase 2 de 4: Tu propuesta (45s)</strong><br>
+            Elige la opción que recomiendas y escribe una frase convenciendo a tu equipo. Luego ellos votan si te apoyan o te vetan.
+            <br><em>Cada opción muestra su rango mínimo y máximo posible en COP.</em>
+          </div>
           <h3 style="margin-bottom: 12px; font-size: 16px;">💡 Elige una opción:</h3>
           <div class="options" id="proposeOptions">${optionsHtml}</div>
           <div class="field" style="margin-top: 18px;">
@@ -566,17 +713,25 @@
       lastRenderKey = key;
 
       const optionsHtml = ['A', 'B', 'C', 'D'].map(k => {
+        const opt = dilemma.options[k];
         const isProposal = rr.proposal === k;
         const isMine = myVote === k;
         const classes = ['option'];
         if (isProposal) classes.push('highlighted');
         if (isMine) classes.push('selected');
+        const rangeColor = opt.max > 0 && opt.min >= 0 ? '#10b981'
+                         : opt.min < 0 && opt.max <= 0 ? '#ef4444'
+                         : '#facc15';
         return `
           <button type="button" class="${classes.join(' ')}" data-choice="${k}" ${myVote ? 'disabled' : ''}>
             <div class="option-letter">${k}</div>
             <div class="option-text">
-              ${escapeHtml(dilemma.options[k].label)}
-              ${isProposal ? '<div style="margin-top: 4px; font-size: 12px; color: var(--warning); font-weight: 700;">⭐ propuesta del ponente</div>' : ''}
+              ${escapeHtml(opt.label)}
+              <div style="margin-top: 6px; font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span>📊 Rango:</span>
+                <span style="color: ${rangeColor}; font-weight: 800;">${Engine.formatCOP(opt.min)} → ${Engine.formatCOP(opt.max)}</span>
+              </div>
+              ${isProposal ? '<div style="margin-top: 4px; font-size: 12px; color: var(--warning); font-weight: 700;">⭐ propuesta del ponente (peso voto ×1.5)</div>' : ''}
             </div>
           </button>
         `;
@@ -593,6 +748,11 @@
             <div class="who">🎤 Propone</div>
             <div class="name">${prop ? escapeHtml(prop.name) : '-'}</div>
             <div class="justification">"${escapeHtml(rr.justification || '')}"</div>
+          </div>
+          <div style="padding: 12px 16px; background: rgba(250, 204, 21, 0.1); border-radius: var(--radius-sm); border-left: 3px solid var(--warning); margin-bottom: 16px; font-size: 13px; color: var(--text-dim);">
+            <strong style="color: var(--text);">🗳️ Fase 3 de 4: Votación (30s)</strong><br>
+            Si estás de acuerdo con tu ponente, vota por su opción. Si crees que se equivoca, vota por otra y lo vetas.
+            <br><em>El voto del ponente vale ×1.5. En empate decide el ponente.</em>
           </div>
           <h3 style="margin-bottom: 12px; font-size: 16px;">🗳️ Vota tu opción preferida:</h3>
           <div class="options" id="voteOptions">${optionsHtml}</div>
