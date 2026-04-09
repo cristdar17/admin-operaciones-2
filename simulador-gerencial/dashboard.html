@@ -45,6 +45,18 @@
         <button class="btn btn-primary" id="eventBtn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">🎲 Lanzar evento sorpresa</button>
         <button class="btn btn-danger" id="resetBtn">🗑 Reiniciar todo</button>
       </div>
+      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
+        <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;">
+          ⚡ Modificadores para la ronda actual
+          <span id="modifierStatus" style="margin-left: 10px;"></span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-sm" id="modShieldBtn" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">🛡️ Escudo (pérdidas ÷2)</button>
+          <button class="btn btn-sm" id="modDoubleBtn" style="background: linear-gradient(135deg, #f59e0b, #dc2626);">💥 Doble o nada (×2)</button>
+          <button class="btn btn-sm" id="modLuckyBtn" style="background: linear-gradient(135deg, #84cc16, #10b981);">🍀 Ronda de suerte</button>
+          <button class="btn btn-sm btn-ghost" id="modClearBtn">Quitar modificador</button>
+        </div>
+      </div>
       <div class="stat-grid" style="margin-top: 18px;">
         <div class="stat-box">
           <div class="label">Ronda</div>
@@ -150,6 +162,7 @@
   <script src="js/ui.js"></script>
   <script src="js/sounds.js"></script>
   <script src="js/narrator.js"></script>
+  <script src="js/achievements.js"></script>
   <script>
     let state = null;
     let prevState = null;
@@ -159,6 +172,7 @@
     let shownStreaks = {}; // companyId -> max streak already announced
     let lastEventId = null;
     let lastEventBannerAt = 0;
+    let unlockedPerCompany = {}; // companyId -> Set of achievement ids
 
     (async function init() {
       await Engine.loadScenarios();
@@ -168,6 +182,10 @@
       document.getElementById('pauseBtn').addEventListener('click', () => control('pause', '¿Alternar pausa?'));
       document.getElementById('resetBtn').addEventListener('click', () => control('reset', '⚠️ Esto BORRA todas las sesiones, votos y dinero. ¿Continuar?'));
       document.getElementById('eventBtn').addEventListener('click', launchEvent);
+      document.getElementById('modShieldBtn').addEventListener('click', () => setMod('shield', '🛡️ Escudo activado: pérdidas de la siguiente resolución se reducen a la mitad'));
+      document.getElementById('modDoubleBtn').addEventListener('click', () => setMod('double', '💥 Doble o nada: la siguiente resolución se multiplica x2'));
+      document.getElementById('modLuckyBtn').addEventListener('click', () => setMod('lucky', '🍀 Ronda de suerte: se suma un bonus aleatorio extra'));
+      document.getElementById('modClearBtn').addEventListener('click', () => setMod('none', '➖ Modificador desactivado'));
       document.getElementById('autoRefreshToggle').addEventListener('change', (e) => {
         if (e.target.checked) startAutoRefresh(); else stopAutoRefresh();
       });
@@ -220,6 +238,34 @@
       } catch (err) {
         UI.toast('Error: ' + err.message, 'error', 5000);
       }
+    }
+
+    // =====================================================
+    // Modificadores
+    // =====================================================
+    async function setMod(mod, msg) {
+      try {
+        const res = await Sheets.setModifier(mod);
+        if (!res.ok) throw new Error(res.error);
+        UI.toast(msg, 'success', 3500);
+        Sounds.alert();
+        setTimeout(refresh, 200);
+      } catch (err) {
+        UI.toast('Error: ' + err.message, 'error');
+      }
+    }
+
+    function renderModifierStatus() {
+      const el = document.getElementById('modifierStatus');
+      if (!el || !state || !state.game) return;
+      const mod = state.game.next_modifier || 'none';
+      const map = {
+        shield: '<span class="mini-badge" style="background: #06b6d4; color: white;">🛡️ ESCUDO ACTIVO</span>',
+        double: '<span class="mini-badge" style="background: #dc2626; color: white;">💥 DOBLE O NADA ACTIVO</span>',
+        lucky:  '<span class="mini-badge" style="background: #10b981; color: white;">🍀 SUERTE ACTIVA</span>',
+        none:   '<span style="color: var(--text-dim); font-size: 11px;">sin modificador</span>',
+      };
+      el.innerHTML = map[mod] || '';
     }
 
     // =====================================================
@@ -352,6 +398,22 @@
         });
       }
 
+      // Logros nuevos por empresa
+      (state.companies || []).forEach(c => {
+        const unlocked = Achievements.detect(state, c.id);
+        if (!unlockedPerCompany[c.id]) unlockedPerCompany[c.id] = new Set();
+        unlocked.forEach(a => {
+          if (!unlockedPerCompany[c.id].has(a.id)) {
+            unlockedPerCompany[c.id].add(a.id);
+            // Solo anunciar si no es el primer render (para no spamear al cargar)
+            if (prevState) {
+              UI.toast(a.emoji + ' ' + c.name + ': ' + a.title, 'success', 4500);
+              Sounds.fanfare();
+            }
+          }
+        });
+      });
+
       prevState = JSON.parse(JSON.stringify(state));
     }
 
@@ -467,6 +529,14 @@
         const streakBadge = streak >= 3
           ? '<span class="mini-badge" style="background: linear-gradient(135deg, #f97316, #ef4444); color: white;">🔥 x' + streak + '</span>'
           : '';
+        const moral = Achievements.computeMoral(state, c.id);
+        const moralColor = moral >= 70 ? '#10b981' : moral >= 40 ? '#facc15' : '#ef4444';
+        const moralEmoji = moral >= 80 ? '😎' : moral >= 60 ? '🙂' : moral >= 40 ? '😐' : moral >= 20 ? '😟' : '😱';
+        const unlocked = (unlockedPerCompany[c.id] ? Array.from(unlockedPerCompany[c.id]) : []).slice(-6);
+        const achBadges = unlocked.map(id => {
+          const a = Achievements.list.find(x => x.id === id);
+          return a ? `<span title="${escapeHtml(a.title)}: ${escapeHtml(a.desc)}" style="font-size: 16px;">${a.emoji}</span>` : '';
+        }).join('');
         const barPct = ph.phase === 'analysis' ? Math.min(100, ((cfg.PHASE_ANALYSIS - ph.remaining) / cfg.PHASE_ANALYSIS) * 100)
                     : ph.phase === 'propose'  ? Math.min(100, ((cfg.PHASE_PROPOSE - ph.remaining) / cfg.PHASE_PROPOSE) * 100)
                     : ph.phase === 'vote'     ? Math.min(100, ((cfg.PHASE_VOTE - ph.remaining) / cfg.PHASE_VOTE) * 100)
@@ -496,6 +566,15 @@
               Ronda ${currentRound}/${cfg.TOTAL_ROUNDS} · 🎤 ${proponent ? escapeHtml(proponent.name) : '—'}
               · 💰 <strong style="color: ${Number(c.cash) >= cfg.INITIAL_CASH ? 'var(--success)' : 'var(--danger)'};">${Engine.formatCOP(c.cash)}</strong>
             </div>
+            <div style="margin-top: 8px;">
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-dim); margin-bottom: 3px;">
+                <span>${moralEmoji} Moral ${moral}/100</span>
+              </div>
+              <div style="height: 5px; background: var(--bg-3); border-radius: 999px; overflow: hidden;">
+                <div style="height: 100%; width: ${moral}%; background: ${moralColor}; transition: width 0.3s ease;"></div>
+              </div>
+            </div>
+            ${achBadges ? `<div style="margin-top: 8px; display: flex; gap: 5px; flex-wrap: wrap;">${achBadges}</div>` : ''}
             ${extraInfo}
           </div>
         `;
@@ -506,6 +585,7 @@
       if (!state) return;
       detectNarrativeEvents();
       renderLiveProgress();
+      renderModifierStatus();
       const game = state.game || {};
       const status = String(game.status || 'lobby');
       const statusPill = document.getElementById('gameStatusPill');

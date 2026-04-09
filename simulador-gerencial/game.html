@@ -15,6 +15,15 @@
         <div class="cash-label">Caja de la empresa</div>
         <div class="cash-display" id="cashDisplay">$0</div>
         <div id="companyLabel" style="font-size: 12px; color: var(--text-dim); margin-top: 2px;"></div>
+        <div style="margin-top: 6px; width: 140px;">
+          <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim);">
+            <span id="moralLabel">😐 Moral 50</span>
+            <span id="streakBadge"></span>
+          </div>
+          <div style="height: 4px; background: var(--bg-3); border-radius: 999px; overflow: hidden; margin-top: 2px;">
+            <div id="moralBar" style="height: 100%; width: 50%; background: #facc15; transition: width 0.4s ease;"></div>
+          </div>
+        </div>
       </div>
       <div class="center">
         <div class="round-badge" id="roundBadge">Ronda -/-</div>
@@ -40,6 +49,7 @@
   <script src="js/ui.js"></script>
   <script src="js/sounds.js"></script>
   <script src="js/narrator.js"></script>
+  <script src="js/achievements.js"></script>
 
   <script>
     // =====================================================
@@ -128,6 +138,30 @@
       const status = String(game.status || 'lobby');
       const serverRound = parseInt(game.round, 10) || 0;
 
+      // Indicador de modificador activo
+      const mod = String(game.next_modifier || 'none');
+      let modBar = document.getElementById('modIndicator');
+      if (mod !== 'none') {
+        const modMap = {
+          shield: { label: '🛡️ ESCUDO: las pérdidas se reducen a la mitad', bg: '#06b6d4' },
+          double: { label: '💥 DOBLE O NADA: el resultado se multiplica ×2', bg: '#dc2626' },
+          lucky:  { label: '🍀 RONDA DE SUERTE: hay un bonus aleatorio extra', bg: '#10b981' },
+        };
+        const m = modMap[mod];
+        if (m) {
+          if (!modBar) {
+            modBar = document.createElement('div');
+            modBar.id = 'modIndicator';
+            modBar.style.cssText = 'position: sticky; top: 0; z-index: 50; padding: 10px; text-align: center; font-weight: 800; color: white; font-size: 13px; animation: pulse 2s infinite;';
+            document.querySelector('.container').prepend(modBar);
+          }
+          modBar.style.background = m.bg;
+          modBar.textContent = m.label;
+        }
+      } else if (modBar) {
+        modBar.remove();
+      }
+
       // Actualizar cash de la empresa
       const myCompany = (serverState.companies || []).find(c => Number(c.id) === Number(session.company));
       if (myCompany) {
@@ -136,6 +170,16 @@
         cashEl.dataset.val = myCompany.cash;
         UI.animateNumber(cashEl, current, Number(myCompany.cash), 900, Engine.formatCOPFull);
         document.getElementById('companyLabel').textContent = (myCompany.emoji || '') + ' ' + myCompany.name;
+
+        // Moral bar y racha
+        const moral = Achievements.computeMoral(serverState, session.company);
+        const moralColor = moral >= 70 ? '#10b981' : moral >= 40 ? '#facc15' : '#ef4444';
+        const moralEmoji = moral >= 80 ? '😎' : moral >= 60 ? '🙂' : moral >= 40 ? '😐' : moral >= 20 ? '😟' : '😱';
+        document.getElementById('moralBar').style.width = moral + '%';
+        document.getElementById('moralBar').style.background = moralColor;
+        document.getElementById('moralLabel').textContent = moralEmoji + ' Moral ' + moral;
+        const streak = Narrator.computeStreak(serverState.rounds, session.company);
+        document.getElementById('streakBadge').innerHTML = streak >= 3 ? '<span style="color:#f97316;font-weight:900;">🔥 x' + streak + '</span>' : '';
       }
 
       // Lobby / Paused / Ended

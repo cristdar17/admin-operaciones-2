@@ -152,6 +152,15 @@
       try { await rpc('game_reset'); return { ok: true }; }
       catch (err) { return { ok: false, error: err.message }; }
     },
+    async setModifier(mod) {
+      try {
+        await rpc('set_modifier', { p_modifier: String(mod || 'none') });
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err.message };
+      }
+    },
+
     async applyEvent(ev, delta) {
       try {
         await rpc('apply_market_event', {
