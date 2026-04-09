@@ -304,9 +304,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Reset completo
 CREATE OR REPLACE FUNCTION game_reset() RETURNS VOID AS $$
 BEGIN
-  DELETE FROM events;
-  DELETE FROM decisions;
-  DELETE FROM students;
+  DELETE FROM events WHERE true;
+  DELETE FROM decisions WHERE true;
+  DELETE FROM students WHERE true;
   UPDATE areas SET spent = 0, revenue = 0,
     bsc_financial = 50, bsc_customer = 50, bsc_internal = 50, bsc_learning = 50,
     current_node = NULL, resting_today = FALSE;
