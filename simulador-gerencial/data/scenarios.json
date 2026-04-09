@@ -15,8 +15,8 @@
       "context": "Tu único proveedor de materia prima sube precios 40% de un día para otro. Tienes pedidos comprometidos para el próximo mes y no hay tiempo de buscar alternativas formales. ¿Qué decide la junta?",
       "options": {
         "A": { "label": "Aceptar el aumento y trasladarlo al cliente final", "min": -45000000, "max": 25000000, "narrative": "Los clientes leales aceptan, pero perdiste 12% de ventas con clientes sensibles al precio." },
-        "B": { "label": "Negociar pago a 90 días a cambio del precio viejo", "min": -25000000, "max": 40000000, "narrative": "El proveedor accede pero te exige garantía bancaria. Ganas margen pero te endeudas un poco." },
-        "C": { "label": "Buscar proveedor pirata más barato sin certificación", "min": -90000000, "max": 70000000, "narrative": "Casi te ahorras un platal... hasta que un cliente devuelve el lote completo por calidad." },
+        "B": { "label": "Buscar proveedor pirata más barato sin certificación", "min": -90000000, "max": 70000000, "narrative": "Casi te ahorras un platal... hasta que un cliente devuelve el lote completo por calidad." },
+        "C": { "label": "Negociar pago a 90 días a cambio del precio viejo", "min": -25000000, "max": 40000000, "narrative": "El proveedor accede pero te exige garantía bancaria. Ganas margen pero te endeudas un poco." },
         "D": { "label": "Reducir producción 30% mientras buscas alternativas", "min": -35000000, "max": 5000000, "narrative": "Operas con menos margen pero sin sustos. Algunos clientes se van con la competencia." }
       }
     },
@@ -51,9 +51,9 @@
       "context": "Tu líder operativo (lleva 4 años, conoce todo) recibe oferta de la competencia con 40% más de sueldo. Vino a contártelo antes de aceptar. ¿Qué haces?",
       "options": {
         "A": { "label": "Igualar la oferta sin condiciones", "min": -35000000, "max": 30000000, "narrative": "Se queda, pero el resto del equipo se entera y empieza a presionar por aumentos." },
-        "B": { "label": "Ofrecerle sociedad: 5% del negocio en vez de aumento", "min": -10000000, "max": 70000000, "narrative": "Acepta encantado. Su sentido de pertenencia se dispara y arrastra al equipo." },
+        "B": { "label": "Ofrecerle 20% más + bonos por resultados", "min": -25000000, "max": 50000000, "narrative": "Acepta a regañadientes. Cumple pero ya no tiene la misma chispa de antes." },
         "C": { "label": "Dejarlo ir con dignidad y promover al de adentro", "min": -50000000, "max": 45000000, "narrative": "El nuevo líder tarda en agarrar ritmo. Hay turbulencia 2 meses, después estabiliza." },
-        "D": { "label": "Ofrecerle 20% más + bonos por resultados", "min": -25000000, "max": 50000000, "narrative": "Acepta a regañadientes. Cumple pero ya no tiene la misma chispa de antes." }
+        "D": { "label": "Ofrecerle sociedad: 5% del negocio en vez de aumento", "min": -10000000, "max": 70000000, "narrative": "Acepta encantado. Su sentido de pertenencia se dispara y arrastra al equipo." }
       }
     },
     {
@@ -87,9 +87,9 @@
       "context": "Llega notificación de la DIAN: revisión de 2 años atrás. Tu contador dice que hay $40M en deducciones grises que probablemente te objeten. ¿Cómo enfrentas la auditoría?",
       "options": {
         "A": { "label": "Allanarse, pagar y cerrar el caso", "min": -55000000, "max": -30000000, "narrative": "Pierdes $40M + sanción del 15%. Pero queda limpio y duermes tranquilo." },
-        "B": { "label": "Contratar abogado tributario top y pelear caso por caso", "min": -70000000, "max": 20000000, "narrative": "Le tumbas al DIAN el 60% de las objeciones, pero el abogado costó harto." },
+        "B": { "label": "Acogerse a la condonación de intereses (norma vigente)", "min": -45000000, "max": -15000000, "narrative": "Pagas el capital con descuento. Solución intermedia y prudente." },
         "C": { "label": "Ignorar y esperar a ver", "min": -120000000, "max": -20000000, "narrative": "La DIAN no se cansa. Embargo de cuentas a los 3 meses. Pésima movida." },
-        "D": { "label": "Acogerse a la condonación de intereses (norma vigente)", "min": -45000000, "max": -15000000, "narrative": "Pagas el capital con descuento. Solución intermedia y prudente." }
+        "D": { "label": "Contratar abogado tributario top y pelear caso por caso", "min": -70000000, "max": 20000000, "narrative": "Le tumbas al DIAN el 60% de las objeciones, pero el abogado costó harto." }
       }
     },
     {
@@ -99,9 +99,9 @@
       "context": "Tu competidor más fuerte baja precios 25% como promoción de lanzamiento. Tus clientes empiezan a preguntar si vas a igualar. ¿Cuál es tu jugada?",
       "options": {
         "A": { "label": "Igualar el precio para no perder clientes", "min": -65000000, "max": 15000000, "narrative": "Conservas market share pero tu margen se evapora. Guerra que nadie gana." },
-        "B": { "label": "Mantener precio y reforzar comunicación de calidad", "min": -25000000, "max": 60000000, "narrative": "Pierdes a los clientes precio-sensibles pero los premium se quedan y compran más." },
-        "C": { "label": "Lanzar línea económica paralela con submarca", "min": -40000000, "max": 75000000, "narrative": "Compites en ambos segmentos. Costos suben pero ingresos también." },
-        "D": { "label": "Ofrecer combo + servicio premium al mismo precio", "min": -15000000, "max": 50000000, "narrative": "Aumentas valor percibido sin tocar precio. Clientes lo notan y agradecen." }
+        "B": { "label": "Mantener precio y reforzar comunicación de calidad", "min": -20000000, "max": 65000000, "narrative": "Pierdes a los clientes precio-sensibles pero los premium se quedan y compran más." },
+        "C": { "label": "Lanzar línea económica paralela con submarca", "min": -40000000, "max": 60000000, "narrative": "Compites en ambos segmentos. Costos suben pero ingresos también." },
+        "D": { "label": "Ofrecer combo + servicio premium al mismo precio", "min": -20000000, "max": 40000000, "narrative": "Aumentas valor percibido sin tocar precio. Clientes lo notan y agradecen." }
       }
     },
     {
@@ -111,8 +111,8 @@
       "context": "Tienes datos de 3 años: dic-23 vendió 1200, dic-24 vendió 1500, dic-25 vendió 1850. Tu producción tarda 6 semanas. Si te quedas corto pierdes ventas, si te pasas tienes inventario muerto. ¿Cuánto produces para dic-26?",
       "options": {
         "A": { "label": "1850 (igual al año pasado, sin riesgo)", "min": -25000000, "max": 15000000, "narrative": "Te quedas corto el 22 de dic. Pierdes ventas en el pico." },
-        "B": { "label": "2200 (proyección lineal +18%)", "min": 10000000, "max": 40000000, "narrative": "Vendes casi todo. Ajuste fino del pronóstico, casi clavado." },
-        "C": { "label": "2600 (apuesta por boom de fin de año)", "min": -45000000, "max": 60000000, "narrative": "Vendes mucho pero te quedan 350 unidades de inventario que toca rematar en enero." },
+        "B": { "label": "2600 (apuesta por boom de fin de año)", "min": -45000000, "max": 60000000, "narrative": "Vendes mucho pero te quedan 350 unidades de inventario que toca rematar en enero." },
+        "C": { "label": "2200 (proyección lineal +18%)", "min": 10000000, "max": 40000000, "narrative": "Vendes casi todo. Ajuste fino del pronóstico, casi clavado." },
         "D": { "label": "1500 (jugar conservador por la economía)", "min": -50000000, "max": 5000000, "narrative": "Te quedas cortísimo. La gente se fue a la competencia y muchos no vuelven." }
       }
     },
@@ -195,9 +195,9 @@
       "context": "Anuncian racionamiento eléctrico: 4 horas diarias durante 2 semanas. Tu producción depende 100% de electricidad. ¿Cómo respondes?",
       "options": {
         "A": { "label": "Alquilar planta diésel grande", "min": -45000000, "max": 30000000, "narrative": "Mantienes producción casi normal pero el diésel sale carísimo." },
-        "B": { "label": "Reorganizar turnos para trabajar de noche", "min": -10000000, "max": 35000000, "narrative": "Equipo se queja al inicio pero te ahorras un platal. Productividad 80%." },
+        "B": { "label": "Comprar planta solar pequeña como inversión a largo plazo", "min": -70000000, "max": 50000000, "narrative": "Inversión grande inicial pero ya no dependes nunca más del racionamiento." },
         "C": { "label": "Parar producción 2 semanas y dar vacaciones colectivas", "min": -55000000, "max": 0, "narrative": "Ahorras energía y nómina parcial pero pierdes pedidos del periodo." },
-        "D": { "label": "Comprar planta solar pequeña como inversión a largo plazo", "min": -70000000, "max": 50000000, "narrative": "Inversión grande inicial pero ya no dependes nunca más del racionamiento." }
+        "D": { "label": "Reorganizar turnos para trabajar de noche", "min": -10000000, "max": 35000000, "narrative": "Equipo se queja al inicio pero te ahorras un platal. Productividad 80%." }
       }
     },
     {
@@ -231,8 +231,8 @@
       "context": "Tu equipo administrativo (8 personas) quiere seguir 100% remoto. Tú crees que la cultura se está perdiendo. La productividad medible no ha bajado pero algo se siente raro.",
       "options": {
         "A": { "label": "Volver 100% presencial", "min": -50000000, "max": 15000000, "narrative": "3 personas renuncian en el primer mes. Las que quedan trabajan resentidas." },
-        "B": { "label": "Híbrido: 3 días oficina, 2 remoto", "min": -10000000, "max": 40000000, "narrative": "Compromiso aceptable. Recuperas algo de cultura sin perder talento." },
-        "C": { "label": "100% remoto pero con encuentros presenciales mensuales", "min": -5000000, "max": 35000000, "narrative": "Equipo feliz, productividad sube. Los encuentros mensuales fortalecen vínculos." },
+        "B": { "label": "Híbrido: 3 días oficina, 2 remoto", "min": -10000000, "max": 50000000, "narrative": "Compromiso aceptable. Recuperas algo de cultura sin perder talento." },
+        "C": { "label": "100% remoto pero con encuentros presenciales mensuales", "min": -5000000, "max": 30000000, "narrative": "Equipo feliz, productividad sube. Los encuentros mensuales fortalecen vínculos." },
         "D": { "label": "Remoto opcional, dejar elegir a cada uno", "min": -20000000, "max": 25000000, "narrative": "Funciona pero crea dos clases de empleados. Genera tensiones sutiles." }
       }
     },
@@ -242,8 +242,8 @@
       "title": "Programación lineal: asignación de recursos",
       "context": "Tienes 3 plantas (Pereira, Dosquebradas, La Virginia) y 4 puntos de venta. La planta de Pereira es la más eficiente pero está al tope. Dosquebradas tiene capacidad ociosa pero el transporte cuesta más. ¿Qué haces?",
       "options": {
-        "A": { "label": "Concentrar todo en Pereira aunque haya que pagar horas extra", "min": -30000000, "max": 20000000, "narrative": "Las horas extras te disparan el costo unitario. Eficiencia de planta no compensa." },
-        "B": { "label": "Distribuir según el modelo de transporte óptimo", "min": 20000000, "max": 50000000, "narrative": "Resolviste con método del esquina noroeste + Vogel. Minimizaste costo total." },
+        "A": { "label": "Distribuir según el modelo de transporte óptimo", "min": 20000000, "max": 50000000, "narrative": "Resolviste con método del esquina noroeste + Vogel. Minimizaste costo total." },
+        "B": { "label": "Concentrar todo en Pereira aunque haya que pagar horas extra", "min": -30000000, "max": 20000000, "narrative": "Las horas extras te disparan el costo unitario. Eficiencia de planta no compensa." },
         "C": { "label": "Cerrar Dosquebradas y concentrar en Pereira y La Virginia", "min": -65000000, "max": 25000000, "narrative": "Indemnizaciones y costos de cierre te golpean. A largo plazo puede ser bueno pero el golpe duele." },
         "D": { "label": "Repartir por tercios (intuitivo, sin modelo)", "min": -15000000, "max": 25000000, "narrative": "Funciona aceptable pero dejas plata sobre la mesa por no optimizar." }
       }
@@ -266,8 +266,8 @@
       "title": "Compra de competidor en quiebra",
       "context": "Un competidor más pequeño está cerrando y te ofrece comprar todo (inventario, clientes, marca) por $90M. Su inventario vale $60M pero la cartera está hecha un lío.",
       "options": {
-        "A": { "label": "Comprar todo el paquete", "min": -100000000, "max": 150000000, "narrative": "Te tomas semanas en limpiar la cartera pero quedas con 30% más de mercado." },
-        "B": { "label": "Comprar solo el inventario y los clientes (sin marca)", "min": -30000000, "max": 80000000, "narrative": "Negocio limpio, sin pasivos ocultos. Crecimiento sano." },
+        "A": { "label": "Comprar todo el paquete", "min": -110000000, "max": 130000000, "narrative": "Te tomas semanas en limpiar la cartera pero quedas con 30% más de mercado." },
+        "B": { "label": "Comprar solo el inventario y los clientes (sin marca)", "min": -30000000, "max": 100000000, "narrative": "Negocio limpio, sin pasivos ocultos. Crecimiento sano." },
         "C": { "label": "Comprar solo la cartera de clientes por $25M", "min": -10000000, "max": 50000000, "narrative": "Inversión mínima, ganancia por captación. Smart play." },
         "D": { "label": "No comprar y esperar a que cierren para captar a sus clientes", "min": -5000000, "max": 35000000, "narrative": "Algunos clientes llegan solos cuando cierran. Otros se van con la competencia." }
       }
@@ -291,8 +291,8 @@
       "context": "Tu proceso tiene 4 etapas con capacidades: Corte 100u/h, Ensamble 60u/h, Pintura 80u/h, Empaque 120u/h. Si quieres aumentar producción, ¿dónde inviertes?",
       "options": {
         "A": { "label": "Mejorar la pintura (es la segunda más lenta)", "min": -25000000, "max": 5000000, "narrative": "El cuello de botella sigue siendo el ensamble (60u/h). Tu producción no subió." },
-        "B": { "label": "Mejorar el ensamble (cuello de botella real)", "min": 25000000, "max": 60000000, "narrative": "Subes ensamble a 90u/h y ahora tu proceso fluye a 80u/h (limitado por pintura). Salto real." },
-        "C": { "label": "Mejorar el corte (la primera etapa)", "min": -30000000, "max": 0, "narrative": "Generas WIP acumulado antes de ensamble. Inventario en proceso, sin más output." },
+        "B": { "label": "Mejorar el corte (la primera etapa)", "min": -30000000, "max": 0, "narrative": "Generas WIP acumulado antes de ensamble. Inventario en proceso, sin más output." },
+        "C": { "label": "Mejorar el ensamble (cuello de botella real)", "min": 25000000, "max": 60000000, "narrative": "Subes ensamble a 90u/h y ahora tu proceso fluye a 80u/h (limitado por pintura). Salto real." },
         "D": { "label": "Mejorar todas las etapas un poquito", "min": -15000000, "max": 25000000, "narrative": "Inversión dispersa, mejora marginal. La teoría de restricciones dice: ataca el cuello." }
       }
     }
