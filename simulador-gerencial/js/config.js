@@ -10,7 +10,7 @@
 // 5. Copia la URL que te da y pegala abajo:
 
 window.SIM_CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbz1q46hJeI0JaJO_5M-s-OjjUsQYpFQwwyhRwXmseRIf2z4uMMVtB2fKOnuS_14Cnuo/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwmsDzeDruQOYWD2t1mK3IDZ2peziqIRM7aIb_VkE5LHDDGhbZG23QyokVV-XfVyR-g/exec',
 
   // Duracion de cada fase en segundos
   PHASE_ANALYSIS: 60,   // todos leen el dilema
