@@ -78,6 +78,7 @@ function handleRequest_(e) {
         case 'reset':   result = actionReset_(params); break;
         default:        result = { ok: false, error: 'accion desconocida: ' + action };
       }
+      invalidateStateCache_(); // forzar refresh en el proximo state
       return jsonOut_(result);
     } finally {
       if (acquired) { try { lock.releaseLock(); } catch (_) {} }
@@ -206,6 +207,7 @@ function actionJoin_(p) {
   const id = uuid_();
   const sh = getSheet_(SHEET_NAMES.STUDENTS);
   sh.appendRow([id, name, company, new Date().toISOString(), 0, 0, new Date().toISOString()]);
+  invalidateStateCache_();
   return { ok: true, studentId: id };
 }
 
@@ -217,9 +219,17 @@ function findRowById_(sh, id) {
   return -1;
 }
 
+const STATE_CACHE_KEY = 'state_snapshot_v1';
+const STATE_CACHE_TTL = 2; // segundos
+
 function actionState_(p) {
-  // Solo lectura - sin heartbeat para evitar writes en cada poll
-  return {
+  // Cache de 2s para absorber polls masivos y evitar rate limit de Sheets
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get(STATE_CACHE_KEY);
+  if (cached) {
+    try { return JSON.parse(cached); } catch (_) {}
+  }
+  const snapshot = {
     ok: true,
     game: getGameMap_(),
     students: readAll_(SHEET_NAMES.STUDENTS),
@@ -227,6 +237,17 @@ function actionState_(p) {
     rounds: readAll_(SHEET_NAMES.ROUNDS),
     serverTime: new Date().toISOString(),
   };
+  try {
+    const serialized = JSON.stringify(snapshot);
+    if (serialized.length < 95000) {
+      cache.put(STATE_CACHE_KEY, serialized, STATE_CACHE_TTL);
+    }
+  } catch (_) {}
+  return snapshot;
+}
+
+function invalidateStateCache_() {
+  try { CacheService.getScriptCache().remove(STATE_CACHE_KEY); } catch (_) {}
 }
 
 function actionStart_(p) {
