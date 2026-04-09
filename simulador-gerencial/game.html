@@ -69,9 +69,12 @@
           window.location.href = 'index.html';
         }
       });
-      startPolling();
       startTick();
-      poll(); // inmediato
+      // Stagger: primer poll entre 0-2s aleatorio para evitar stampede
+      setTimeout(() => {
+        poll();
+        startPolling();
+      }, Math.floor(Math.random() * 2000));
     })();
 
     function startPolling() {

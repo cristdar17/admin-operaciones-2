@@ -35,20 +35,23 @@ function doPost(e) {
   return handleRequest_(e);
 }
 
-// Acciones que NO requieren lock (solo lectura)
-const READ_ONLY_ACTIONS = ['state', 'ping'];
+// Acciones que NO requieren lock
+// - state/ping: solo lectura
+// - join: usa appendRow que es atomico en Apps Script
+const READ_ONLY_ACTIONS = ['state', 'ping', 'join'];
 
 function handleRequest_(e) {
   try {
     const params = parseParams_(e);
     const action = params.action || 'state';
 
-    // Lecturas: sin lock, ejecucion concurrente
+    // Sin lock: lecturas + join (appendRow es atomico)
     if (READ_ONLY_ACTIONS.indexOf(action) >= 0) {
       ensureSheets_();
       let result;
       if (action === 'ping') result = { ok: true, pong: new Date().toISOString() };
       else if (action === 'state') result = actionState_(params);
+      else if (action === 'join') result = actionJoin_(params);
       return jsonOut_(result);
     }
 
@@ -193,23 +196,16 @@ function uuid_() {
 // =====================================================
 
 function actionJoin_(p) {
+  // Sin lock: appendRow es atomico. Sin readAll para evitar contencion.
+  // Si hay duplicados por nombre, no pasa nada - el localStorage del estudiante
+  // guarda su studentId propio y funciona.
   const name = String(p.name || '').trim();
   const company = parseInt(p.company, 10);
   if (!name) return { ok: false, error: 'Nombre requerido' };
   if (!(company >= 1 && company <= 5)) return { ok: false, error: 'Empresa invalida' };
-
-  const sh = getSheet_(SHEET_NAMES.STUDENTS);
-  // Verificar duplicado por nombre+empresa
-  const existing = readAll_(SHEET_NAMES.STUDENTS).find(function (s) {
-    return String(s.name).toLowerCase() === name.toLowerCase() && Number(s.company) === company;
-  });
-  if (existing) {
-    sh.getRange(findRowById_(sh, existing.id), 7).setValue(new Date().toISOString());
-    return { ok: true, studentId: existing.id, rejoined: true };
-  }
   const id = uuid_();
+  const sh = getSheet_(SHEET_NAMES.STUDENTS);
   sh.appendRow([id, name, company, new Date().toISOString(), 0, 0, new Date().toISOString()]);
-  logEvent_('join', { id: id, name: name, company: company });
   return { ok: true, studentId: id };
 }
 

@@ -96,13 +96,8 @@
       window.location.href = 'game.html';
     }
 
-    // Ping al backend
-    Sheets.ping().then(() => {
-      document.getElementById('syncStatus').innerHTML = '<span class="sync-dot"></span>conectado';
-    }).catch(() => {
-      document.getElementById('syncStatus').innerHTML = '<span class="sync-dot offline"></span>sin backend';
-      UI.toast('No hay conexión con el backend. Configura API_URL en js/config.js', 'error', 6000);
-    });
+    // Listo (sin ping para evitar requests innecesarios en inicios masivos)
+    document.getElementById('syncStatus').innerHTML = '<span class="sync-dot"></span>listo';
 
     // Selector de empresas
     document.querySelectorAll('.company-card').forEach(card => {
