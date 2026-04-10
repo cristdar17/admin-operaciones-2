@@ -1,8 +1,9 @@
 /* ============================================================
-   TREE-FINANCE - Arbol de decisiones del area de FINANZAS
+   TREE-FINANCE v2 - Arbol de decisiones del area de FINANZAS
    Simulador Empresarial - Administracion de Operaciones II
    Cadenas de comida rapida en Pereira, Colombia
    Presupuesto del area: $75.000.000 COP
+   10 nodos de decision / 25 dias / 6 choice + 2 binary + 2 multi
    ============================================================ */
 
 window.TREE_FINANCE = {
@@ -13,1302 +14,678 @@ window.TREE_FINANCE = {
   nodes: {
 
     // ============================================================
-    //  FASE 1 - ESTRUCTURA DE CAPITAL (Dias 1-10)
+    //  NODO 1 — DIA 1: Estructura de capital
     // ============================================================
-
-    // --- DIA 2: Estructura de capital inicial ---
     'fin_01': {
-      day: 2,
-      title: 'Estructura de capital inicial',
-      context: 'La cadena arranca con $500M COP de capital propio. El gerente financiero debe decidir como apalancar el negocio. En Colombia, las tasas de interes corporativo oscilan entre 14% y 22% E.A. segun el perfil de riesgo. Un mayor apalancamiento permite crecer rapido, pero el costo financiero puede asfixiar la operacion si las ventas no despegan. ¿Cual sera la estrategia de financiacion?',
+      day: 1,
+      title: 'Estructura de capital',
+      context: 'La cadena arranca con $500M COP de capital propio. Debes decidir cuanto apalancamiento tomar para financiar la operacion.',
       type: 'choice',
       multiMax: null,
       options: [
         {
           id: 'A',
-          label: 'Estructura conservadora (80% propio / 20% deuda)',
-          description: 'Solicitar solo $100M en credito. Tasa preferencial del 15.5% E.A. con Bancolombia. Bajo riesgo financiero, pero crecimiento lento. Punto de equilibrio mas bajo necesario.',
-          cost: 2500000,
+          label: 'Conservador (85% propio / 15% deuda)',
+          description: 'Credito de $75M con Bancolombia al 15% E.A.',
+          cost: 2000000,
           revenue: 0,
-          bsc: { bsc_financial: 5, bsc_customer: 0, bsc_internal: 2, bsc_learning: 1 },
+          bsc: { bsc_financial: 5, bsc_customer: 0, bsc_internal: 1, bsc_learning: 1 },
           crossEffects: [
-            { area: 'operations', message: 'Presupuesto ajustado limita inversiones en cocina', bsc: { bsc_internal: -2 }, cost: 0 }
+            { area: 'operations', message: 'Presupuesto limitado para equipos de cocina', bsc: { bsc_internal: -2 }, cost: 0 }
           ],
-          tags: ['conservador', 'bajo-riesgo', 'crecimiento-lento'],
-          next: 'fin_02_safe',
-          narrative: 'El banco aprueba el credito en 48 horas por el bajo monto. La tasa es de las mejores del mercado. Sin embargo, las otras areas miran con preocupacion el presupuesto limitado.'
+          tags: ['conservador', 'bajo-riesgo'],
+          next: 'fin_02',
+          narrative: 'El banco aprueba en 24 horas. Cuota mensual baja, pero las areas piden mas recursos.',
+          feedback: 'Opcion segura. La teoria financiera dice que minimizar deuda reduce riesgo de insolvencia, pero tambien limita el crecimiento (trade-off riesgo-rendimiento). Buena si el mercado es incierto.'
         },
         {
           id: 'B',
-          label: 'Estructura moderada (60% propio / 40% deuda)',
-          description: 'Credito de $200M con Bancolombia. Tasa del 17.8% E.A. Equilibrio entre riesgo y capacidad de inversion. Se requiere un flujo de caja constante para cubrir cuotas mensuales.',
+          label: 'Moderado (60% propio / 40% deuda)',
+          description: 'Credito de $200M al 17.5% E.A. con garantia sobre activos.',
           cost: 5000000,
           revenue: 0,
           bsc: { bsc_financial: 3, bsc_customer: 1, bsc_internal: 3, bsc_learning: 2 },
           crossEffects: [
-            { area: 'operations', message: 'Presupuesto razonable para equipos nuevos', bsc: { bsc_internal: 2 }, cost: 0 },
-            { area: 'marketing', message: 'Hay recursos disponibles para campanas iniciales', bsc: { bsc_customer: 1 }, cost: 0 }
+            { area: 'operations', message: 'Recursos razonables para equipar locales', bsc: { bsc_internal: 2 }, cost: 0 },
+            { area: 'marketing', message: 'Hay fondos para campanas iniciales', bsc: { bsc_customer: 1 }, cost: 0 }
           ],
           tags: ['moderado', 'equilibrado'],
-          next: 'fin_02_safe',
-          narrative: 'El comite de credito de Bancolombia aprueba despues de analizar las proyecciones. La cuota mensual es manejable si se mantiene el nivel de ventas esperado.'
+          next: 'fin_02',
+          narrative: 'Bancolombia aprueba tras revisar proyecciones. Cuota mensual manejable si las ventas responden.',
+          feedback: 'Esta es la mejor opcion. El apalancamiento moderado (40%) aprovecha el efecto palanca sin arriesgar la liquidez. Es el punto dulce entre crecimiento y seguridad financiera.'
         },
         {
           id: 'C',
-          label: 'Estructura agresiva (40% propio / 60% deuda)',
-          description: 'Credito de $300M combinando Bancolombia y Davivienda. Tasa promedio del 20.2% E.A. Maximo crecimiento posible, pero el servicio de deuda sera muy alto. Si las ventas fallan, la empresa puede entrar en iliquidez.',
+          label: 'Agresivo (40% propio / 60% deuda)',
+          description: 'Credito de $300M entre Bancolombia y Davivienda al 20% E.A.',
           cost: 8000000,
           revenue: 0,
-          bsc: { bsc_financial: -2, bsc_customer: 3, bsc_internal: 5, bsc_learning: 3 },
+          bsc: { bsc_financial: -3, bsc_customer: 2, bsc_internal: 5, bsc_learning: 2 },
           crossEffects: [
-            { area: 'operations', message: 'Presupuesto amplio: equipos de ultima generacion', bsc: { bsc_internal: 4 }, cost: 0 },
-            { area: 'marketing', message: 'Gran presupuesto disponible para posicionamiento', bsc: { bsc_customer: 3 }, cost: 0 },
+            { area: 'operations', message: 'Presupuesto amplio para equipos premium', bsc: { bsc_internal: 4 }, cost: 0 },
             { area: 'logistics', message: 'Fondos para flota de domicilios desde el dia uno', bsc: { bsc_internal: 2 }, cost: 0 }
           ],
-          tags: ['agresivo', 'alto-riesgo', 'alto-retorno'],
+          tags: ['agresivo', 'alto-riesgo'],
           next: 'fin_02_risk',
-          narrative: 'Dos bancos comparten el riesgo. El dinero llega rapido y las areas celebran el presupuesto abundante, pero la cuota mensual de $18M+ no perdona. Cada peso debe generar retorno.'
+          narrative: 'El dinero llega rapido, pero la cuota mensual de $18M no perdona. Cada peso debe generar retorno.',
+          feedback: 'Peligroso. Con 60% deuda al 20% E.A., el costo financiero puede superar la utilidad operativa. Solo funciona si las ventas crecen muy rapido. Alto riesgo de iliquidez.'
         },
         {
           id: 'D',
-          label: 'Buscar inversionista angel',
-          description: 'Un empresario pereirano del sector cafetero ofrece $250M a cambio del 25% de participacion. No genera deuda ni intereses, pero diluye el control y las utilidades futuras.',
+          label: 'Inversionista angel',
+          description: 'Un empresario pereirano ofrece $250M a cambio del 25% de participacion.',
           cost: 0,
           revenue: 0,
           bsc: { bsc_financial: 2, bsc_customer: 2, bsc_internal: 2, bsc_learning: 5 },
           crossEffects: [
-            { area: 'marketing', message: 'El inversionista trae contactos en el sector hotelero', bsc: { bsc_customer: 3 }, cost: 0 },
-            { area: 'hr', message: 'El inversionista exige contratar un controller financiero', bsc: { bsc_learning: 2 }, cost: -5000000 }
+            { area: 'marketing', message: 'El inversionista trae contactos en el sector hotelero', bsc: { bsc_customer: 3 }, cost: 0 }
           ],
-          tags: ['inversionista', 'sin-deuda', 'dilucion'],
-          next: 'fin_02_risk',
-          narrative: 'El inversionista acepta. Aporta no solo capital sino experiencia empresarial y una red de contactos en el Eje Cafetero. Pero ahora hay que rendir cuentas a un socio que opina sobre cada decision.'
+          tags: ['inversionista', 'dilucion'],
+          next: 'fin_02',
+          narrative: 'Sin deuda, pero ahora compartes decisiones y utilidades con un socio externo.',
+          feedback: 'Interesante pero costoso a largo plazo: cedes 25% de utilidades para siempre. Mejor que deuda agresiva, pero peor que la moderada si el negocio es rentable. Ideal solo si necesitas know-how ademas de dinero.'
         }
       ]
     },
 
-    // --- DIA 4 (rama conservadora): Linea de credito con perfil bajo ---
-    'fin_02_safe': {
+    // ============================================================
+    //  NODO 2 — DIA 4: Linea de credito rotativa
+    // ============================================================
+    'fin_02': {
       day: 4,
-      title: 'Linea de credito - Perfil conservador',
-      context: 'Con un endeudamiento bajo, los bancos ven a la empresa como un cliente de bajo riesgo. Bancolombia ofrece condiciones preferenciales. La pregunta es: ¿tomar la linea de credito como red de seguridad, o aprovechar el buen perfil para algo mas ambicioso?',
+      title: 'Linea de credito rotativa',
+      context: 'Bancolombia ofrece una linea de credito rotativa para cubrir imprevistos. Tener liquidez de respaldo es clave en los primeros meses.',
       type: 'binary',
       multiMax: null,
       options: [
         {
           id: 'A',
-          label: 'Linea rotativa estandar $50M al 16.5% E.A.',
-          description: 'Tasa preferencial por buen perfil crediticio. Solo se paga si se usa. Comision de disponibilidad minima. Red de seguridad perfecta para un perfil conservador.',
-          cost: 400000,
-          revenue: 0,
-          bsc: { bsc_financial: 4, bsc_customer: 0, bsc_internal: 2, bsc_learning: 1 },
-          crossEffects: [],
-          tags: ['bancolombia', 'credito-rotativo', 'preferencial'],
-          next: 'fin_03',
-          narrative: 'Bancolombia aprueba en 2 dias habiles con tasa preferencial. El perfil conservador da acceso a las mejores condiciones del mercado. Red de seguridad lista sin costo real.'
-        },
-        {
-          id: 'B',
-          label: 'Rechazar linea y crear fondo de reserva interno ($25M)',
-          description: 'Apartar $25M del capital como colchon propio. Sin intereses ni ataduras bancarias. Pero reduce el capital de trabajo disponible para las primeras semanas de operacion.',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: 2, bsc_customer: -1, bsc_internal: -1, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'operations', message: 'Capital de trabajo reducido en las primeras semanas', bsc: { bsc_internal: -2 }, cost: 0 }
-          ],
-          tags: ['sin-credito', 'autofinanciado', 'independiente'],
-          next: 'fin_03',
-          narrative: 'Cero dependencia bancaria. Pero $25M inmovilizados "por si acaso" son $25M que no estan trabajando. El equipo debatira si esa prudencia extrema vale el costo de oportunidad.'
-        }
-      ]
-    },
-
-    // --- DIA 4 (rama agresiva/inversionista): Linea de credito con perfil alto ---
-    'fin_02_risk': {
-      day: 4,
-      title: 'Linea de credito - Perfil de alto crecimiento',
-      context: 'Con un nivel de inversion alto (ya sea por deuda o inversionista), la empresa tiene ambicion de crecer rapido. Los bancos ven potencial pero tambien riesgo. Las condiciones seran diferentes a las de una empresa conservadora.',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Bancolombia - Rotativo $80M al 19.5% E.A. con garantia',
-          description: 'Cupo alto gracias al respaldo del inversionista o los activos financiados. Tasa mas alta por el perfil de riesgo. Requiere garantia sobre los equipos de cocina.',
-          cost: 800000,
-          revenue: 0,
-          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 2, bsc_learning: 1 },
-          crossEffects: [
-            { area: 'operations', message: 'Equipos de cocina en garantia bancaria', bsc: { bsc_internal: -1 }, cost: 0 }
-          ],
-          tags: ['bancolombia', 'credito-rotativo', 'cupo-alto'],
-          next: 'fin_03',
-          narrative: 'Cupo generoso pero con condiciones. La tasa refleja que la empresa ya tiene un nivel de deuda/compromiso alto. Los equipos quedan como garantia: no se pueden vender sin permiso del banco.'
-        },
-        {
-          id: 'B',
-          label: 'Davivienda - Rotativo $60M al 18.2% E.A. sin garantia',
-          description: 'Menor cupo pero sin garantia real. Davivienda quiere competir con Bancolombia por el cliente. Tasa intermedia. Mas flexibilidad operativa.',
-          cost: 600000,
-          revenue: 0,
-          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 3, bsc_learning: 1 },
-          crossEffects: [],
-          tags: ['davivienda', 'credito-rotativo', 'sin-garantia'],
-          next: 'fin_03',
-          narrative: 'Davivienda aprueba sin pedir garantias reales. Los equipos quedan libres y la operacion mantiene flexibilidad total. El cupo es menor pero suficiente para emergencias.'
-        },
-        {
-          id: 'C',
-          label: 'Negociar con ambos bancos para obtener la mejor oferta',
-          description: 'Poner a competir a Bancolombia y Davivienda. Puede lograr mejores condiciones, pero el proceso toma 2 semanas y consume tiempo gerencial valioso.',
+          label: 'Abrir linea de credito por $50M',
+          description: 'Costo de apertura $1.5M, interes solo si se usa (18% E.A.).',
           cost: 1500000,
           revenue: 0,
-          bsc: { bsc_financial: 5, bsc_customer: 0, bsc_internal: 1, bsc_learning: 3 },
+          bsc: { bsc_financial: 4, bsc_customer: 0, bsc_internal: 2, bsc_learning: 2 },
           crossEffects: [],
-          tags: ['negociacion', 'competencia-bancaria', 'tiempo'],
+          tags: ['liquidez', 'prevision'],
           next: 'fin_03',
-          narrative: 'Despues de 2 semanas de reuniones, Bancolombia mejora su oferta: $75M al 17.8% sin garantia. Excelente resultado, pero las 2 semanas sin linea de credito fueron un riesgo calculado que salio bien.'
+          narrative: 'La linea queda disponible. Duermes tranquilo sabiendo que hay un colchon financiero.',
+          feedback: 'Correcta. Tener una linea de credito rotativa es una practica financiera estandar. El costo de apertura es bajo comparado con el beneficio de tener liquidez disponible ante imprevistos. Es la mejor opcion.'
+        },
+        {
+          id: 'B',
+          label: 'No abrir linea de credito',
+          description: 'Ahorrar el costo de apertura y manejar todo con caja propia.',
+          cost: 0,
+          revenue: 0,
+          bsc: { bsc_financial: -1, bsc_customer: 0, bsc_internal: 0, bsc_learning: 0 },
+          crossEffects: [],
+          tags: ['sin-colchon', 'riesgoso'],
+          next: 'fin_03',
+          narrative: 'Te ahorras $1.5M hoy, pero si surge una emergencia no tendras de donde sacar.',
+          feedback: 'Mala decision. En finanzas corporativas, la liquidez es oxigeno. Ahorrarse $1.5M pero quedar sin red de seguridad expone la empresa a riesgo de insolvencia ante cualquier imprevisto.'
         }
       ]
     },
 
-    // --- DIA 6: Estrategia de capital de trabajo ---
+    // Rama riesgo del nodo 1 opcion C
+    'fin_02_risk': {
+      day: 4,
+      title: 'Presion bancaria temprana',
+      context: 'Por el alto apalancamiento, los bancos exigen una cuenta de reserva con $30M bloqueados como garantia adicional.',
+      type: 'binary',
+      multiMax: null,
+      options: [
+        {
+          id: 'A',
+          label: 'Aceptar la reserva obligatoria',
+          description: 'Bloquear $30M reduce tu liquidez pero mantiene la relacion bancaria.',
+          cost: 30000000,
+          revenue: 0,
+          bsc: { bsc_financial: -3, bsc_customer: 0, bsc_internal: -1, bsc_learning: 2 },
+          crossEffects: [
+            { area: 'operations', message: 'Menos caja disponible para insumos del mes', bsc: { bsc_internal: -2 }, cost: 0 }
+          ],
+          tags: ['obligacion-bancaria', 'liquidez-baja'],
+          next: 'fin_03',
+          narrative: 'Los $30M quedan congelados. Ahora hay que operar con mucho menos margen.',
+          feedback: 'Es la consecuencia directa del apalancamiento agresivo. Los bancos protegen su riesgo. Esto confirma que la estructura 60% deuda fue excesiva para una empresa nueva.'
+        },
+        {
+          id: 'B',
+          label: 'Negociar reducir la reserva a $15M',
+          description: 'Ofrecer reportes financieros mensuales a cambio de reducir el bloqueo.',
+          cost: 15000000,
+          revenue: 0,
+          bsc: { bsc_financial: -1, bsc_customer: 0, bsc_internal: 1, bsc_learning: 3 },
+          crossEffects: [],
+          tags: ['negociacion', 'compromiso'],
+          next: 'fin_03',
+          narrative: 'El banco acepta si entregas estados financieros cada 30 dias. Mas trabajo administrativo pero conservas liquidez.',
+          feedback: 'Buena negociacion. Ofrecer transparencia (reportes) a cambio de mejores condiciones es una tactica financiera inteligente. Siempre es mejor negociar que aceptar la primera oferta del banco.'
+        }
+      ]
+    },
+
+    // ============================================================
+    //  NODO 3 — DIA 6: Capital de trabajo
+    // ============================================================
     'fin_03': {
       day: 6,
-      title: 'Estrategia de capital de trabajo',
-      context: 'El capital de trabajo es el oxigeno del negocio: la diferencia entre activos corrientes y pasivos corrientes. En un restaurante, esto se traduce en: ¿cuanto inventario tener? ¿a cuantos dias pagar proveedores? ¿que plazo dar a clientes corporativos? En Colombia, el ciclo de conversion de efectivo promedio en restaurantes es de 15-20 dias.',
+      title: 'Gestion del capital de trabajo',
+      context: 'Los proveedores ofrecen diferentes plazos de pago. Manejar bien el ciclo de caja (dias de cobro vs dias de pago) es vital para la liquidez.',
       type: 'choice',
       multiMax: null,
       options: [
         {
           id: 'A',
-          label: 'Estrategia restrictiva (minimo inventario, cobro inmediato)',
-          description: 'Inventario para 3 dias, pago a proveedores a 30 dias, cero credito a clientes. Maximiza el efectivo disponible pero puede generar desabastecimiento y perder clientes corporativos que piden factura a 15 dias.',
+          label: 'Pago anticipado con descuento (2/10 neto 30)',
+          description: 'Pagar en 10 dias para obtener 2% de descuento sobre compras.',
           cost: 0,
           revenue: 3000000,
-          bsc: { bsc_financial: 5, bsc_customer: -3, bsc_internal: -1, bsc_learning: 1 },
+          bsc: { bsc_financial: 4, bsc_customer: 0, bsc_internal: 3, bsc_learning: 2 },
           crossEffects: [
-            { area: 'logistics', message: 'Pedidos de insumos mas frecuentes, lotes pequenos', bsc: { bsc_internal: -3 }, cost: -2000000 },
-            { area: 'marketing', message: 'Clientes corporativos rechazan la politica sin credito', bsc: { bsc_customer: -2 }, cost: 0 }
+            { area: 'logistics', message: 'Proveedores priorizan tus pedidos por buen pago', bsc: { bsc_internal: 2 }, cost: 0 }
           ],
-          tags: ['restrictivo', 'liquidez', 'eficiente'],
+          tags: ['descuento-pronto-pago', 'liquidez-alta'],
           next: 'fin_04',
-          narrative: 'La caja esta saludable, pero el area de logistica se queja de que tiene que hacer pedidos casi diarios. Dos empresas del centro de Pereira preguntan por catering pero no aceptan pago de contado.'
+          narrative: 'Los proveedores te aman. Prioridad en entregas y el 2% de descuento suma millones al ano.',
+          feedback: 'Excelente decision. El descuento 2/10 neto 30 equivale a un rendimiento anualizado del ~36%. Siempre que tengas liquidez, tomar el descuento por pronto pago es financieramente optimo. Mejor opcion.'
         },
         {
           id: 'B',
-          label: 'Estrategia moderada (equilibrio entre liquidez y servicio)',
-          description: 'Inventario para 7 dias, pago a proveedores a 15 dias, credito a clientes corporativos a 8 dias. Balance entre eficiencia financiera y operativa.',
-          cost: 5000000,
-          revenue: 2000000,
-          bsc: { bsc_financial: 3, bsc_customer: 2, bsc_internal: 2, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'logistics', message: 'Frecuencia de pedidos manejable, buen nivel de stock', bsc: { bsc_internal: 1 }, cost: 0 },
-            { area: 'marketing', message: 'Politica de credito atrae clientes corporativos', bsc: { bsc_customer: 2 }, cost: 0 }
-          ],
-          tags: ['moderado', 'equilibrado'],
+          label: 'Pago a 30 dias estandar',
+          description: 'Usar el plazo completo para conservar caja mas tiempo.',
+          cost: 0,
+          revenue: 0,
+          bsc: { bsc_financial: 2, bsc_customer: 0, bsc_internal: 1, bsc_learning: 1 },
+          crossEffects: [],
+          tags: ['estandar', 'conservador'],
           next: 'fin_04',
-          narrative: 'Un buen equilibrio. Los proveedores estan comodos con los plazos, los clientes corporativos aceptan las condiciones, y la caja tiene un margen razonable.'
+          narrative: 'Flujo de caja estable. No ganas descuento pero tampoco te presionas con pagos rapidos.',
+          feedback: 'Aceptable pero no optima. Pierdes el descuento del 2% que en terminos anualizados es muy alto. Solo tiene sentido si tu caja esta muy ajustada.'
         },
         {
           id: 'C',
-          label: 'Estrategia flexible (amplio inventario, credito generoso)',
-          description: 'Inventario para 12 dias, pago a proveedores a 8 dias, credito a clientes hasta 30 dias. Maximiza satisfaccion de proveedores y clientes pero inmoviliza mucho capital.',
-          cost: 12000000,
-          revenue: 5000000,
-          bsc: { bsc_financial: -2, bsc_customer: 5, bsc_internal: 3, bsc_learning: 1 },
+          label: 'Negociar plazo a 60 dias',
+          description: 'Estirar el pago para financiarte con el dinero de proveedores.',
+          cost: 0,
+          revenue: 0,
+          bsc: { bsc_financial: 1, bsc_customer: 0, bsc_internal: -2, bsc_learning: 1 },
           crossEffects: [
-            { area: 'logistics', message: 'Almacen lleno, nunca falta nada', bsc: { bsc_internal: 4 }, cost: 0 },
-            { area: 'marketing', message: 'Clientes corporativos encantados con el plazo de pago', bsc: { bsc_customer: 4 }, cost: 0 },
-            { area: 'operations', message: 'Riesgo de desperdicio por exceso de inventario perecedero', bsc: { bsc_internal: -2 }, cost: -3000000 }
+            { area: 'logistics', message: 'Proveedores molestos, posibles retrasos en entregas', bsc: { bsc_internal: -3 }, cost: 0 }
           ],
-          tags: ['flexible', 'generoso', 'capital-inmovilizado'],
+          tags: ['riesgoso', 'relacion-proveedores'],
           next: 'fin_04',
-          narrative: 'Los proveedores aman recibir pago rapido y dan prioridad a tus pedidos. Los clientes corporativos firman contratos de catering. Pero la caja esta tensa y hay riesgo de que los ingredientes perecederos se danen.'
+          narrative: 'Ganas 30 dias de caja extra, pero los proveedores empiezan a priorizar otros clientes.',
+          feedback: 'Riesgoso. Financiarte con proveedores (alargar cuentas por pagar) funciona a corto plazo pero deteriora relaciones comerciales. En Pereira el mercado es pequeno y la reputacion importa mucho.'
         }
       ]
     },
 
-    // --- DIA 8: Asignacion de presupuesto extra a areas (MULTI) ---
+    // ============================================================
+    //  NODO 4 — DIA 9: Asignacion de presupuesto (MULTI)
+    // ============================================================
     'fin_04': {
-      day: 8,
-      title: 'Asignacion de presupuesto adicional',
-      context: 'Despues de analizar los primeros dias de operacion, el area de finanzas tiene $20M COP disponibles para repartir entre las areas que mas lo necesiten. Cada area ha presentado su caso. Operaciones quiere un horno industrial nuevo, Marketing pide pauta en Instagram, Talento Humano necesita uniformes y capacitacion, Logistica quiere una moto adicional para domicilios, e I+D propone un menu vegano experimental. Selecciona MAXIMO 2 areas para financiar.',
-      type: 'multi',
-      multiMax: 2,
-      options: [
-        {
-          id: 'A',
-          label: 'Operaciones - Horno industrial combinado ($10M)',
-          description: 'Un horno racional que reduce tiempos de coccion 40% y consumo de gas 25%. Impacto directo en capacidad de produccion y costo unitario. Concepto clave: reduccion del punto de equilibrio.',
-          cost: 10000000,
-          revenue: 0,
-          bsc: { bsc_financial: 2, bsc_customer: 2, bsc_internal: 5, bsc_learning: 1 },
-          crossEffects: [
-            { area: 'operations', message: 'Horno industrial nuevo: capacidad +40%, costos -25%', bsc: { bsc_internal: 6, bsc_financial: 3 }, cost: 0 }
-          ],
-          tags: ['inversion', 'capex', 'operaciones'],
-          next: 'fin_05',
-          narrative: 'El horno llega en 5 dias. Operaciones esta eufonica: pueden producir mas platos en menos tiempo y con menor costo de gas. El punto de equilibrio baja significativamente.'
-        },
-        {
-          id: 'B',
-          label: 'Marketing - Campana digital en redes ($8M)',
-          description: 'Pauta en Instagram y TikTok durante 2 semanas, influencers locales, y produccion de contenido. Genera visibilidad inmediata en Pereira.',
-          cost: 8000000,
-          revenue: 4000000,
-          bsc: { bsc_financial: 1, bsc_customer: 5, bsc_internal: 0, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'marketing', message: 'Presupuesto extra para campana digital agresiva', bsc: { bsc_customer: 5, bsc_financial: 2 }, cost: 0 }
-          ],
-          tags: ['marketing', 'digital', 'posicionamiento'],
-          next: 'fin_05',
-          narrative: 'Los reels en TikTok empiezan a viralizarse. Dos influencers pereiranos con 50K seguidores cada uno publican contenido. Las ventas del fin de semana suben 20%.'
-        },
-        {
-          id: 'C',
-          label: 'Talento Humano - Capacitacion y uniformes ($6M)',
-          description: 'Programa de servicio al cliente para todo el personal + uniformes corporativos de calidad. Mejora la imagen y la atencion.',
-          cost: 6000000,
-          revenue: 0,
-          bsc: { bsc_financial: 0, bsc_customer: 3, bsc_internal: 2, bsc_learning: 5 },
-          crossEffects: [
-            { area: 'hr', message: 'Fondos para plan de capacitacion integral', bsc: { bsc_learning: 5, bsc_customer: 3 }, cost: 0 }
-          ],
-          tags: ['talento', 'capacitacion', 'servicio'],
-          next: 'fin_05',
-          narrative: 'El equipo sale motivado de la capacitacion. Los uniformes nuevos proyectan una imagen profesional. Los clientes notan la diferencia en el trato.'
-        },
-        {
-          id: 'D',
-          label: 'Logistica - Moto y equipo de domicilios ($7M)',
-          description: 'Una moto con cajon termico, casco, y app de rastreo GPS. Ampliar la capacidad de delivery es clave en la era post-pandemia.',
-          cost: 7000000,
-          revenue: 3000000,
-          bsc: { bsc_financial: 2, bsc_customer: 4, bsc_internal: 3, bsc_learning: 1 },
-          crossEffects: [
-            { area: 'logistics', message: 'Moto nueva para domicilios: cobertura +50%', bsc: { bsc_internal: 4, bsc_customer: 3 }, cost: 0 }
-          ],
-          tags: ['logistica', 'domicilios', 'delivery'],
-          next: 'fin_05',
-          narrative: 'La moto nueva permite cubrir barrios mas lejanos: Cuba, Dosquebradas sur, y la circunvalar. Los pedidos por Rappi y domicilios propios suben 35%.'
-        },
-        {
-          id: 'E',
-          label: 'I+D - Menu vegano experimental ($9M)',
-          description: 'Desarrollar 5 platos veganos/plant-based con ingredientes locales. Puede abrir un nicho de mercado en Pereira que ninguna cadena de comida rapida atiende.',
-          cost: 9000000,
-          revenue: 0,
-          bsc: { bsc_financial: -1, bsc_customer: 3, bsc_internal: 1, bsc_learning: 6 },
-          crossEffects: [
-            { area: 'innovation', message: 'Fondos para investigacion de menu vegano', bsc: { bsc_learning: 6, bsc_customer: 2 }, cost: 0 }
-          ],
-          tags: ['innovacion', 'vegano', 'diferenciacion'],
-          next: 'fin_05',
-          narrative: 'El equipo de I+D desarrolla hamburguesas de lenteja, wraps de platano maduro con hogao, y una "mazorca burger". Las pruebas internas son prometedoras, pero falta validar con el mercado.'
-        }
-      ]
-    },
-
-    // --- DIA 10: Inversion de excedentes a corto plazo ---
-    'fin_05': {
-      day: 10,
-      title: 'Inversion de excedentes de tesoreria',
-      context: 'Despues de las asignaciones, quedan $15M COP en excedentes temporales que no se necesitaran por 30-45 dias. En Colombia, dejar la plata quieta en cuenta de ahorros rinde apenas 1-2% E.A. Existen alternativas de corto plazo: CDTs (Certificados de Deposito a Termino), fondos de inversion colectiva (fiducias), o mantener liquidez total. Todo peso ocioso es un costo de oportunidad.',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'CDT a 30 dias en Bancolombia al 11.5% E.A.',
-          description: 'Inversion segura, garantizada por Fogafin hasta $50M. Rendimiento modesto pero predecible. El dinero queda "amarrado" por 30 dias: si lo necesitas antes, pierdes los intereses.',
-          cost: 15000000,
-          revenue: 15140000,
-          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 1, bsc_learning: 2 },
-          crossEffects: [],
-          tags: ['cdt', 'renta-fija', 'seguro'],
-          next: 'fin_06',
-          narrative: 'El CDT se abre digitalmente en 5 minutos. En 30 dias rendira $140.000 de intereses. Poco, pero mas que nada. El riesgo es necesitar esa plata antes del vencimiento.'
-        },
-        {
-          id: 'B',
-          label: 'Fondo de inversion colectiva (Fiducia Bancolombia)',
-          description: 'Fondo "Fiducuenta" con liquidez en T+1 (un dia habil). Rinde entre 9% y 13% E.A. dependiendo del mercado. No tiene garantia de Fogafin, pero el riesgo es muy bajo.',
-          cost: 15000000,
-          revenue: 15100000,
-          bsc: { bsc_financial: 2, bsc_customer: 0, bsc_internal: 2, bsc_learning: 3 },
-          crossEffects: [],
-          tags: ['fiducia', 'liquidez', 'rendimiento-variable'],
-          next: 'fin_06',
-          narrative: 'El dinero se mueve a Fiducuenta. La ventaja: si surge una emergencia, se puede retirar en 24 horas. El rendimiento no es espectacular, pero la flexibilidad vale.'
-        },
-        {
-          id: 'C',
-          label: 'Mantener en cuenta de ahorros (liquidez total)',
-          description: 'Cero rendimiento real (la tasa de ahorro no supera la inflacion), pero el dinero esta disponible al instante. Ante la incertidumbre de un negocio nuevo, la liquidez es reina.',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: 0, bsc_customer: 0, bsc_internal: 0, bsc_learning: 0 },
-          crossEffects: [],
-          tags: ['liquidez', 'conservador', 'cero-rendimiento'],
-          next: 'fin_06',
-          narrative: 'La plata queda en la cuenta corriente. Cero rendimiento, pero disponible al instante. Si la inflacion en Colombia esta al 9%, estos $15M pierden poder adquisitivo cada dia.'
-        },
-        {
-          id: 'D',
-          label: 'Prestar a otra area para proyecto urgente',
-          description: 'Operaciones necesita $15M para reparar una nevera industrial que se dano. Se presta internamente al 0% pero se espera "devolucion" en forma de mayor productividad.',
-          cost: 15000000,
-          revenue: 0,
-          bsc: { bsc_financial: -1, bsc_customer: 1, bsc_internal: 4, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'operations', message: 'Finanzas presta $15M para reparar nevera industrial', bsc: { bsc_internal: 5, bsc_financial: 2 }, cost: 0 }
-          ],
-          tags: ['prestamo-interno', 'operaciones', 'solidaridad'],
-          next: 'fin_06',
-          narrative: 'La nevera se repara en 2 dias. Operaciones agradece enormemente el apoyo. La produccion no se detiene y no se pierden ingredientes perecederos. Finanzas espera reciprocidad.'
-        }
-      ]
-    },
-
-    // ============================================================
-    //  FASE 2 - GESTION FINANCIERA (Dias 13-25)
-    // ============================================================
-
-    // --- DIA 13: Analisis de costos y punto de equilibrio ---
-    'fin_06': {
-      day: 13,
-      title: 'Analisis de costos por linea de producto',
-      context: 'Despues de 2 semanas de operacion, finanzas tiene datos reales de costos y ventas. El restaurante tiene 4 lineas de producto: hamburguesas ($18.000 PVP, costo $7.200), pollo ($15.000 PVP, costo $6.750), ensaladas ($12.000 PVP, costo $4.800), y bebidas ($5.000 PVP, costo $1.000). Los costos fijos mensuales son $25M. Hay que analizar cuales lineas son mas rentables usando el punto de equilibrio multiproducto y decidir donde enfocar esfuerzos.',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Enfocar en hamburguesas (mayor margen absoluto: $10.800)',
-          description: 'El margen de contribucion de hamburguesas es el mas alto en pesos. Aumentar produccion, mejorar receta, y empujar ventas de esta linea. El punto de equilibrio se alcanza vendiendo ~2.315 hamburguesas/mes.',
-          cost: 5000000,
-          revenue: 8000000,
-          bsc: { bsc_financial: 4, bsc_customer: 2, bsc_internal: 3, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'operations', message: 'Priorizamos hamburguesas: optimizar estacion de parrilla', bsc: { bsc_internal: 3 }, cost: -2000000 },
-            { area: 'marketing', message: 'Campana enfocada en hamburguesas como producto estrella', bsc: { bsc_customer: 2 }, cost: 0 }
-          ],
-          tags: ['hamburguesas', 'margen', 'punto-equilibrio'],
-          next: 'fin_07',
-          narrative: 'El analisis muestra que las hamburguesas generan el 48% del margen total con solo el 35% de las ventas. Operaciones reorganiza la cocina para priorizar esta linea. El punto de equilibrio multiproducto baja.'
-        },
-        {
-          id: 'B',
-          label: 'Enfocar en bebidas (mayor margen porcentual: 80%)',
-          description: 'Las bebidas tienen el margen porcentual mas alto (80%). Cada limonada de $5.000 deja $4.000. Invertir en estacion de bebidas artesanales y combos que siempre incluyan bebida.',
-          cost: 3000000,
-          revenue: 6000000,
-          bsc: { bsc_financial: 5, bsc_customer: 1, bsc_internal: 2, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'operations', message: 'Nueva estacion de bebidas artesanales en cocina', bsc: { bsc_internal: 2 }, cost: -1500000 },
-            { area: 'innovation', message: 'Desarrollar recetas de bebidas unicas: lulada, cholado', bsc: { bsc_learning: 3 }, cost: 0 }
-          ],
-          tags: ['bebidas', 'margen-porcentual', 'upselling'],
-          next: 'fin_07',
-          narrative: 'Cada combo ahora incluye bebida por defecto. La estacion de bebidas artesanales con lulada, cholado y jugo de maracuya se vuelve un diferenciador. El margen general sube 12%.'
-        },
-        {
-          id: 'C',
-          label: 'Portafolio equilibrado (optimizar todas las lineas)',
-          description: 'No concentrar riesgo en una sola linea. Mejorar eficiencia en las 4 categorias, negociar costos con proveedores, y usar el mix de ventas como esta. Diversificacion reduce riesgo.',
-          cost: 7000000,
-          revenue: 5000000,
-          bsc: { bsc_financial: 2, bsc_customer: 3, bsc_internal: 3, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'logistics', message: 'Renegociar con todos los proveedores para bajar costos', bsc: { bsc_financial: 2 }, cost: 0 },
-            { area: 'operations', message: 'Optimizacion general de cocina para todas las lineas', bsc: { bsc_internal: 2 }, cost: 0 }
-          ],
-          tags: ['diversificado', 'equilibrado', 'riesgo-bajo'],
-          next: 'fin_07',
-          narrative: 'Se renegocia con proveedores logrando una rebaja del 8% en ingredientes. Cada linea mejora un poco. El portafolio diversificado protege contra caidas en cualquier categoria.'
-        },
-        {
-          id: 'D',
-          label: 'Eliminar ensaladas (menor volumen de ventas)',
-          description: 'Las ensaladas solo representan el 10% de las ventas y requieren ingredientes perecederos. Eliminarlas simplifica operaciones y reduce desperdicio. Pero se pierde el segmento saludable.',
-          cost: 0,
-          revenue: 2000000,
-          bsc: { bsc_financial: 3, bsc_customer: -4, bsc_internal: 2, bsc_learning: -1 },
-          crossEffects: [
-            { area: 'operations', message: 'Menos SKUs: cocina mas simple y rapida', bsc: { bsc_internal: 3 }, cost: 0 },
-            { area: 'marketing', message: 'Se pierde el argumento de "opciones saludables"', bsc: { bsc_customer: -3 }, cost: 0 },
-            { area: 'logistics', message: 'Menos ingredientes perecederos, menos desperdicio', bsc: { bsc_internal: 2, bsc_financial: 1 }, cost: 0 }
-          ],
-          tags: ['eliminar-linea', 'simplificar', 'riesgo-reputacion'],
-          next: 'fin_07',
-          narrative: 'Se eliminan las ensaladas. La cocina se simplifica y el desperdicio baja 30%. Pero en redes sociales empiezan a preguntar: "¿Ya no tienen opciones saludables?" El segmento fitness de Pereira se queja.'
-        }
-      ]
-    },
-
-    // --- DIA 16: Crisis de flujo de caja ---
-    'fin_07': {
-      day: 16,
-      title: 'Crisis de flujo de caja',
-      context: '¡Alerta roja! Un problema inesperado: el proveedor principal de carne exige pago anticipado por un lote de $22M porque tuvo problemas con otro cliente que no le pago. Al mismo tiempo, la DIAN notifica que hay una retencion en la fuente de $8M que se debia declarar la semana pasada. El saldo en caja es de $18M. Hay un deficit de $12M que debe resolverse HOY o la operacion se detiene manana.',
-      type: 'binary',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Usar la linea de credito rotativo',
-          description: 'Desembolsar $12M de la linea de credito. Es la solucion mas rapida: el dinero esta disponible hoy. Pero se empiezan a pagar intereses desde manana y la linea disponible se reduce.',
-          cost: 12000000,
-          revenue: 0,
-          bsc: { bsc_financial: -2, bsc_customer: 1, bsc_internal: 3, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'operations', message: 'La produccion no se detiene, carne asegurada', bsc: { bsc_internal: 2 }, cost: 0 },
-            { area: 'logistics', message: 'Proveedor de carne recibe pago: relacion preservada', bsc: { bsc_internal: 1 }, cost: 0 }
-          ],
-          tags: ['credito', 'emergencia', 'liquidez'],
-          next: 'fin_08',
-          narrative: 'El desembolso se hace por la app del banco en 10 minutos. Se paga al proveedor y a la DIAN. La operacion no se detiene ni un segundo, pero ahora hay $12M en deuda rotativa generando intereses diarios. La crisis se resolvio rapido, el equipo respira.'
-        },
-        {
-          id: 'B',
-          label: 'Negociar plazos y priorizar pagos',
-          description: 'Pagar $8M a la DIAN (no negociable: las multas tributarias son altisimas) y negociar con el proveedor pago parcial hoy ($10M) y el resto en 5 dias. Requiere vender platos agresivamente este fin de semana.',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: 1, bsc_customer: -1, bsc_internal: -1, bsc_learning: 4 },
-          crossEffects: [
-            { area: 'operations', message: 'Lote de carne reducido: menu limitado por 5 dias', bsc: { bsc_internal: -3, bsc_customer: -2 }, cost: 0 },
-            { area: 'marketing', message: 'Urgente: promociones de fin de semana para generar caja', bsc: { bsc_customer: 1, bsc_financial: 1 }, cost: -3000000 }
-          ],
-          tags: ['negociacion', 'restriccion', 'flujo-caja'],
-          next: 'fin_07b',
-          narrative: 'La DIAN recibe su pago inmediato (no jugar con la DIAN). El proveedor acepta el pago parcial pero se nota molesto. El fin de semana sera critico: se necesita vender fuerte para cubrir el saldo.'
-        }
-      ]
-    },
-
-    // --- DIA 17 (rama negociacion): Fin de semana critico ---
-    'fin_07b': {
-      day: 17,
-      title: 'Fin de semana critico: ¿se cubre el deficit?',
-      context: 'El proveedor espera el saldo de $12M el lunes. Las ventas del fin de semana fueron de $9M, mejor de lo esperado. Pero aun faltan $3M. El lunes a las 8am el proveedor llamara. ¿Como cubrir el faltante?',
-      type: 'binary',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Pedir anticipo del fin de semana siguiente a un cliente corporativo',
-          description: 'Un cliente corporativo que tiene evento el proximo viernes acepta pagar el 50% de anticipo ($4M). Se cubre el deficit y queda un colchon minimo.',
-          cost: 0,
-          revenue: 4000000,
-          bsc: { bsc_financial: 2, bsc_customer: 2, bsc_internal: 1, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'marketing', message: 'Relacion con cliente corporativo se fortalece', bsc: { bsc_customer: 2 }, cost: 0 }
-          ],
-          tags: ['anticipo', 'negociacion', 'cliente'],
-          next: 'fin_08',
-          narrative: 'El cliente acepta pagar anticipo a cambio de un 5% de descuento. Se cubren los $3M faltantes. El proveedor recibe su dinero el lunes y la relacion se mantiene. Leccion: un buen cliente corporativo es un activo financiero.'
-        },
-        {
-          id: 'B',
-          label: 'Vender equipos menores que no se usan ($5M)',
-          description: 'Una freidora auxiliar y un congelador pequeno que estan subutilizados se venden en Marketplace por $5M. Solucion definitiva pero se pierden activos.',
-          cost: 0,
-          revenue: 5000000,
-          bsc: { bsc_financial: 1, bsc_customer: 0, bsc_internal: -2, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'operations', message: 'Se vendieron equipos auxiliares: capacidad de respaldo reducida', bsc: { bsc_internal: -2 }, cost: 0 }
-          ],
-          tags: ['venta-activos', 'emergencia', 'capacidad'],
-          next: 'fin_08',
-          narrative: 'Los equipos se venden rapido. Se cubren los $3M y queda algo extra. Pero si la demanda sube, no habra equipo de respaldo. Una decision de corto plazo con implicaciones operativas.'
-        }
-      ]
-    },
-
-    // --- DIA 19: Presupuesto de capital - Proyecto de expansion (NPV/IRR) ---
-    'fin_08': {
-      day: 19,
-      title: 'Evaluacion de proyecto de expansion',
-      context: 'Aparece una oportunidad: un local disponible en el Centro Comercial Victoria Plaza, zona de alto trafico en Pereira. El arriendo es $8M/mes, la adecuacion cuesta $45M, y se proyectan ventas adicionales de $25M/mes con costos variables del 45%. El analisis financiero muestra: VPN (al 18% de tasa de descuento) = $12.3M positivo, TIR = 28.5%, Payback = 14 meses. ¿Se aprueba la expansion?',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Aprobar expansion - financiar con recursos propios',
-          description: 'Invertir $45M de caja propia. VPN positivo y TIR superior al WACC. Es un proyecto viable segun los criterios de presupuesto de capital. Pero compromete seriamente la liquidez.',
-          cost: 45000000,
-          revenue: 15000000,
-          bsc: { bsc_financial: 3, bsc_customer: 5, bsc_internal: 2, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'operations', message: 'Nuevo punto de venta: duplicar capacidad operativa', bsc: { bsc_internal: 4, bsc_customer: 3 }, cost: -10000000 },
-            { area: 'hr', message: 'Contratar 8 personas para el nuevo local', bsc: { bsc_learning: 3 }, cost: -12000000 },
-            { area: 'marketing', message: 'Gran inauguracion en Victoria Plaza', bsc: { bsc_customer: 5 }, cost: -5000000 }
-          ],
-          tags: ['expansion', 'vpn-positivo', 'recursos-propios'],
-          next: 'fin_08b',
-          narrative: 'Se firma el contrato de arriendo. La adecuacion tardara 15 dias. Las otras areas se activan para el nuevo punto. Es la apuesta mas grande hasta ahora: si funciona, se duplican ingresos. Si falla, la caja quedara critica.'
-        },
-        {
-          id: 'B',
-          label: 'Aprobar expansion - financiar con leasing',
-          description: 'Leasing operativo con Bancolombia Leasing para la adecuacion ($45M a 24 meses, canon $2.3M/mes). No compromete la caja de golpe y el canon es deducible de impuestos.',
-          cost: 5000000,
-          revenue: 15000000,
-          bsc: { bsc_financial: 4, bsc_customer: 5, bsc_internal: 3, bsc_learning: 4 },
-          crossEffects: [
-            { area: 'operations', message: 'Nuevo punto de venta con equipos en leasing', bsc: { bsc_internal: 3, bsc_customer: 3 }, cost: -5000000 },
-            { area: 'hr', message: 'Contratar personal para segundo punto', bsc: { bsc_learning: 3 }, cost: -12000000 },
-            { area: 'marketing', message: 'Inauguracion del segundo punto en centro comercial', bsc: { bsc_customer: 4 }, cost: -4000000 }
-          ],
-          tags: ['expansion', 'leasing', 'beneficio-fiscal'],
-          next: 'fin_08b',
-          narrative: 'El leasing se aprueba en una semana. La caja no se desangra y el canon mensual se absorbe con las ventas proyectadas. Ademas, el beneficio tributario del leasing operativo reduce la carga fiscal.'
-        },
-        {
-          id: 'C',
-          label: 'Rechazar la expansion - no es el momento',
-          description: 'La TIR es atractiva pero la empresa aun esta estabilizando su primer punto. Expandirse prematuramente puede colapsar la operacion. Mejor consolidar y esperar una oportunidad en 6 meses.',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: 2, bsc_customer: -2, bsc_internal: 1, bsc_learning: 1 },
-          crossEffects: [
-            { area: 'operations', message: 'Sin expansion: enfocarse en eficiencia del punto actual', bsc: { bsc_internal: 2 }, cost: 0 }
-          ],
-          tags: ['conservador', 'consolidar', 'prudencia'],
-          next: 'fin_09',
-          narrative: 'El equipo esta dividido. Algunos ven la oportunidad perdida, otros aplauden la prudencia. Se enfocaran en que el primer punto sea impecable antes de pensar en crecer.'
-        }
-      ]
-    },
-
-    // --- DIA 20 (rama expansion aprobada): Primer mes del nuevo local ---
-    'fin_08b': {
-      day: 20,
-      title: 'Desempeno del nuevo local - primer reporte',
-      context: 'El segundo punto en Victoria Plaza lleva 5 dias abierto. Las ventas estan al 65% de la proyeccion, lo cual es normal para un local nuevo. Sin embargo, los costos de operacion estan un 30% por encima de lo estimado (doble nomina, doble servicios, doble arriendo). El flujo de caja consolidado es negativo esta semana. ¿Como reaccionar?',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Invertir mas en marketing local para acelerar ventas',
-          description: 'Destinar $5M en volantes, pendones, y degustaciones en el centro comercial. Atacar fuerte la primera impresion. Si la gente no sabe que existes, no vendrá.',
-          cost: 5000000,
-          revenue: 3000000,
-          bsc: { bsc_financial: 1, bsc_customer: 4, bsc_internal: 1, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'marketing', message: 'Campana de lanzamiento del segundo punto', bsc: { bsc_customer: 4 }, cost: 0 }
-          ],
-          tags: ['marketing', 'expansion', 'lanzamiento'],
-          next: 'fin_09',
-          narrative: 'Las degustaciones son un exito. La gente prueba y vuelve. En 10 dias las ventas suben al 85% de la proyeccion. La inversion en marketing del lanzamiento fue clave para acelerar la curva de adopcion.'
-        },
-        {
-          id: 'B',
-          label: 'Reducir costos del nuevo local: horario parcial',
-          description: 'Operar solo almuerzo y cena (11am-3pm, 6pm-9pm) en vez de jornada completa. Reduce costos de personal y servicios un 35% mientras se estabiliza la demanda.',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: 3, bsc_customer: -1, bsc_internal: 2, bsc_learning: 1 },
-          crossEffects: [
-            { area: 'hr', message: 'Personal del nuevo local en medio tiempo', bsc: { bsc_learning: -1 }, cost: 0 },
-            { area: 'operations', message: 'Operacion parcial: optimizar tiempos de apertura', bsc: { bsc_internal: 1 }, cost: 0 }
-          ],
-          tags: ['costos', 'eficiencia', 'horario-parcial'],
-          next: 'fin_09',
-          narrative: 'El horario parcial reduce significativamente los costos fijos diarios. El punto deja de dar perdida en la segunda semana. Cuando la demanda crezca, se ampliara gradualmente.'
-        },
-        {
-          id: 'C',
-          label: 'Mantener operacion completa y esperar la curva de adopcion',
-          description: 'Todo local nuevo tarda 4-6 semanas en estabilizarse. No cambiar nada y confiar en que las ventas creceran naturalmente. Requiere aguantar el flujo de caja negativo.',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: -2, bsc_customer: 2, bsc_internal: 1, bsc_learning: 2 },
-          crossEffects: [],
-          tags: ['paciencia', 'largo-plazo', 'confianza'],
-          next: 'fin_09',
-          narrative: 'Se mantiene la operacion completa. Las primeras semanas duelen financieramente, pero al dia 30 las ventas alcanzan el 90% de la proyeccion. La paciencia tuvo un costo pero el local se consolida sin recortes.'
-        }
-      ]
-    },
-
-    // --- DIA 22: Optimizacion tributaria ---
-    'fin_09': {
-      day: 22,
-      title: 'Estrategia de optimizacion tributaria',
-      context: 'El contador presenta el panorama fiscal: la tarifa de renta para empresas en Colombia es del 35%. Hay gastos que se pueden optimizar legalmente para reducir la base gravable. La DIAN ha intensificado las fiscalizaciones en el Eje Cafetero. Hay tres estrategias sobre la mesa, todas legales, pero con diferentes niveles de agresividad fiscal.',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Estrategia conservadora: solo deducciones estandar',
-          description: 'Deducir unicamente lo que marca la ley sin interpretaciones creativas: nomina, arriendos, depreciacion en linea recta, impuestos pagados. Cero riesgo de requerimiento de la DIAN.',
-          cost: 2000000,
-          revenue: 0,
-          bsc: { bsc_financial: 2, bsc_customer: 0, bsc_internal: 3, bsc_learning: 2 },
-          crossEffects: [],
-          tags: ['tributario', 'conservador', 'seguro'],
-          next: 'fin_10',
-          narrative: 'El impuesto a pagar sera alto pero no habra sorpresas. La contabilidad esta limpia como un cristal. Si la DIAN pide revision, todo estara en orden perfecto.'
-        },
-        {
-          id: 'B',
-          label: 'Estrategia moderada: maximizar deducciones legales',
-          description: 'Incluir depreciacion acelerada de equipos de cocina (vida util de 5 anos en vez de 10), deduccion de donaciones a fundaciones locales, y credito fiscal por nuevos empleos. Ahorro estimado: $8M en impuestos.',
-          cost: 4000000,
-          revenue: 8000000,
-          bsc: { bsc_financial: 4, bsc_customer: 1, bsc_internal: 2, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'hr', message: 'Nuevas contrataciones generan beneficio fiscal', bsc: { bsc_financial: 2, bsc_learning: 1 }, cost: 0 }
-          ],
-          tags: ['tributario', 'moderado', 'deducciones'],
-          next: 'fin_10',
-          narrative: 'El contador implementa la depreciacion acelerada y registra las donaciones. El ahorro fiscal es significativo. Todo esta soportado con documentos, pero requiere una carpeta tributaria impecable.'
-        },
-        {
-          id: 'C',
-          label: 'Estrategia agresiva: planeacion fiscal avanzada',
-          description: 'Crear una SAS holding que facture servicios de gestion, distribuir gastos entre entidades, y usar todos los beneficios tributarios disponibles. Ahorro estimado: $15M. Pero si la DIAN interpreta esto como evasion, las sanciones serian del 160% del impuesto.',
-          cost: 8000000,
-          revenue: 15000000,
-          bsc: { bsc_financial: 5, bsc_customer: 0, bsc_internal: -2, bsc_learning: 4 },
-          crossEffects: [],
-          tags: ['tributario', 'agresivo', 'riesgo-fiscal'],
-          next: 'fin_10_audit',
-          narrative: 'Se crea la estructura fiscal avanzada. El ahorro es enorme, pero el contador advierte: "Si la DIAN nos pide explicar esto, necesitamos que cada factura tenga sustancia economica real." El riesgo no es trivial.'
-        }
-      ]
-    },
-
-    // --- DIA 22 (rama): Consecuencia de estrategia agresiva ---
-    'fin_10_audit': {
-      day: 23,
-      title: 'Notificacion de la DIAN',
-      context: 'Al dia siguiente de implementar la estrategia fiscal agresiva, llega una notificacion de la DIAN: "Requerimiento ordinario de informacion". Piden soportes de todas las transacciones entre empresas vinculadas de los ultimos 3 meses. Es una revision de rutina, pero con la estructura recien creada, puede complicarse.',
-      type: 'binary',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Revertir la estructura y pagar impuestos normales',
-          description: 'Deshacer la holding, pagar los impuestos que se ahorraron, mas una sancion voluntaria del 5% por correccion. Total: $17M. Duele, pero es mucho menos que una sancion del 160%.',
-          cost: 17000000,
-          revenue: 0,
-          bsc: { bsc_financial: -3, bsc_customer: 0, bsc_internal: 2, bsc_learning: 5 },
-          crossEffects: [],
-          tags: ['dian', 'correccion', 'sancion'],
-          next: 'fin_10',
-          narrative: 'Se presenta la correccion voluntaria ante la DIAN. Pierden $17M pero aprenden una leccion invaluable sobre los limites de la planeacion fiscal en Colombia. El contador suspira aliviado.'
-        },
-        {
-          id: 'B',
-          label: 'Mantener la estructura y enfrentar la revision',
-          description: 'Defender la posicion con argumentos juridicos. Si la DIAN acepta, se ahorran $15M. Si no, la sancion puede ser de hasta $24M mas intereses moratorios. Es un juego de alto riesgo.',
-          cost: 5000000,
-          revenue: 0,
-          bsc: { bsc_financial: -1, bsc_customer: 0, bsc_internal: -3, bsc_learning: 3 },
-          crossEffects: [],
-          tags: ['dian', 'riesgo', 'defensa-legal'],
-          next: 'fin_10',
-          narrative: 'El abogado tributarista prepara la respuesta. "Tenemos argumentos solidos," dice, "pero la DIAN en Pereira ha estado cerrando este tipo de estructuras." La incertidumbre pesa sobre el equipo.'
-        }
-      ]
-    },
-
-    // --- DIA 25: Renegociacion de deuda ---
-    'fin_10': {
-      day: 25,
-      title: 'Renegociacion de condiciones crediticias',
-      context: 'Han pasado casi 4 semanas. El banco ofrece refinanciar la deuda existente porque la empresa ha sido puntual en sus pagos. Las opciones incluyen: extender el plazo (cuota mas baja pero mas intereses totales), reducir la tasa (el banco compite con Davivienda que ofrecio mejor tasa), o hacer un abono extraordinario para reducir el saldo.',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Extender plazo de 24 a 36 meses',
-          description: 'La cuota mensual baja un 28%, liberando flujo de caja. Pero se pagan $12M adicionales en intereses totales. Es el clasico dilema: comodidad mensual vs. costo total del credito.',
-          cost: 2000000,
-          revenue: 0,
-          bsc: { bsc_financial: 1, bsc_customer: 0, bsc_internal: 2, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'operations', message: 'Cuota mas baja libera flujo para gastos operativos', bsc: { bsc_internal: 2 }, cost: 0 }
-          ],
-          tags: ['refinanciacion', 'plazo', 'flujo-caja'],
-          next: 'fin_11',
-          narrative: 'El banco acepta la extension. La cuota mensual baja de $14M a $10M. El flujo de caja respira, pero el costo financiero total sube. En el largo plazo, se paga mas.'
-        },
-        {
-          id: 'B',
-          label: 'Negociar reduccion de tasa (del 17.8% al 15.2% E.A.)',
-          description: 'Usar la oferta de Davivienda como palanca. Si Bancolombia baja la tasa, el ahorro es de $6M en intereses totales sin cambiar el plazo. Requiere habilidad negociadora.',
-          cost: 0,
-          revenue: 6000000,
-          bsc: { bsc_financial: 5, bsc_customer: 0, bsc_internal: 1, bsc_learning: 4 },
-          crossEffects: [],
-          tags: ['tasa', 'negociacion', 'ahorro-intereses'],
-          next: 'fin_11',
-          narrative: 'Bancolombia baja la tasa para no perder el cliente. $6M de ahorro en intereses que van directo al bolsillo. Una leccion de negociacion financiera: siempre cotizar con la competencia.'
-        },
-        {
-          id: 'C',
-          label: 'Abono extraordinario de $20M al capital',
-          description: 'Reducir el saldo de la deuda en $20M de golpe. Los intereses futuros se calculan sobre un monto menor, generando un ahorro de $9M. Pero la caja queda muy apretada.',
-          cost: 20000000,
-          revenue: 9000000,
-          bsc: { bsc_financial: 4, bsc_customer: -1, bsc_internal: -1, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'operations', message: 'Caja apretada: postergar compras no urgentes', bsc: { bsc_internal: -2 }, cost: 0 }
-          ],
-          tags: ['abono', 'reduccion-deuda', 'agresivo'],
-          next: 'fin_11',
-          narrative: 'El abono reduce la deuda significativamente. Los intereses mensuales bajan y el banco mejora la calificacion crediticia. Pero la caja queda en minimos: cualquier imprevisto sera un problema.'
-        }
-      ]
-    },
-
-    // ============================================================
-    //  FASE 3 - CRECIMIENTO Y CIERRE (Dias 28-45)
-    // ============================================================
-
-    // --- DIA 28: Oportunidad de inversion ---
-    'fin_11': {
-      day: 28,
-      title: 'Oportunidad de inversion: nueva tecnologia',
-      context: 'Un proveedor ofrece un sistema de punto de venta (POS) con inteligencia artificial que predice la demanda diaria con 85% de precision. Cuesta $18M de instalacion + $1.2M/mes de licencia. Promete reducir el desperdicio de alimentos en 35% y optimizar las compras. El ROI estimado es del 45% anual. ¿Vale la pena el riesgo de invertir en tecnologia en este punto?',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Invertir en el sistema POS completo',
-          description: 'Implementacion completa: POS con IA, integracion con inventario, prediccion de demanda, y dashboard en tiempo real. Es caro pero puede transformar la operacion.',
-          cost: 18000000,
-          revenue: 8000000,
-          bsc: { bsc_financial: 3, bsc_customer: 2, bsc_internal: 5, bsc_learning: 6 },
-          crossEffects: [
-            { area: 'operations', message: 'POS con IA: prediccion de demanda reduce desperdicio 35%', bsc: { bsc_internal: 5, bsc_financial: 3 }, cost: 0 },
-            { area: 'logistics', message: 'Sistema predice necesidades: pedidos automaticos a proveedores', bsc: { bsc_internal: 4 }, cost: 0 },
-            { area: 'innovation', message: 'Datos de IA abren posibilidades de I+D', bsc: { bsc_learning: 4 }, cost: 0 }
-          ],
-          tags: ['tecnologia', 'ia', 'inversion-alta'],
-          next: 'fin_12',
-          narrative: 'El sistema se instala en una semana. Los primeros datos son reveladores: se estaba desperdiciando $4M/mes en ingredientes. La IA empieza a afinar predicciones y la cocina opera con precision quirurgica.'
-        },
-        {
-          id: 'B',
-          label: 'Invertir solo en POS basico sin IA',
-          description: 'Un sistema de punto de venta estandar ($5M) sin la capa de inteligencia artificial. Mejora el control pero sin prediccion automatica. Se puede escalar despues.',
-          cost: 5000000,
-          revenue: 3000000,
-          bsc: { bsc_financial: 2, bsc_customer: 1, bsc_internal: 3, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'operations', message: 'POS basico: mejor control de ventas e inventario', bsc: { bsc_internal: 2 }, cost: 0 }
-          ],
-          tags: ['tecnologia', 'basico', 'escalable'],
-          next: 'fin_12',
-          narrative: 'El POS basico funciona bien para registrar ventas y controlar inventario. No tiene IA pero da visibilidad sobre los numeros. Se puede escalar si la empresa crece.'
-        },
-        {
-          id: 'C',
-          label: 'No invertir en tecnologia ahora',
-          description: 'Seguir con el control manual y hojas de calculo. El dinero se necesita para la operacion diaria. "Si no esta roto, no lo arregles."',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: 1, bsc_customer: 0, bsc_internal: -2, bsc_learning: -3 },
-          crossEffects: [
-            { area: 'operations', message: 'Sin POS: control manual sigue, desperdicio continua', bsc: { bsc_internal: -1 }, cost: 0 }
-          ],
-          tags: ['sin-tecnologia', 'manual', 'riesgo'],
-          next: 'fin_11b',
-          narrative: 'El equipo sigue con cuadernos y Excel. Funciona, pero se siguen perdiendo $4M/mes en desperdicio y no hay datos para tomar mejores decisiones. La competencia si esta invirtiendo en tecnologia.'
-        }
-      ]
-    },
-
-    // --- DIA 29 (rama sin tecnologia): Error contable por control manual ---
-    'fin_11b': {
-      day: 29,
-      title: 'Error contable detectado',
-      context: 'Sin sistema POS, la contabilidad se lleva en Excel. Un error de digitacion causo que $6M en ventas del fin de semana no se registraran. El inventario no cuadra con las ventas reportadas. El contador descubre la inconsistencia al hacer la conciliacion bancaria. Hay que decidir como corregir esto antes de que se acumulen mas errores.',
-      type: 'binary',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Contratar auxiliar contable dedicado ($3.5M/mes)',
-          description: 'Una persona que se encargue exclusivamente del registro diario de ventas, conciliaciones, y control de inventario. Solucion humana al problema tecnologico.',
-          cost: 3500000,
-          revenue: 0,
-          bsc: { bsc_financial: -1, bsc_customer: 0, bsc_internal: 3, bsc_learning: 2 },
-          crossEffects: [
-            { area: 'hr', message: 'Nueva contratacion: auxiliar contable', bsc: { bsc_learning: 1 }, cost: -3500000 }
-          ],
-          tags: ['contratacion', 'control', 'manual'],
-          next: 'fin_12',
-          narrative: 'El auxiliar empieza de inmediato. Los registros mejoran, los errores se reducen al 2%. Pero es un costo fijo mensual que un POS habria evitado. A veces lo barato sale caro.'
-        },
-        {
-          id: 'B',
-          label: 'Implementar POS basico de emergencia ($4M)',
-          description: 'Comprar un POS sencillo (sin IA) para al menos automatizar el registro de ventas. No es el sistema completo, pero elimina los errores de digitacion.',
-          cost: 4000000,
-          revenue: 0,
-          bsc: { bsc_financial: 1, bsc_customer: 0, bsc_internal: 3, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'operations', message: 'POS basico instalado: ventas se registran automaticamente', bsc: { bsc_internal: 2 }, cost: 0 }
-          ],
-          tags: ['pos', 'tecnologia', 'correccion'],
-          next: 'fin_12',
-          narrative: 'El POS se instala en 2 dias. Ya no hay errores de digitacion. Leccion costosa: debieron invertir en tecnologia desde el principio. El costo del error ($6M no registrados + $4M del POS) supera lo que costaba el sistema original.'
-        }
-      ]
-    },
-
-    // --- DIA 31: Programa de reduccion de costos (MULTI) ---
-    'fin_12': {
-      day: 31,
-      title: 'Programa de reduccion de costos',
-      context: 'Al cierre del primer mes, los costos estan 15% por encima de lo presupuestado. El margen operativo es del 12% cuando deberia ser del 20%. Finanzas diseña un programa de reduccion de costos con 5 iniciativas. Se deben seleccionar MAXIMO 3 para implementar inmediatamente. Cada una tiene beneficios y consecuencias diferentes.',
+      day: 9,
+      title: 'Asignacion del presupuesto de $75M',
+      context: 'El presupuesto del area financiera es $75M COP. Debes priorizar en que invertirlo. Selecciona hasta 3 rubros.',
       type: 'multi',
       multiMax: 3,
       options: [
         {
           id: 'A',
-          label: 'Renegociar contratos con proveedores (-$4M/mes)',
-          description: 'Pedir descuento por volumen y amenazar con cambiar de proveedor. Se puede lograr un 12% de reduccion en el costo de materias primas. Pero presionar mucho puede danar relaciones.',
-          cost: 1000000,
-          revenue: 4000000,
-          bsc: { bsc_financial: 4, bsc_customer: 0, bsc_internal: 1, bsc_learning: 2 },
+          label: 'Software contable (Siigo/Alegra)',
+          description: 'Licencia anual + implementacion para facturacion electronica DIAN.',
+          cost: 12000000,
+          revenue: 0,
+          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 4, bsc_learning: 3 },
           crossEffects: [
-            { area: 'logistics', message: 'Renegociacion agresiva con proveedores: posible tension', bsc: { bsc_internal: -1, bsc_financial: 3 }, cost: 0 }
+            { area: 'operations', message: 'Facturacion automatizada agiliza cierres', bsc: { bsc_internal: 2 }, cost: 0 }
           ],
-          tags: ['costos', 'proveedores', 'negociacion'],
-          next: 'fin_13',
-          narrative: 'Los proveedores ceden un 10% despues de una negociacion intensa. El de carne acepta de mala gana, el de verduras ofrece 12% feliz porque garantiza volumen. El ahorro mensual es significativo.'
+          tags: ['tecnologia', 'cumplimiento-DIAN'],
+          next: 'fin_05',
+          narrative: 'El software queda operativo en 5 dias. La facturacion electronica cumple con la DIAN desde el dia uno.',
+          feedback: 'Fundamental. La DIAN exige facturacion electronica. No tenerla genera multas. Ademas automatiza procesos contables. Deberia ser prioridad #1 en cualquier combinacion.'
         },
         {
           id: 'B',
-          label: 'Reducir horario de operacion (-$3M/mes)',
-          description: 'Cerrar 2 horas antes entre semana (de 10pm a 8pm). Las ventas despues de las 8pm solo representan el 8% del total diario pero generan costos fijos de personal y servicios.',
-          cost: 0,
-          revenue: 3000000,
-          bsc: { bsc_financial: 3, bsc_customer: -4, bsc_internal: 2, bsc_learning: 0 },
-          crossEffects: [
-            { area: 'hr', message: 'Reduccion de horas: personal contento, pero menos propinas', bsc: { bsc_learning: 1, bsc_financial: -1 }, cost: 0 },
-            { area: 'marketing', message: 'Clientes nocturnos se quejan en redes sociales', bsc: { bsc_customer: -3 }, cost: 0 }
-          ],
-          tags: ['costos', 'horario', 'reduccion'],
-          next: 'fin_13',
-          narrative: 'Se cierra a las 8pm entre semana. Los universitarios de la UTP que cenaban tarde migran al rival. Las redes se llenan de quejas, pero el ahorro en costos fijos es real.'
+          label: 'Fondo de emergencia',
+          description: 'Reservar $20M en CDT a 90 dias como colchon financiero.',
+          cost: 20000000,
+          revenue: 500000,
+          bsc: { bsc_financial: 5, bsc_customer: 0, bsc_internal: 1, bsc_learning: 1 },
+          crossEffects: [],
+          tags: ['reserva', 'seguridad'],
+          next: 'fin_05',
+          narrative: 'El CDT genera rendimientos modestos mientras espera. Tranquilidad financiera asegurada.',
+          feedback: 'Buena practica. Tener un fondo de emergencia equivalente a 1-2 meses de gastos fijos es regla de oro en finanzas. Los rendimientos del CDT son bonus.'
         },
         {
           id: 'C',
-          label: 'Optimizar porciones (ingenieria de menu) (-$2.5M/mes)',
-          description: 'Reducir porciones un 10% sin que el cliente lo note (de 220g a 200g en hamburguesas, por ejemplo). Se invierte en mejor presentacion para compensar. Tecnica comun en la industria.',
-          cost: 1500000,
-          revenue: 2500000,
-          bsc: { bsc_financial: 3, bsc_customer: -1, bsc_internal: 2, bsc_learning: 3 },
+          label: 'Capacitacion financiera al equipo',
+          description: 'Curso de costos y presupuestos para gerentes de local.',
+          cost: 8000000,
+          revenue: 0,
+          bsc: { bsc_financial: 1, bsc_customer: 0, bsc_internal: 2, bsc_learning: 5 },
           crossEffects: [
-            { area: 'operations', message: 'Nuevas fichas tecnicas con gramajes ajustados', bsc: { bsc_internal: 2 }, cost: 0 },
-            { area: 'marketing', message: 'Mejor presentacion compensa reduccion de porcion', bsc: { bsc_customer: 1 }, cost: -500000 }
+            { area: 'operations', message: 'Gerentes entienden mejor el impacto de desperdicios', bsc: { bsc_learning: 3 }, cost: 0 }
           ],
-          tags: ['costos', 'porciones', 'ingenieria-menu'],
-          next: 'fin_13',
-          narrative: 'Las nuevas fichas tecnicas reducen el costo por plato. La presentacion mejora con platos de menor diametro que hacen ver la porcion mas generosa. Psicologia del consumidor en accion.'
+          tags: ['formacion', 'cultura-financiera'],
+          next: 'fin_05',
+          narrative: 'Los gerentes de local empiezan a hablar de margen de contribucion y punto de equilibrio.',
+          feedback: 'Excelente inversion a largo plazo. Que los gerentes operativos entiendan finanzas reduce desperdicios y mejora decisiones en campo. Alto retorno sobre la inversion en formacion.'
         },
         {
           id: 'D',
-          label: 'Cambiar a energia solar para reducir servicios (-$1.8M/mes)',
-          description: 'Instalar paneles solares ($12M) que cubren el 60% del consumo electrico. Payback en 7 meses. Ademas, genera imagen de marca sostenible.',
-          cost: 12000000,
-          revenue: 1800000,
-          bsc: { bsc_financial: 2, bsc_customer: 3, bsc_internal: 3, bsc_learning: 4 },
-          crossEffects: [
-            { area: 'marketing', message: 'Restaurante con energia solar: imagen verde', bsc: { bsc_customer: 4 }, cost: 0 },
-            { area: 'innovation', message: 'Innovacion en sostenibilidad energetica', bsc: { bsc_learning: 3 }, cost: 0 }
-          ],
-          tags: ['costos', 'energia', 'sostenibilidad'],
-          next: 'fin_13',
-          narrative: 'Los paneles solares se instalan en el techo. La factura de energia baja un 55%. Los clientes notan los paneles y preguntan: se vuelve un tema de conversacion positivo. La marca se asocia con sostenibilidad.'
+          label: 'Asesoria tributaria especializada',
+          description: 'Contratar firma contable para optimizar la carga fiscal del primer ano.',
+          cost: 15000000,
+          revenue: 8000000,
+          bsc: { bsc_financial: 4, bsc_customer: 0, bsc_internal: 2, bsc_learning: 3 },
+          crossEffects: [],
+          tags: ['impuestos', 'optimizacion'],
+          next: 'fin_05',
+          narrative: 'La firma encuentra deducciones que no conocias. Se proyecta un ahorro fiscal importante.',
+          feedback: 'Muy util en el primer ano. Un buen asesor tributario se paga solo con los ahorros que genera. En Colombia hay muchos beneficios fiscales que las empresas nuevas desconocen.'
         },
         {
           id: 'E',
-          label: 'Automatizar procesos contables (-$2M/mes)',
-          description: 'Implementar software contable (Siigo o Alegra) que automatiza facturacion electronica, nomina, y reportes a la DIAN. Reduce la necesidad de un auxiliar contable de tiempo completo.',
-          cost: 3000000,
-          revenue: 2000000,
-          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 4, bsc_learning: 5 },
+          label: 'Sistema de control de costos',
+          description: 'Dashboard en tiempo real para monitorear gastos por local y por producto.',
+          cost: 18000000,
+          revenue: 0,
+          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 5, bsc_learning: 2 },
           crossEffects: [
-            { area: 'hr', message: 'Se prescinde de un auxiliar contable (liquidacion)', bsc: { bsc_learning: -2, bsc_financial: 1 }, cost: -3000000 }
+            { area: 'operations', message: 'Visibilidad total de costos por plato y por local', bsc: { bsc_internal: 3 }, cost: 0 }
           ],
-          tags: ['costos', 'automatizacion', 'contabilidad'],
-          next: 'fin_13',
-          narrative: 'Siigo se implementa en 3 dias. La facturacion electronica queda automatizada, los reportes a la DIAN se generan con un clic, y la nomina se liquida sola. El auxiliar contable se reubica en atencion al cliente.'
+          tags: ['control', 'dashboards'],
+          next: 'fin_05',
+          narrative: 'Ahora puedes ver en tiempo real que local gasta mas y en que. Tomar decisiones se vuelve mas facil.',
+          feedback: 'Buena inversion si ya tienes lo basico cubierto. El control de costos es donde se gana la batalla de la rentabilidad. Combinado con software contable es muy poderoso.'
         }
       ]
     },
 
-    // --- DIA 34: Preparacion para auditoria externa ---
-    'fin_13': {
-      day: 34,
-      title: 'Preparacion para auditoria externa',
-      context: 'La Superintendencia de Sociedades envia notificacion de revision a empresas del sector alimentos en Risaralda. Hay que preparar: estados financieros, libros contables, soportes de transacciones, declaraciones tributarias, y certificados de existencia. La revision sera en 5 dias. El nivel de preparacion actual es del 70%. ¿Como abordar la auditoria?',
+    // ============================================================
+    //  NODO 5 — DIA 11: Inversion a corto plazo
+    // ============================================================
+    'fin_05': {
+      day: 11,
+      title: 'Inversion de excedentes de caja',
+      context: 'Hay $40M de excedente temporal en caja. En vez de dejarlos quietos en cuenta corriente, puedes ponerlos a trabajar a corto plazo.',
       type: 'choice',
       multiMax: null,
       options: [
         {
           id: 'A',
-          label: 'Contratar firma auditora para preparacion intensiva',
-          description: 'Contratar a KPMG Pereira o BDO para que revise todo antes de la Supersociedades. Cuesta $8M pero garantiza que la documentacion este impecable. "Mas vale prevenir que lamentar."',
-          cost: 8000000,
-          revenue: 0,
-          bsc: { bsc_financial: 2, bsc_customer: 0, bsc_internal: 5, bsc_learning: 4 },
+          label: 'CDT a 90 dias en Bancolombia',
+          description: 'Tasa del 11.5% E.A. Dinero seguro pero no disponible por 3 meses.',
+          cost: 40000000,
+          revenue: 1100000,
+          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 0, bsc_learning: 1 },
           crossEffects: [],
-          tags: ['auditoria', 'prevencion', 'profesional'],
-          next: 'fin_14',
-          narrative: 'La firma auditora encuentra 3 inconsistencias menores que se corrigen en 2 dias. Cuando llega la Supersociedades, todo esta en orden. Los auditores felicitan la organizacion. Dinero bien gastado.'
+          tags: ['CDT', 'renta-fija', 'seguro'],
+          next: 'fin_06',
+          narrative: 'El dinero queda bloqueado pero genera rendimiento garantizado. Cero riesgo.',
+          feedback: 'Opcion segura. El CDT a 90 dias tiene riesgo cero y genera rendimiento real positivo. El problema es la iliquidez temporal. Buena si no necesitas esos $40M pronto.'
         },
         {
           id: 'B',
-          label: 'Preparacion interna con equipo contable propio',
-          description: 'El contador y su equipo trabajan horas extra durante 5 dias para organizar todo. Costo: $2M en horas extra. Riesgo: pueden pasar por alto detalles que un ojo externo si ve.',
+          label: 'Fondo de inversion colectiva (FIC)',
+          description: 'Rentabilidad estimada del 13% E.A. con liquidez T+1.',
+          cost: 40000000,
+          revenue: 1300000,
+          bsc: { bsc_financial: 4, bsc_customer: 0, bsc_internal: 1, bsc_learning: 3 },
+          crossEffects: [],
+          tags: ['FIC', 'liquidez', 'rendimiento'],
+          next: 'fin_06',
+          narrative: 'El fondo rinde un poco mas que el CDT y puedes retirar en 24 horas si necesitas el dinero.',
+          feedback: 'Mejor opcion. Ofrece mayor rendimiento que el CDT Y mantiene liquidez (puedes retirar en T+1). El riesgo es minimo en fondos de renta fija. Equilibrio perfecto entre rendimiento y disponibilidad.'
+        },
+        {
+          id: 'C',
+          label: 'Dejarlo en cuenta corriente',
+          description: 'Maxima liquidez pero cero rendimiento. El dinero pierde valor con la inflacion.',
+          cost: 0,
+          revenue: 0,
+          bsc: { bsc_financial: -2, bsc_customer: 0, bsc_internal: 0, bsc_learning: 0 },
+          crossEffects: [],
+          tags: ['ineficiente', 'inflacion'],
+          next: 'fin_06',
+          narrative: 'Los $40M pierden poder adquisitivo cada dia que pasan quietos. La inflacion se los come.',
+          feedback: 'Mala decision. Dejar dinero quieto en cuenta corriente es destruir valor. Con inflacion del ~7% en Colombia, perdes ~$230K mensuales en poder adquisitivo. Siempre pon a trabajar los excedentes.'
+        }
+      ]
+    },
+
+    // ============================================================
+    //  NODO 6 — DIA 14: Analisis de punto de equilibrio
+    // ============================================================
+    'fin_06': {
+      day: 14,
+      title: 'Analisis de punto de equilibrio',
+      context: 'Los costos fijos mensuales son $45M y el margen de contribucion promedio por combo es $12.000. Necesitas saber cuantos combos vender al mes para no perder plata.',
+      type: 'choice',
+      multiMax: null,
+      options: [
+        {
+          id: 'A',
+          label: 'Meta: alcanzar punto de equilibrio exacto (3.750 combos/mes)',
+          description: 'Operar al minimo para cubrir costos. Sin margen de seguridad.',
+          cost: 0,
+          revenue: 0,
+          bsc: { bsc_financial: 1, bsc_customer: -1, bsc_internal: 0, bsc_learning: 2 },
+          crossEffects: [
+            { area: 'marketing', message: 'Sin presupuesto para atraer mas clientes', bsc: { bsc_customer: -2 }, cost: 0 }
+          ],
+          tags: ['minimalista', 'sin-margen'],
+          next: 'fin_07',
+          narrative: 'Operas en el filo de la navaja. Un mal dia y estas en rojo.',
+          feedback: 'Nunca planifiques para el punto de equilibrio exacto. La teoria recomienda un margen de seguridad de minimo 20-25% por encima del PE. Sin colchon, cualquier variacion te pone en perdida.'
+        },
+        {
+          id: 'B',
+          label: 'Meta: PE + 25% margen de seguridad (4.688 combos/mes)',
+          description: 'Agregar colchon del 25% para absorber variaciones de demanda.',
+          cost: 3000000,
+          revenue: 11250000,
+          bsc: { bsc_financial: 5, bsc_customer: 1, bsc_internal: 3, bsc_learning: 4 },
+          crossEffects: [
+            { area: 'marketing', message: 'Meta clara permite disenar campanas enfocadas', bsc: { bsc_customer: 2 }, cost: 0 },
+            { area: 'operations', message: 'Produccion se organiza para volumen definido', bsc: { bsc_internal: 2 }, cost: 0 }
+          ],
+          tags: ['margen-seguridad', 'planificado'],
+          next: 'fin_07',
+          narrative: 'Todas las areas alinean sus planes a la meta. Hay espacio para errores sin entrar en perdida.',
+          feedback: 'Esta es la respuesta correcta. El margen de seguridad del 25% es estandar en analisis de punto de equilibrio. Permite absorber caidas de demanda, subidas de costos y errores operativos. Teoria pura.'
+        },
+        {
+          id: 'C',
+          label: 'Meta: maximizar ventas sin tope definido',
+          description: 'Vender todo lo que se pueda sin preocuparse por un numero especifico.',
+          cost: 5000000,
+          revenue: 15000000,
+          bsc: { bsc_financial: 2, bsc_customer: 3, bsc_internal: -2, bsc_learning: 0 },
+          crossEffects: [
+            { area: 'operations', message: 'Sin meta clara, produccion no puede planificar', bsc: { bsc_internal: -3 }, cost: 0 }
+          ],
+          tags: ['ambicioso', 'desorganizado'],
+          next: 'fin_07',
+          narrative: 'Las ventas crecen pero sin control. Produccion no da abasto unos dias y sobra comida otros.',
+          feedback: 'Parece buena idea pero genera caos operativo. Sin una meta cuantificada, no puedes planificar compras, turnos ni inventario. El punto de equilibrio sirve justamente para fijar objetivos medibles.'
+        }
+      ]
+    },
+
+    // ============================================================
+    //  NODO 7 — DIA 16: Crisis de flujo de caja
+    // ============================================================
+    'fin_07': {
+      day: 16,
+      title: 'Crisis de flujo de caja',
+      context: 'Las ventas del primer mes fueron 15% por debajo de lo esperado. Hay que cubrir nomina de $22M en 5 dias y la caja solo tiene $14M.',
+      type: 'choice',
+      multiMax: null,
+      options: [
+        {
+          id: 'A',
+          label: 'Usar la linea de credito rotativa',
+          description: 'Tomar $10M de la linea al 18% E.A. para cubrir el faltante.',
+          cost: 150000,
+          revenue: 0,
+          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 2, bsc_learning: 2 },
+          crossEffects: [],
+          tags: ['linea-credito', 'solucion-rapida'],
+          next: 'fin_08',
+          narrative: 'El dinero llega en 24 horas. Nomina cubierta sin estres. Pagas intereses pero evitas la crisis.',
+          feedback: 'Esta es la respuesta correcta si abriste la linea de credito. Para eso existen: cubrir brechas temporales de liquidez. El costo es minimo ($150K) comparado con el dano de no pagar nomina.'
+        },
+        {
+          id: 'B',
+          label: 'Negociar con proveedores extender pago 15 dias',
+          description: 'Pedir plazo adicional a proveedores para liberar caja para nomina.',
+          cost: 0,
+          revenue: 0,
+          bsc: { bsc_financial: 1, bsc_customer: 0, bsc_internal: -1, bsc_learning: 2 },
+          crossEffects: [
+            { area: 'logistics', message: 'Proveedores aceptan pero con condiciones mas duras a futuro', bsc: { bsc_internal: -2 }, cost: 0 }
+          ],
+          tags: ['negociacion', 'relaciones'],
+          next: 'fin_08',
+          narrative: 'Los proveedores aceptan de mala gana. Cubres nomina pero tu reputacion crediticia se deteriora.',
+          feedback: 'Funciona como emergencia pero tiene costo oculto: los proveedores pierden confianza y pueden subir precios o exigir pagos anticipados despues. Es parche, no solucion.'
+        },
+        {
+          id: 'C',
+          label: 'Pagar nomina parcial y el resto en 15 dias',
+          description: 'Pagar 60% ahora y el 40% restante cuando entre mas caja.',
+          cost: 0,
+          revenue: 0,
+          bsc: { bsc_financial: 0, bsc_customer: -2, bsc_internal: -4, bsc_learning: 1 },
+          crossEffects: [
+            { area: 'operations', message: 'Empleados desmotivados, riesgo de renuncias', bsc: { bsc_internal: -4, bsc_learning: -2 }, cost: 0 }
+          ],
+          tags: ['peligroso', 'clima-laboral'],
+          next: 'fin_08',
+          narrative: 'Los empleados se enteran rapido. La moral cae en picada y dos cocineros clave amenazan con irse.',
+          feedback: 'Peor opcion posible. En Colombia, no pagar nomina completa y a tiempo genera riesgo legal (Ministerio de Trabajo) y destruye la moral del equipo. La nomina SIEMPRE es prioridad #1 de pago.'
+        },
+        {
+          id: 'D',
+          label: 'Venta flash de bonos de regalo al 30% de descuento',
+          description: 'Vender bonos de comida con descuento para generar caja inmediata.',
+          cost: 2000000,
+          revenue: 10000000,
+          bsc: { bsc_financial: 2, bsc_customer: 2, bsc_internal: 1, bsc_learning: 1 },
+          crossEffects: [
+            { area: 'marketing', message: 'Venta flash genera trafico y visibilidad', bsc: { bsc_customer: 3 }, cost: 0 }
+          ],
+          tags: ['creativo', 'venta-anticipada'],
+          next: 'fin_08',
+          narrative: 'Los bonos se venden rapido. Cubres nomina y generas clientes futuros, aunque con margen reducido.',
+          feedback: 'Creativo y funcional. Es basicamente venta anticipada de ingresos futuros con descuento. Resuelve la crisis y genera clientes, pero estas comprometiendo margen futuro. Buena solucion de emergencia.'
+        }
+      ]
+    },
+
+    // ============================================================
+    //  NODO 8 — DIA 18: Reduccion de costos (MULTI)
+    // ============================================================
+    'fin_08': {
+      day: 18,
+      title: 'Plan de reduccion de costos',
+      context: 'Tras la crisis de caja, necesitas reducir costos sin afectar la calidad. Selecciona hasta 2 medidas para implementar.',
+      type: 'multi',
+      multiMax: 2,
+      options: [
+        {
+          id: 'A',
+          label: 'Renegociar arriendo de locales',
+          description: 'Proponer contrato a 3 anos a cambio de 12% de descuento mensual.',
+          cost: 0,
+          revenue: 5000000,
+          bsc: { bsc_financial: 4, bsc_customer: 0, bsc_internal: 1, bsc_learning: 1 },
+          crossEffects: [],
+          tags: ['negociacion', 'costos-fijos'],
+          next: 'fin_09',
+          narrative: 'Los arrendatarios aceptan. Prefieren inquilino estable por 3 anos a buscar nuevo.',
+          feedback: 'Excelente. Renegociar arriendos con compromiso de largo plazo es una de las formas mas efectivas de reducir costos fijos. No afecta calidad ni operacion. Deberia ser prioridad.'
+        },
+        {
+          id: 'B',
+          label: 'Optimizar turnos de personal',
+          description: 'Analizar horas pico y ajustar turnos para eliminar horas muertas.',
+          cost: 2000000,
+          revenue: 4000000,
+          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 3, bsc_learning: 3 },
+          crossEffects: [
+            { area: 'operations', message: 'Menos personal en horas valle, mas en horas pico', bsc: { bsc_internal: 2 }, cost: 0 }
+          ],
+          tags: ['eficiencia', 'nomina'],
+          next: 'fin_09',
+          narrative: 'Los datos muestran que sobra gente de 2-4pm y falta de 7-9pm. Se redistribuyen turnos.',
+          feedback: 'Inteligente. Usar datos para optimizar turnos es gestion basada en evidencia. Reduces costos de nomina sin despedir a nadie. Combinado con renegociar arriendo, es la dupla ganadora.'
+        },
+        {
+          id: 'C',
+          label: 'Reducir menu a los 10 platos mas rentables',
+          description: 'Eliminar platos con bajo margen para simplificar compras e inventario.',
+          cost: 0,
+          revenue: 3000000,
+          bsc: { bsc_financial: 2, bsc_customer: -2, bsc_internal: 3, bsc_learning: 1 },
+          crossEffects: [
+            { area: 'operations', message: 'Cocina mas simple y rapida con menos platos', bsc: { bsc_internal: 3 }, cost: 0 },
+            { area: 'marketing', message: 'Algunos clientes se quejan por platos eliminados', bsc: { bsc_customer: -2 }, cost: 0 }
+          ],
+          tags: ['menu-engineering', 'simplificacion'],
+          next: 'fin_09',
+          narrative: 'La cocina es mas eficiente pero pierdes variedad. Algunos clientes habituales se quejan.',
+          feedback: 'Concepto correcto (menu engineering) pero riesgoso en una cadena nueva que aun esta formando clientela. Mejor esperar a tener mas datos de ventas antes de eliminar platos. Puede funcionar pero es prematuro.'
+        },
+        {
+          id: 'D',
+          label: 'Reducir calidad de ingredientes',
+          description: 'Cambiar a proveedores mas baratos para reducir costo de materia prima un 20%.',
+          cost: 0,
+          revenue: 6000000,
+          bsc: { bsc_financial: 2, bsc_customer: -5, bsc_internal: -1, bsc_learning: -1 },
+          crossEffects: [
+            { area: 'marketing', message: 'Clientes notan la baja de calidad en redes sociales', bsc: { bsc_customer: -4 }, cost: 0 },
+            { area: 'operations', message: 'Mas devoluciones y quejas en punto de venta', bsc: { bsc_internal: -2 }, cost: 0 }
+          ],
+          tags: ['peligroso', 'calidad'],
+          next: 'fin_09',
+          narrative: 'Los numeros mejoran en el papel pero los clientes empiezan a irse. Las resenas en Google caen a 3.2 estrellas.',
+          feedback: 'Grave error. Reducir calidad para bajar costos destruye la propuesta de valor. En restaurantes, los clientes detectan cambios de calidad inmediatamente. Es pan para hoy, hambre para manana. NUNCA hagas esto.'
+        }
+      ]
+    },
+
+    // ============================================================
+    //  NODO 9 — DIA 22: Estrategia tributaria
+    // ============================================================
+    'fin_09': {
+      day: 22,
+      title: 'Estrategia tributaria primer ano',
+      context: 'Se acerca la primera declaracion de renta. Tu contador presenta tres escenarios para la carga tributaria ante la DIAN.',
+      type: 'choice',
+      multiMax: null,
+      options: [
+        {
+          id: 'A',
+          label: 'Regimen SIMPLE de tributacion',
+          description: 'Tarifa unificada del 3.7% sobre ingresos brutos. Menos tramites pero no permite descontar IVA.',
+          cost: 6000000,
+          revenue: 0,
+          bsc: { bsc_financial: 2, bsc_customer: 0, bsc_internal: 3, bsc_learning: 2 },
+          crossEffects: [],
+          tags: ['SIMPLE', 'DIAN', 'simplicidad'],
+          next: 'fin_10',
+          narrative: 'La contabilidad se simplifica enormemente. Un solo formulario y ya.',
+          feedback: 'Funcional para negocios pequenos con pocos costos deducibles. Pero en restaurantes donde compras muchos insumos con IVA, perder el descuento de IVA puede salir mas caro. Revisa los numeros primero.'
+        },
+        {
+          id: 'B',
+          label: 'Regimen ordinario con planeacion fiscal',
+          description: 'Renta al 35% sobre utilidad neta, pero con deducciones y descuentos legales maximizados.',
+          cost: 10000000,
+          revenue: 18000000,
+          bsc: { bsc_financial: 5, bsc_customer: 0, bsc_internal: 2, bsc_learning: 4 },
+          crossEffects: [],
+          tags: ['ordinario', 'planeacion-fiscal', 'optimo'],
+          next: 'fin_10',
+          narrative: 'El asesor encuentra deducciones por inversion, descuentos de IVA y depreciacion acelerada. El ahorro neto es significativo.',
+          feedback: 'Mejor opcion. El regimen ordinario con buena planeacion fiscal permite deducir costos, descontar IVA de compras y aprovechar beneficios como depreciacion acelerada de equipos. El costo del asesor se paga con creces.'
+        },
+        {
+          id: 'C',
+          label: 'Minimizar impuestos de forma agresiva',
+          description: 'Usar estructuras de facturacion entre empresas relacionadas para reducir base gravable.',
+          cost: 15000000,
+          revenue: 25000000,
+          bsc: { bsc_financial: -3, bsc_customer: 0, bsc_internal: -2, bsc_learning: -2 },
+          crossEffects: [],
+          tags: ['agresivo', 'riesgo-DIAN', 'elusion'],
+          next: 'fin_10',
+          narrative: 'El ahorro es grande en el papel pero la DIAN tiene algoritmos de deteccion. Queda un riesgo latente de sancion.',
+          feedback: 'Muy peligroso. La elusion agresiva con empresas de papel es ilegal (evasion disfrazada). La DIAN en Colombia ha fortalecido mucho la fiscalizacion. Las sanciones pueden ser del 160% del impuesto mas intereses. Jamas vale el riesgo.'
+        }
+      ]
+    },
+
+    // ============================================================
+    //  NODO 10 — DIA 25: Proyeccion financiera final
+    // ============================================================
+    'fin_10': {
+      day: 25,
+      title: 'Proyeccion financiera a 12 meses',
+      context: 'Con toda la informacion del mes piloto, debes presentar la proyeccion financiera a la junta directiva. ¿Que enfoque tomas?',
+      type: 'choice',
+      multiMax: null,
+      options: [
+        {
+          id: 'A',
+          label: 'Proyeccion conservadora (crecimiento 5% mensual)',
+          description: 'Basada en datos reales del mes. Sin optimismo excesivo.',
           cost: 2000000,
           revenue: 0,
-          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 2, bsc_learning: 3 },
+          bsc: { bsc_financial: 4, bsc_customer: 0, bsc_internal: 2, bsc_learning: 3 },
           crossEffects: [
-            { area: 'hr', message: 'Equipo contable agotado por horas extra', bsc: { bsc_learning: -1 }, cost: 0 }
+            { area: 'marketing', message: 'Presupuesto de marketing limitado para el ano', bsc: { bsc_customer: -1 }, cost: 0 }
           ],
-          tags: ['auditoria', 'interno', 'riesgo-moderado'],
-          next: 'fin_14',
-          narrative: 'El equipo trabaja hasta las 11pm durante 5 dias. Logran organizar el 90% de la documentacion. La Supersociedades hace algunas observaciones menores pero nada grave. Agotador, pero se salvo.'
-        },
-        {
-          id: 'C',
-          label: 'No hacer nada especial - confiar en que todo esta en orden',
-          description: 'El negocio ha sido transparente desde el dia 1. No deberia haber problemas. Gastar dinero en preparacion es innecesario si no se ha hecho nada malo.',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: -2, bsc_customer: 0, bsc_internal: -3, bsc_learning: -2 },
-          crossEffects: [],
-          tags: ['auditoria', 'riesgo-alto', 'confianza'],
-          next: 'fin_14_problem',
-          narrative: 'La Supersociedades llega y pide documentos que estan desordenados en carpetas sin rotular. Encuentran inconsistencias en la conciliacion bancaria y una factura sin soporte. Se abre un proceso de investigacion.'
-        }
-      ]
-    },
-
-    // --- DIA 34 (rama): Problema con la auditoria ---
-    'fin_14_problem': {
-      day: 35,
-      title: 'Sancion de la Superintendencia',
-      context: 'La Superintendencia de Sociedades emite un pliego de cargos por inconsistencias contables. La sancion puede ser entre $5M y $25M dependiendo de la gravedad. Hay 3 dias para responder con descargos y presentar los soportes faltantes.',
-      type: 'binary',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Contratar abogado y presentar descargos formales',
-          description: 'Un abogado especialista en derecho corporativo presenta descargos con toda la documentacion que faltaba. Costo: $6M entre honorarios y organizacion urgente. Probable reduccion de sancion al minimo ($5M).',
-          cost: 11000000,
-          revenue: 0,
-          bsc: { bsc_financial: -3, bsc_customer: 0, bsc_internal: 2, bsc_learning: 5 },
-          crossEffects: [],
-          tags: ['sancion', 'defensa-legal', 'supersociedades'],
-          next: 'fin_14',
-          narrative: 'El abogado presenta descargos solidos. La sancion se reduce al minimo: $5M. Leccion carisima pero aprendida: nunca subestimar una auditoria. La empresa implementa protocolos de documentacion permanentes.'
+          tags: ['conservador', 'realista'],
+          next: null,
+          narrative: 'La junta aprueba sin entusiasmo. Los numeros son creibles pero no emocionan a nadie.',
+          feedback: 'Proyecciones conservadoras basadas en datos reales son las mas creibles. Los inversionistas y bancos prefieren que superes la proyeccion a que no la alcances. Genera confianza.'
         },
         {
           id: 'B',
-          label: 'Aceptar la sancion y seguir adelante',
-          description: 'Pagar la sancion promedio ($15M) sin pelear. Ahorrar tiempo y energia del abogado. Implementar mejoras contables inmediatamente para evitar reincidencia.',
-          cost: 15000000,
-          revenue: 0,
-          bsc: { bsc_financial: -5, bsc_customer: 0, bsc_internal: -1, bsc_learning: 3 },
-          crossEffects: [],
-          tags: ['sancion', 'aceptar', 'costoso'],
-          next: 'fin_14',
-          narrative: 'Se paga la sancion de $15M. Duele enormemente. Pero la empresa aprende, contrata un mejor sistema contable, y jura que nunca mas ira a una auditoria desprevenida.'
-        }
-      ]
-    },
-
-    // --- DIA 37: Emergencia de liquidez ---
-    'fin_14': {
-      day: 37,
-      title: 'Emergencia de liquidez',
-      context: 'Tormenta perfecta financiera: el proveedor de pollo quiebra y hay que conseguir uno nuevo que cobra 20% mas caro, la nevera del local principal se dana ($8M de reparacion), y un cliente corporativo que debia $12M avisa que pagara en 30 dias, no en 8. El saldo en caja es de $10M y las obligaciones inmediatas suman $28M. Hay un hueco de $18M que resolver esta semana.',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Factoring: vender la factura del cliente corporativo',
-          description: 'Vender la factura de $12M al 3.5% de descuento con una empresa de factoring. Se reciben $11.58M hoy en vez de esperar 30 dias. Es caro pero inmediato. Quedan $6.42M por resolver.',
-          cost: 420000,
-          revenue: 11580000,
-          bsc: { bsc_financial: 2, bsc_customer: 0, bsc_internal: 2, bsc_learning: 4 },
-          crossEffects: [],
-          tags: ['factoring', 'liquidez', 'emergencia'],
-          next: 'fin_15',
-          narrative: 'La empresa de factoring compra la factura en 24 horas. Se reciben $11.58M. Es como cambiar un cheque posfechado: pierdes un poco pero ganas tiempo. Una herramienta financiera invaluable para pymes.'
-        },
-        {
-          id: 'B',
-          label: 'Pedir prestamo de emergencia a socios/familia',
-          description: 'Solicitar $18M a socios o familiares como prestamo personal al 0% de interes por 60 dias. No genera costo financiero pero mezcla relaciones personales con negocios.',
-          cost: 0,
-          revenue: 18000000,
-          bsc: { bsc_financial: 3, bsc_customer: 0, bsc_internal: 1, bsc_learning: 1 },
-          crossEffects: [],
-          tags: ['prestamo-personal', 'socios', 'emergencia'],
-          next: 'fin_15',
-          narrative: 'Un socio presta los $18M sin intereses. "Estamos juntos en esto," dice. El problema se resuelve, pero ahora hay una deuda moral que pesa. Si no se paga a tiempo, la relacion se puede dañar.'
-        },
-        {
-          id: 'C',
-          label: 'Venta de activos no esenciales + credito parcial',
-          description: 'Vender el carro de la empresa ($15M valor comercial, se consigue $12M rapido) y usar $6M de la linea de credito. Liquida un activo pero resuelve la crisis sin deuda adicional significativa.',
-          cost: 6000000,
-          revenue: 12000000,
-          bsc: { bsc_financial: 0, bsc_customer: 0, bsc_internal: -2, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'logistics', message: 'Se vendio el vehiculo de la empresa: transporte limitado', bsc: { bsc_internal: -3 }, cost: 0 }
-          ],
-          tags: ['venta-activos', 'emergencia', 'mixto'],
-          next: 'fin_15',
-          narrative: 'El carro se vende en 3 dias por TuCarro.com. No es lo ideal: ahora el gerente va en Uber y logistica depende de transportadoras externas. Pero la crisis se resolvio sin endeudarse mucho.'
-        },
-        {
-          id: 'D',
-          label: 'Declarar estado de reorganizacion (Ley 1116)',
-          description: 'Acogerse a la Ley 1116 de insolvencia empresarial. Congela temporalmente las deudas y da 4 meses para reorganizar las finanzas. Pero marca a la empresa en centrales de riesgo y asusta a proveedores.',
+          label: 'Proyeccion con tres escenarios (pesimista, base, optimista)',
+          description: 'Presentar rango de resultados con probabilidades asignadas a cada uno.',
           cost: 5000000,
           revenue: 0,
-          bsc: { bsc_financial: -5, bsc_customer: -3, bsc_internal: -2, bsc_learning: 5 },
+          bsc: { bsc_financial: 5, bsc_customer: 1, bsc_internal: 3, bsc_learning: 5 },
           crossEffects: [
-            { area: 'logistics', message: 'Proveedores exigen pago anticipado al enterarse', bsc: { bsc_internal: -4 }, cost: 0 },
-            { area: 'marketing', message: 'Rumor de insolvencia afecta imagen de marca', bsc: { bsc_customer: -5 }, cost: 0 },
-            { area: 'hr', message: 'Empleados preocupados por estabilidad laboral', bsc: { bsc_learning: -3 }, cost: 0 }
+            { area: 'operations', message: 'Plan operativo adaptable segun escenario', bsc: { bsc_internal: 3 }, cost: 0 },
+            { area: 'marketing', message: 'Presupuesto flexible segun resultados', bsc: { bsc_customer: 2 }, cost: 0 }
           ],
-          tags: ['insolvencia', 'ley-1116', 'ultimo-recurso'],
-          next: 'fin_14_ley1116',
-          narrative: 'La decision nuclear. La Supersociedades acepta el tramite de reorganizacion. Las deudas se congelan, pero la noticia se riega rapido. Proveedores empiezan a pedir pago de contado y dos empleados renuncian por miedo.'
-        }
-      ]
-    },
-
-    // --- DIA 38 (rama Ley 1116): Negociacion con acreedores ---
-    'fin_14_ley1116': {
-      day: 38,
-      title: 'Acuerdo de reorganizacion con acreedores',
-      context: 'Bajo la Ley 1116, la empresa tiene 4 meses para presentar un acuerdo de reorganizacion. Los acreedores se reunen: el banco quiere cobrar, los proveedores quieren garantias, y los empleados quieren saber si habra liquidacion. El promotor designado por la Supersociedades media entre las partes. Es el momento de salvar la empresa o aceptar el fracaso.',
-      type: 'binary',
-      multiMax: null,
-      options: [
+          tags: ['escenarios', 'profesional', 'mejor-practica'],
+          next: null,
+          narrative: 'La junta queda impresionada. El analisis de escenarios demuestra madurez financiera y permite tomar decisiones informadas.',
+          feedback: 'Esta es la respuesta correcta. La proyeccion por escenarios (analisis de sensibilidad) es la practica estandar en finanzas corporativas. Muestra los riesgos y oportunidades, y permite planificar contingencias para cada caso.'
+        },
         {
-          id: 'A',
-          label: 'Proponer reestructuracion: pago en 18 meses con periodo de gracia',
-          description: 'Pedir 3 meses de gracia (sin pagar capital) y luego 15 cuotas mensuales. Los acreedores recuperan el 100% pero mas lento. La empresa sobrevive si mejora la operacion.',
+          id: 'C',
+          label: 'Proyeccion optimista (crecimiento 15% mensual)',
+          description: 'Mostrar el mejor caso posible para motivar al equipo y atraer inversion.',
           cost: 3000000,
           revenue: 0,
-          bsc: { bsc_financial: -2, bsc_customer: 1, bsc_internal: 2, bsc_learning: 5 },
+          bsc: { bsc_financial: -2, bsc_customer: 2, bsc_internal: -1, bsc_learning: -1 },
           crossEffects: [
-            { area: 'logistics', message: 'Proveedores aceptan seguir surtiendo con pago semanal', bsc: { bsc_internal: 1 }, cost: 0 },
-            { area: 'hr', message: 'Estabilidad laboral confirmada: moral del equipo se recupera', bsc: { bsc_learning: 2 }, cost: 0 }
+            { area: 'marketing', message: 'Presupuesto de marketing agresivo basado en proyeccion inflada', bsc: { bsc_customer: 3 }, cost: 0 }
           ],
-          tags: ['reestructuracion', 'ley-1116', 'sobrevivir'],
-          next: 'fin_15',
-          narrative: 'Los acreedores aceptan la propuesta por mayoria. El banco no esta feliz pero prefiere cobrar lento que no cobrar. La empresa sobrevive con condiciones estrictas: cada peso debe ser reportado. Es una segunda oportunidad que no se puede desperdiciar.'
-        },
-        {
-          id: 'B',
-          label: 'Buscar inversionista de rescate que asuma las deudas',
-          description: 'Un grupo empresarial de Manizales ofrece inyectar $40M a cambio del 51% de la empresa. Pagan las deudas urgentes y toman el control. Los fundadores pierden la mayoria pero la empresa sobrevive.',
-          cost: 0,
-          revenue: 40000000,
-          bsc: { bsc_financial: 3, bsc_customer: 2, bsc_internal: 1, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'marketing', message: 'Nuevo grupo inversor trae imagen de respaldo corporativo', bsc: { bsc_customer: 2 }, cost: 0 },
-            { area: 'hr', message: 'Nuevos duenos: incertidumbre sobre cambios en equipo', bsc: { bsc_learning: -1 }, cost: 0 }
-          ],
-          tags: ['rescate', 'inversionista', 'control-perdido'],
-          next: 'fin_15',
-          narrative: 'El grupo de Manizales firma. Las deudas se pagan, la Ley 1116 se levanta, y la empresa sale de centrales de riesgo. Pero los fundadores ya no mandan: el 51% esta en manos externas. Dificil leccion sobre las consecuencias de la iliquidez.'
-        }
-      ]
-    },
-
-    // --- DIA 40: Decision de dividendos vs. reinversion ---
-    'fin_15': {
-      day: 40,
-      title: 'Dividendos o reinversion de utilidades',
-      context: 'A pesar de los tropiezos, la empresa tiene una utilidad acumulada de $35M COP. Los socios presionan por recibir dividendos despues de semanas de estres. Pero el gerente financiero sabe que reinvertir fortalece la empresa para el largo plazo. En Colombia, los dividendos superiores a $15.5M estan gravados al 10% adicional por la DIAN.',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Distribuir el 100% como dividendos ($35M)',
-          description: 'Los socios reciben todo. Despues de la retencion del 10% sobre el excedente, quedan ~$33M netos para los socios. La empresa queda sin reservas para imprevistos.',
-          cost: 35000000,
-          revenue: 0,
-          bsc: { bsc_financial: -4, bsc_customer: 0, bsc_internal: -3, bsc_learning: -1 },
-          crossEffects: [
-            { area: 'operations', message: 'Sin reinversion: equipos no se renuevan', bsc: { bsc_internal: -2 }, cost: 0 },
-            { area: 'innovation', message: 'Cero presupuesto para I+D el proximo periodo', bsc: { bsc_learning: -3 }, cost: 0 }
-          ],
-          tags: ['dividendos', 'total', 'sin-reservas'],
-          next: 'fin_15b',
-          narrative: 'Los socios estan felices. Reciben su retorno. Pero la empresa queda fragil: sin colchon financiero, sin capacidad de invertir, dependiente de que todo salga perfecto el siguiente mes.'
-        },
-        {
-          id: 'B',
-          label: 'Distribuir 40% ($14M) y reinvertir 60% ($21M)',
-          description: 'Los socios reciben un dividendo modesto ($14M, exento del 10% adicional por estar debajo del umbral) y la empresa retiene $21M para capital de trabajo y mejoras.',
-          cost: 14000000,
-          revenue: 0,
-          bsc: { bsc_financial: 3, bsc_customer: 1, bsc_internal: 3, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'operations', message: 'Reinversion permite mantenimiento preventivo de equipos', bsc: { bsc_internal: 3 }, cost: 0 },
-            { area: 'innovation', message: 'Fondos reservados para I+D el proximo mes', bsc: { bsc_learning: 2 }, cost: 0 }
-          ],
-          tags: ['dividendos-parcial', 'reinversion', 'equilibrado'],
-          next: 'fin_16',
-          narrative: 'Solucion salomonica. Los socios reciben algo (y no pagan impuesto adicional por dividendos), la empresa retiene recursos para crecer. Todos contentos, nadie eufórico.'
-        },
-        {
-          id: 'C',
-          label: 'Reinvertir el 100% de las utilidades',
-          description: 'No distribuir dividendos. Todo se reinvierte en: $10M en marketing, $6M en mejora de local, $5M en fondo de emergencia. Los socios no reciben nada ahora, pero el valor de la empresa crece.',
-          cost: 0,
-          revenue: 0,
-          bsc: { bsc_financial: 5, bsc_customer: 2, bsc_internal: 4, bsc_learning: 4 },
-          crossEffects: [
-            { area: 'marketing', message: '$10M reinvertidos en campana de posicionamiento', bsc: { bsc_customer: 4 }, cost: 0 },
-            { area: 'operations', message: '$6M para mejoras en el local principal', bsc: { bsc_internal: 3 }, cost: 0 }
-          ],
-          tags: ['reinversion-total', 'crecimiento', 'largo-plazo'],
-          next: 'fin_16',
-          narrative: 'Los socios estan molestos. "¿Para que montamos esto si no vemos plata?" Pero la empresa queda blindada financieramente. Es una apuesta por el futuro que solo se valora con el tiempo.'
-        }
-      ]
-    },
-
-    // --- DIA 41 (rama dividendos totales): Consecuencia de caja vacia ---
-    'fin_15b': {
-      day: 41,
-      title: 'Sin reservas: imprevisto inmediato',
-      context: 'Dos dias despues de distribuir todos los dividendos, el INVIMA (Instituto de Vigilancia de Medicamentos y Alimentos) hace una visita de inspeccion y requiere adecuaciones sanitarias por $7M: cambiar losetas rotas, instalar trampa de grasas certificada, y comprar termometros industriales. El plazo es de 10 dias o cierran el local. La caja tiene $2M.',
-      type: 'binary',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Pedir a los socios que devuelvan parte de los dividendos',
-          description: 'Llamar a los socios y pedirles que reintegren $7M de los dividendos que acaban de recibir. Situacion incomoda pero necesaria. Demuestra que distribuir el 100% fue un error.',
-          cost: 0,
-          revenue: 7000000,
-          bsc: { bsc_financial: -2, bsc_customer: 0, bsc_internal: 1, bsc_learning: 5 },
-          crossEffects: [],
-          tags: ['dividendos', 'error', 'leccion'],
-          next: 'fin_16',
-          narrative: 'Los socios devuelven el dinero de mala gana. "¡Nos dieron dividendos hace 2 dias y ya los piden de vuelta!" La leccion es clara: siempre mantener reservas. Nunca distribuir el 100% de las utilidades.'
-        },
-        {
-          id: 'B',
-          label: 'Credito de emergencia con Bancolombia',
-          description: 'Solicitar $7M de credito de consumo a tasa del 22% E.A. Es caro, pero es mas rapido que pedirle a los socios. Las adecuaciones se hacen en 5 dias.',
-          cost: 7000000,
-          revenue: 0,
-          bsc: { bsc_financial: -3, bsc_customer: 0, bsc_internal: 2, bsc_learning: 3 },
-          crossEffects: [],
-          tags: ['credito', 'emergencia', 'invima'],
-          next: 'fin_16',
-          narrative: 'El credito se aprueba en 48 horas. Las adecuaciones se hacen antes del plazo del INVIMA. Pero ahora hay $7M mas de deuda a la tasa mas alta del mercado. El costo de no tener reservas: deuda cara.'
-        }
-      ]
-    },
-
-    // --- DIA 43: Proyeccion financiera final ---
-    'fin_16': {
-      day: 43,
-      title: 'Proyeccion financiera y estrategia de cierre',
-      context: 'Ultimo nodo de decision financiera. El CFO debe presentar la proyeccion a 6 meses ante la junta directiva. Hay 3 escenarios posibles dependiendo de la estrategia final. Los indicadores actuales: margen operativo 18%, ROE 15%, razon corriente 1.4, endeudamiento 45%. ¿Que mensaje llevar a la junta y que estrategia adoptar para el proximo semestre?',
-      type: 'choice',
-      multiMax: null,
-      options: [
-        {
-          id: 'A',
-          label: 'Estrategia de crecimiento agresivo',
-          description: 'Proyectar apertura de 2 puntos nuevos en Dosquebradas y Armenia. Apalancarse al 60%, contratar 20 personas, y triplicar la pauta digital. Meta: $1.500M en ventas semestrales. Alto riesgo, alto retorno.',
-          cost: 10000000,
-          revenue: 0,
-          bsc: { bsc_financial: 2, bsc_customer: 5, bsc_internal: 3, bsc_learning: 4 },
-          crossEffects: [
-            { area: 'operations', message: 'Plan de expansion: preparar SOPs para replicar operacion', bsc: { bsc_internal: 3, bsc_learning: 3 }, cost: 0 },
-            { area: 'hr', message: 'Plan de contratacion masiva para nuevos puntos', bsc: { bsc_learning: 4 }, cost: 0 },
-            { area: 'marketing', message: 'Campana regional: Pereira, Dosquebradas, Armenia', bsc: { bsc_customer: 5 }, cost: 0 },
-            { area: 'logistics', message: 'Cadena de suministro debe escalar a 3 ciudades', bsc: { bsc_internal: 2 }, cost: 0 }
-          ],
-          tags: ['crecimiento', 'expansion', 'agresivo'],
+          tags: ['optimista', 'riesgoso'],
           next: null,
-          narrative: 'La junta aprueba el plan con entusiasmo cauto. "Si ejecutamos bien, seremos la cadena de comida rapida lider del Eje Cafetero en 6 meses." Los riesgos son enormes pero la vision es ambiciosa. El area de finanzas diseña el plan de financiacion mas complejo de su historia.'
-        },
-        {
-          id: 'B',
-          label: 'Estrategia de consolidacion y eficiencia',
-          description: 'No expandir. Optimizar el punto actual hasta lograr margen operativo del 25%. Pagar toda la deuda, crear fondo de reserva de $50M, y mejorar cada proceso interno. Meta: $800M en ventas semestrales con 25% de margen.',
-          cost: 5000000,
-          revenue: 0,
-          bsc: { bsc_financial: 5, bsc_customer: 2, bsc_internal: 5, bsc_learning: 3 },
-          crossEffects: [
-            { area: 'operations', message: 'Foco en eficiencia: reducir costos 15% adicional', bsc: { bsc_internal: 4, bsc_financial: 3 }, cost: 0 },
-            { area: 'innovation', message: 'I+D enfocado en eficiencia de procesos', bsc: { bsc_learning: 3 }, cost: 0 }
-          ],
-          tags: ['consolidacion', 'eficiencia', 'bajo-riesgo'],
-          next: null,
-          narrative: 'La junta asiente con aprobacion. "Primero ser excelentes en lo que hacemos, despues pensar en crecer." La meta es ser la operacion de comida rapida mas eficiente de Pereira: cada peso bien gastado, cada proceso optimizado, cero desperdicio. Finanzas diseña un plan de pago de deuda acelerado.'
-        },
-        {
-          id: 'C',
-          label: 'Estrategia de diversificacion',
-          description: 'Mantener el restaurante estable y usar utilidades para abrir una nueva linea de negocio: servicio de catering corporativo para las empresas de la zona franca de Pereira. Nuevo segmento, nuevo mercado.',
-          cost: 8000000,
-          revenue: 0,
-          bsc: { bsc_financial: 3, bsc_customer: 4, bsc_internal: 2, bsc_learning: 5 },
-          crossEffects: [
-            { area: 'marketing', message: 'Branding para division de catering corporativo', bsc: { bsc_customer: 3 }, cost: 0 },
-            { area: 'hr', message: 'Contratar equipo especializado en catering', bsc: { bsc_learning: 3 }, cost: 0 },
-            { area: 'logistics', message: 'Logistica de catering: vehiculos, contenedores termicos', bsc: { bsc_internal: 2 }, cost: 0 },
-            { area: 'innovation', message: 'Menu exclusivo para catering ejecutivo', bsc: { bsc_learning: 4 }, cost: 0 }
-          ],
-          tags: ['diversificacion', 'catering', 'nuevo-mercado'],
-          next: null,
-          narrative: 'La junta debate intensamente. "¿No sera mucho abarcar?" vs "¡Es el futuro del negocio!" El plan es ambicioso pero inteligente: el catering corporativo tiene margenes del 35% y en Pereira casi nadie lo hace bien. Finanzas modela dos escenarios y el VPN de ambos es positivo. Se aprueba con condiciones de revision mensual.'
+          narrative: 'El equipo se emociona pero cuando los numeros no se cumplen, la frustracion sera doble.',
+          feedback: 'Peligroso. Proyecciones infladas generan expectativas irreales, sobreinversion y decepcion cuando no se cumplen. Los bancos y los inversionistas serios desconfian de proyecciones demasiado optimistas. Credibilidad ante todo.'
         },
         {
           id: 'D',
-          label: 'Estrategia de franquicia',
-          description: 'Crear un modelo de franquicia para que otros inviertan en abrir puntos con la marca. Se cobra fee de entrada ($30M) + 5% de ventas mensual. Crece sin asumir riesgo propio, pero pierde control sobre calidad.',
-          cost: 12000000,
+          label: 'No hacer proyeccion formal, ir mes a mes',
+          description: 'Evitar comprometerse con numeros. Ajustar sobre la marcha.',
+          cost: 0,
           revenue: 0,
-          bsc: { bsc_financial: 4, bsc_customer: 3, bsc_internal: -1, bsc_learning: 6 },
+          bsc: { bsc_financial: -4, bsc_customer: 0, bsc_internal: -3, bsc_learning: -2 },
           crossEffects: [
-            { area: 'operations', message: 'Documentar todos los procesos para manual de franquicia', bsc: { bsc_internal: 3, bsc_learning: 5 }, cost: 0 },
-            { area: 'marketing', message: 'Marca debe ser suficientemente fuerte para franquiciar', bsc: { bsc_customer: 2 }, cost: 0 },
-            { area: 'hr', message: 'Equipo de soporte y auditoria de franquicias', bsc: { bsc_learning: 3 }, cost: 0 }
+            { area: 'operations', message: 'Sin proyeccion no hay plan de compras ni produccion', bsc: { bsc_internal: -3 }, cost: 0 }
           ],
-          tags: ['franquicia', 'escalabilidad', 'modelo-negocio'],
+          tags: ['improvisacion', 'mala-practica'],
           next: null,
-          narrative: 'La idea genera electricidad en la sala. "¿Nuestra marca ya es suficientemente fuerte para franquiciar?" El plan exige documentar cada proceso, crear manuales, y disenar un sistema de control de calidad para franquiciados. Finanzas proyecta que con 3 franquicias operando, los ingresos pasivos superarian la operacion propia. Alto potencial, alta complejidad.'
+          narrative: 'La junta directiva pierde confianza. Sin rumbo financiero definido, cada area improvisa por su cuenta.',
+          feedback: 'La peor opcion. Una empresa sin proyeccion financiera es un barco sin brujula. No planificar NO reduce el riesgo, solo te impide prepararte para el. La planeacion financiera es obligatoria, no opcional.'
         }
       ]
     }
+
   }
 };
