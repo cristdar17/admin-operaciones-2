@@ -273,7 +273,7 @@ DECLARE
 BEGIN
   SELECT value::INT INTO v_day FROM game_state WHERE key = 'day';
   v_day := v_day + 1;
-  IF v_day > 45 THEN
+  IF v_day > 25 THEN
     UPDATE game_state SET value = 'ended' WHERE key = 'status';
     RETURN 45;
   END IF;

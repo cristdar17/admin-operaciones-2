@@ -8,7 +8,7 @@ const CONFIG = {
 
   // --- Timing ---
   SECONDS_PER_DAY: 180,       // 3 minutos por día simulado
-  TOTAL_DAYS: 45,             // 45 días × 2 min = 90 min
+  TOTAL_DAYS: 25,             // 25 días × 3 min = 75 min
   POLL_INTERVAL: 3000,        // polling cada 3 segundos
   DECISION_TIMEOUT: 100,      // segundos para decidir (antes de auto-skip)
 
