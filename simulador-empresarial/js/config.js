@@ -7,7 +7,7 @@ const CONFIG = {
   SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxuc3pnbnpndGVoYXdndmhxeGpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NjcyMTcsImV4cCI6MjA5MTM0MzIxN30.HPDJbfPaSjkdCvGecI-07CytBZf44wGhjceFzQ8RZLg',
 
   // --- Timing ---
-  SECONDS_PER_DAY: 240,       // 4 minutos por día simulado
+  SECONDS_PER_DAY: 180,       // 3 minutos por día simulado
   TOTAL_DAYS: 45,             // 45 días × 2 min = 90 min
   POLL_INTERVAL: 3000,        // polling cada 3 segundos
   DECISION_TIMEOUT: 100,      // segundos para decidir (antes de auto-skip)
