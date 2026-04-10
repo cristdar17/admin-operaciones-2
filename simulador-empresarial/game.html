@@ -146,6 +146,9 @@
     let dayTimer = null;
     let selectedOptions = []; // for multi-select
     let hasDecidedToday = false;
+    let lastRenderedDay = -1;
+    let lastRenderedDecided = false;
+    let lastRenderedNodeId = null;
 
     // --- Init ---
     (function init() {
@@ -238,40 +241,59 @@
         document.getElementById('area-bsc').innerHTML = renderBscMini(myArea);
       }
 
-      // Team
-      document.getElementById('team-list').innerHTML = myTeam.map(s => {
-        const isMe = s.id === session.id;
-        const isDecider = Engine.getDecisionMaker(session.area, session.company, gameData.students, day)?.id === s.id;
-        return `
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${isMe ? 'font-weight:700' : ''}">
-            <span class="status-dot ${isDecider ? 'active' : ''}"></span>
-            ${s.name} ${isMe ? '(tú)' : ''} ${isDecider ? '<span class="pill pill-sm" style="background:rgba(0,122,255,0.1);color:var(--color-primary)">Decide hoy</span>' : ''}
-            <span style="margin-left:auto;font-size:0.72rem;color:var(--text-tertiary)">${s.decisions_made} dec.</span>
-          </div>
-        `;
-      }).join('') || '<span style="color:var(--text-tertiary)">Sin equipo aún</span>';
+      // Team — solo re-render si cambió la cantidad o el día
+      const teamKey = myTeam.map(s => s.id + s.decisions_made).join(',') + day;
+      if (teamKey !== updateUI._lastTeamKey) {
+        updateUI._lastTeamKey = teamKey;
+        document.getElementById('team-list').innerHTML = myTeam.map(s => {
+          const isMe = s.id === session.id;
+          const isDecider = Engine.getDecisionMaker(session.area, session.company, gameData.students, day)?.id === s.id;
+          return `
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${isMe ? 'font-weight:700' : ''}">
+              <span class="status-dot ${isDecider ? 'active' : ''}"></span>
+              ${s.name} ${isMe ? '(tú)' : ''} ${isDecider ? '<span class="pill pill-sm" style="background:rgba(0,122,255,0.1);color:var(--color-primary)">Decide hoy</span>' : ''}
+              <span style="margin-left:auto;font-size:0.72rem;color:var(--text-tertiary)">${s.decisions_made} dec.</span>
+            </div>
+          `;
+        }).join('') || '<span style="color:var(--text-tertiary)">Sin equipo aún</span>';
+      }
 
-      // Decision history
+      // Decision history — solo re-render si cambió
       const myDecisions = gameData.decisions
         .filter(d => d.company_id === session.company && d.area_code === session.area)
         .sort((a, b) => b.day - a.day)
         .slice(0, 5);
-      document.getElementById('decision-history').innerHTML = myDecisions.map(d => {
-        const net = (d.revenue_amount || 0) - (d.cost_amount || 0);
-        return `
-          <div class="history-item">
-            <div class="history-day">${d.day}</div>
-            <div class="history-content">
-              <div class="history-title">${d.node_id}</div>
-              <div class="history-narrative">${d.narrative || ''}</div>
+      const histKey = myDecisions.map(d => d.id).join(',');
+      if (histKey !== updateUI._lastHistKey) {
+        updateUI._lastHistKey = histKey;
+        document.getElementById('decision-history').innerHTML = myDecisions.map(d => {
+          const net = (d.revenue_amount || 0) - (d.cost_amount || 0);
+          return `
+            <div class="history-item">
+              <div class="history-day">${d.day}</div>
+              <div class="history-content">
+                <div class="history-title">${d.node_id}</div>
+                <div class="history-narrative">${d.narrative || ''}</div>
+              </div>
+              <span class="history-delta ${net >= 0 ? 'positive' : 'negative'}">${UI.formatCOP(net)}</span>
             </div>
-            <span class="history-delta ${net >= 0 ? 'positive' : 'negative'}">${UI.formatCOP(net)}</span>
-          </div>
-        `;
-      }).join('') || '<span style="color:var(--text-tertiary);font-size:0.85rem">Sin decisiones aún</span>';
+          `;
+        }).join('') || '<span style="color:var(--text-tertiary);font-size:0.85rem">Sin decisiones aún</span>';
+      }
 
-      // Render decision or gerente view
-      renderMainContent(day);
+      // Render decision or gerente view — SOLO si algo cambió
+      const currentDecided = gameData.decisions.some(
+        d => d.company_id === session.company && d.area_code === session.area && d.day === day
+      );
+      const currentArea = gameData.areas.find(a => a.company_id === session.company && a.area_code === session.area);
+      const currentNodeId = currentArea?.current_node || null;
+
+      if (day !== lastRenderedDay || currentDecided !== lastRenderedDecided || currentNodeId !== lastRenderedNodeId) {
+        renderMainContent(day);
+        lastRenderedDay = day;
+        lastRenderedDecided = currentDecided;
+        lastRenderedNodeId = currentNodeId;
+      }
 
       // Notifications
       renderNotifications(day);
@@ -522,8 +544,14 @@
     }
 
     // --- Gerente View ---
+    let lastGerenteKey = '';
     function renderGerenteView(day) {
       const el = document.getElementById('gerente-overview');
+      // Solo re-render si cambió algo relevante
+      const gerenteDecisions = gameData.decisions.filter(d => d.company_id === session.company && d.day === day);
+      const gerenteKey = day + ':' + gerenteDecisions.map(d => d.area_code + d.choice).join(',');
+      if (gerenteKey === lastGerenteKey) return;
+      lastGerenteKey = gerenteKey;
       const overview = Engine.getGerenteOverview(session.company, gameData.areas, gameData.decisions, day);
 
       // Gerente's own decision
