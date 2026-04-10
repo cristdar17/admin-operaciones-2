@@ -376,28 +376,66 @@
         const dec = gameData.decisions.find(
           d => d.company_id === session.company && d.area_code === session.area && d.day === day
         );
-        // Buscar feedback de la opción elegida
         const tree = Engine.getTree(session.area);
         const decNode = tree?.nodes[dec?.node_id];
         const chosenOpt = decNode?.options?.find(o => o.id === dec?.choice);
         const feedbackText = chosenOpt?.feedback || '';
         const net = (dec?.revenue_amount || 0) - (dec?.cost_amount || 0);
 
+        // Encontrar la mejor opción (mayor score compuesto)
+        const bestOpt = decNode?.options ? findBestOption(decNode.options) : null;
+        const choseTheBest = bestOpt && bestOpt.id === dec?.choice;
+        const bestNet = bestOpt ? (bestOpt.revenue || 0) - (bestOpt.cost || 0) : 0;
+
         el.innerHTML = `
           <div class="glass card decision-panel">
             <div class="decision-type-badge choice">✅ Decisión tomada</div>
             <div class="decision-title">${decNode?.title || 'Día ' + day}</div>
             <div class="narrative-box">${dec?.narrative || 'Decisión procesada.'}</div>
-            <div style="margin-top:12px;display:flex;gap:12px">
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <span class="pill" style="background:${net >= 0 ? 'rgba(52,199,89,0.1)' : 'rgba(255,59,48,0.1)'};color:${net >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">
                 Impacto: ${UI.formatCOP(net)}
               </span>
               <span class="pill" style="background:rgba(0,122,255,0.08);color:var(--color-primary)">Elegiste: ${dec?.choice}</span>
+              ${choseTheBest
+                ? '<span class="pill" style="background:rgba(52,199,89,0.12);color:var(--color-success)">🏆 ¡Elegiste la mejor!</span>'
+                : `<span class="pill" style="background:rgba(255,149,0,0.12);color:var(--color-warning)">💡 La mejor era: ${bestOpt?.id}</span>`
+              }
             </div>
+
+            <!-- Comparativa de todas las opciones -->
+            ${decNode?.options ? `
+              <div style="margin-top:16px">
+                <div style="font-weight:700;font-size:0.82rem;margin-bottom:8px">📊 Comparativa de opciones</div>
+                ${decNode.options.map(o => {
+                  const oNet = (o.revenue || 0) - (o.cost || 0);
+                  const isBest = bestOpt && o.id === bestOpt.id;
+                  const isChosen = o.id === dec?.choice;
+                  return `
+                    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:4px;border-radius:8px;
+                      background:${isBest ? 'rgba(52,199,89,0.08)' : isChosen && !isBest ? 'rgba(255,149,0,0.06)' : 'rgba(0,0,0,0.02)'};
+                      border-left:3px solid ${isBest ? 'var(--color-success)' : isChosen ? 'var(--color-primary)' : 'transparent'}">
+                      <span style="font-weight:800;min-width:24px">${o.id}</span>
+                      <span style="flex:1;font-size:0.82rem">${o.label}</span>
+                      <span style="font-weight:700;font-size:0.8rem;color:${oNet >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">${UI.formatCOP(oNet)}</span>
+                      ${isBest ? '<span style="font-size:0.75rem">🏆</span>' : ''}
+                      ${isChosen ? '<span style="font-size:0.75rem">👈</span>' : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : ''}
+
             ${feedbackText ? `
-              <div style="margin-top:16px;padding:14px 16px;border-radius:var(--radius-sm);background:rgba(88,86,214,0.08);border-left:4px solid var(--color-indigo)">
+              <div style="margin-top:12px;padding:14px 16px;border-radius:var(--radius-sm);background:rgba(88,86,214,0.08);border-left:4px solid var(--color-indigo)">
                 <div style="font-weight:700;font-size:0.82rem;color:var(--color-indigo);margin-bottom:6px">📚 Retroalimentación</div>
                 <div style="font-size:0.85rem;line-height:1.6;color:var(--text-secondary)">${feedbackText}</div>
+              </div>
+            ` : ''}
+            ${bestOpt?.feedback && bestOpt.id !== dec?.choice ? `
+              <div style="margin-top:8px;padding:14px 16px;border-radius:var(--radius-sm);background:rgba(52,199,89,0.06);border-left:4px solid var(--color-success)">
+                <div style="font-weight:700;font-size:0.82rem;color:var(--color-success);margin-bottom:6px">🏆 ¿Por qué "${bestOpt.id}" era la mejor?</div>
+                <div style="font-size:0.85rem;line-height:1.6;color:var(--text-secondary)">${bestOpt.feedback}</div>
               </div>
             ` : ''}
             <div class="waiting-state" style="padding:16px">
@@ -517,6 +555,23 @@
           </div>
         </div>
       `;
+    }
+
+    // --- Encontrar la mejor opción de un nodo ---
+    function findBestOption(options) {
+      if (!options || options.length === 0) return null;
+      return options.reduce((best, opt) => {
+        // Score compuesto: impacto financiero + suma BSC ponderada
+        const netOpt = (opt.revenue || 0) - (opt.cost || 0);
+        const bscOpt = Object.values(opt.bsc || {}).reduce((s, v) => s + v, 0);
+        const scoreOpt = netOpt / 1000000 + bscOpt * 2; // normalizar: 1M COP ~ 2 puntos BSC
+
+        const netBest = (best.revenue || 0) - (best.cost || 0);
+        const bscBest = Object.values(best.bsc || {}).reduce((s, v) => s + v, 0);
+        const scoreBest = netBest / 1000000 + bscBest * 2;
+
+        return scoreOpt > scoreBest ? opt : best;
+      });
     }
 
     // --- Vote option (non-deciders can suggest) ---
