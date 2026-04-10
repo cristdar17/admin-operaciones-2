@@ -83,20 +83,9 @@ const Engine = (() => {
      (áreas con 1 solo miembro descansan cada 3 decisiones)
   ---------------------------------------------------------- */
   function shouldRest(areaCode, companyId, students, decisions) {
-    if (areaCode === 'gerente') return false;
-
-    const members = students.filter(s => s.company_id === companyId && s.area_code === areaCode);
-    if (members.length > 1) return false; // Solo aplica para áreas de 1 persona
-
-    // Contar decisiones consecutivas sin descanso
-    const areaDecisions = decisions
-      .filter(d => d.company_id === companyId && d.area_code === areaCode)
-      .sort((a, b) => b.day - a.day);
-
-    // Descansar cada 3 decisiones consecutivas
-    if (areaDecisions.length > 0 && areaDecisions.length % 3 === 0) {
-      return true;
-    }
+    // Descanso deshabilitado - causaba deadlocks.
+    // El balanceo se maneja naturalmente porque no todas las áreas
+    // tienen decisiones todos los días.
     return false;
   }
 
