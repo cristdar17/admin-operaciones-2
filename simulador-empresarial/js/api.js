@@ -70,20 +70,94 @@ const API = (() => {
       });
     },
 
-    applyCrossEffect(company, area, bsc, cost = 0) {
-      return rpc('apply_cross_effect', { p_company: company, p_area: area, p_bsc: bsc, p_cost: cost });
-    },
-
-    applyEvent(day, type, title, desc, targetCompany, targetArea, cashDelta, bsc) {
-      return rpc('apply_event', {
-        p_day: day, p_type: type, p_title: title, p_desc: desc,
-        p_target_company: targetCompany, p_target_area: targetArea,
-        p_cash_delta: cashDelta, p_bsc: bsc
+    // Cross effect via REST directo
+    async applyCrossEffect(company, area, bscDeltas, cost = 0) {
+      const h = headers();
+      // Leer área actual
+      const rows = await query('areas', `select=*&company_id=eq.${company}&area_code=eq.${area}`);
+      if (!rows.length) return;
+      const a = rows[0];
+      const patch = {};
+      if (cost > 0) patch.spent = a.spent + cost;
+      patch.bsc_financial = Math.max(0, Math.min(100, a.bsc_financial + (bscDeltas.bsc_financial || 0)));
+      patch.bsc_customer  = Math.max(0, Math.min(100, a.bsc_customer  + (bscDeltas.bsc_customer  || 0)));
+      patch.bsc_internal  = Math.max(0, Math.min(100, a.bsc_internal  + (bscDeltas.bsc_internal  || 0)));
+      patch.bsc_learning  = Math.max(0, Math.min(100, a.bsc_learning  + (bscDeltas.bsc_learning  || 0)));
+      await fetch(`${base()}/areas?company_id=eq.${company}&area_code=eq.${area}`, {
+        method: 'PATCH', headers: h, body: JSON.stringify(patch)
       });
+      if (cost > 0) {
+        const comp = (await query('companies', `select=*&id=eq.${company}`))[0];
+        await fetch(`${base()}/companies?id=eq.${company}`, {
+          method: 'PATCH', headers: h, body: JSON.stringify({
+            total_costs: comp.total_costs + cost,
+            total_cash: comp.total_cash - cost
+          })
+        });
+      }
     },
 
-    recalcBSC(company) {
-      return rpc('recalc_company_bsc', { p_company: company });
+    // Evento externo via REST directo
+    async applyEvent(day, type, title, desc, targetCompany, targetArea, cashDelta, bscDeltas) {
+      const h = headers();
+      // Insertar evento
+      await fetch(`${base()}/events`, {
+        method: 'POST', headers: h, body: JSON.stringify({
+          day, event_type: type, title, description: desc,
+          target_company: targetCompany, target_area: targetArea,
+          cash_delta: cashDelta, bsc_deltas: bscDeltas
+        })
+      });
+
+      // Aplicar a área(s) si se especifica
+      if (targetArea) {
+        const filter = targetCompany
+          ? `company_id=eq.${targetCompany}&area_code=eq.${targetArea}`
+          : `area_code=eq.${targetArea}`;
+        const rows = await query('areas', `select=*&${filter}`);
+        for (const a of rows) {
+          await fetch(`${base()}/areas?company_id=eq.${a.company_id}&area_code=eq.${a.area_code}`, {
+            method: 'PATCH', headers: h, body: JSON.stringify({
+              spent:   cashDelta < 0 ? a.spent + Math.abs(cashDelta) : a.spent,
+              revenue: cashDelta > 0 ? a.revenue + cashDelta : a.revenue,
+              bsc_financial: Math.max(0, Math.min(100, a.bsc_financial + (bscDeltas.bsc_financial || 0))),
+              bsc_customer:  Math.max(0, Math.min(100, a.bsc_customer  + (bscDeltas.bsc_customer  || 0))),
+              bsc_internal:  Math.max(0, Math.min(100, a.bsc_internal  + (bscDeltas.bsc_internal  || 0))),
+              bsc_learning:  Math.max(0, Math.min(100, a.bsc_learning  + (bscDeltas.bsc_learning  || 0)))
+            })
+          });
+        }
+      }
+
+      // Aplicar cash delta a empresa(s)
+      if (cashDelta !== 0) {
+        const compFilter = targetCompany ? `id=eq.${targetCompany}` : `id=gt.0`;
+        const comps = await query('companies', `select=*&${compFilter}`);
+        for (const c of comps) {
+          await fetch(`${base()}/companies?id=eq.${c.id}`, {
+            method: 'PATCH', headers: h, body: JSON.stringify({
+              total_cash:    c.total_cash + cashDelta,
+              total_costs:   cashDelta < 0 ? c.total_costs + Math.abs(cashDelta) : c.total_costs,
+              total_revenue: cashDelta > 0 ? c.total_revenue + cashDelta : c.total_revenue
+            })
+          });
+        }
+      }
+    },
+
+    // Recalc BSC via REST directo
+    async recalcBSC(company) {
+      const areas = await query('areas', `select=bsc_financial,bsc_customer,bsc_internal,bsc_learning&company_id=eq.${company}`);
+      if (!areas.length) return;
+      const avg = (key) => Math.round(areas.reduce((s, a) => s + a[key], 0) / areas.length);
+      await fetch(`${base()}/companies?id=eq.${company}`, {
+        method: 'PATCH', headers: headers(), body: JSON.stringify({
+          bsc_financial: avg('bsc_financial'),
+          bsc_customer:  avg('bsc_customer'),
+          bsc_internal:  avg('bsc_internal'),
+          bsc_learning:  avg('bsc_learning')
+        })
+      });
     },
 
     // --- Control del juego ---
