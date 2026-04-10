@@ -537,14 +537,33 @@
 
     // --- Timer display ---
     function updateTimerDisplay() {
-      if (!gameData || gameData.state.status !== 'playing') {
-        document.getElementById('timer-display').textContent = '--:--';
+      const el = document.getElementById('timer-display');
+      if (!gameData) { el.textContent = '--:--'; return; }
+
+      const status = gameData.state.status;
+      const startedStr = gameData.state.day_started_at;
+
+      if (status === 'paused') {
+        el.textContent = '⏸ PAUSA';
+        el.style.color = 'var(--color-warning)';
         return;
       }
-      const started = new Date(gameData.state.day_started_at).getTime();
+      if (status === 'ended') {
+        el.textContent = '🏁 FIN';
+        el.style.color = 'var(--text-primary)';
+        return;
+      }
+      if (status !== 'playing' || !startedStr) {
+        el.textContent = '--:--';
+        el.style.color = 'var(--text-primary)';
+        return;
+      }
+
+      const started = new Date(startedStr).getTime();
+      if (isNaN(started)) { el.textContent = '--:--'; return; }
+
       const elapsed = (Date.now() - started) / 1000;
       const remaining = Math.max(0, CONFIG.SECONDS_PER_DAY - elapsed);
-      const el = document.getElementById('timer-display');
       el.textContent = UI.formatTimer(Math.round(remaining));
       el.style.color = remaining < 30 ? 'var(--color-danger)' : 'var(--text-primary)';
     }

@@ -89,7 +89,8 @@
     <div class="company-toggle" style="margin-bottom:12px">
       <button onclick="setCompany(1)" id="toggle-1" class="active-1">🍗 Fritanga Express</button>
       <button onclick="setCompany(2)" id="toggle-2">🥩 Parrilla & CO</button>
-      <button onclick="setCompany(0)" id="toggle-0" style="margin-left:auto;font-size:0.78rem">📊 Comparar</button>
+      <button onclick="setCompany(0)" id="toggle-0" style="font-size:0.78rem">📊 Comparar</button>
+      <button onclick="setCompany(-1)" id="toggle-players" style="font-size:0.78rem">👤 Jugadores</button>
     </div>
 
     <!-- Area tabs -->
@@ -154,6 +155,8 @@
       document.getElementById('toggle-1').className = id === 1 ? 'active-1' : '';
       document.getElementById('toggle-2').className = id === 2 ? 'active-2' : '';
       document.getElementById('toggle-0').style.background = id === 0 ? 'rgba(255,255,255,0.4)' : '';
+      document.getElementById('toggle-players').style.background = id === -1 ? 'rgba(255,255,255,0.4)' : '';
+      document.getElementById('area-tabs').style.display = id === -1 ? 'none' : 'flex';
       renderContent();
     }
 
@@ -203,12 +206,103 @@
       if (!gameData) return;
       const el = document.getElementById('monitor-content');
 
+      if (selectedCompany === -1) {
+        renderPlayers(el);
+        return;
+      }
       if (selectedCompany === 0) {
         renderComparison(el);
         return;
       }
 
       renderTreeView(el, selectedCompany, selectedArea);
+    }
+
+    // --- Vista individual de jugadores ---
+    function renderPlayers(container) {
+      const students = gameData.students || [];
+      const decisions = gameData.decisions || [];
+      const areas = gameData.areas || [];
+
+      // Calcular stats por estudiante
+      const playerStats = students.map(s => {
+        const playerDecs = decisions.filter(d => d.decided_by === s.id);
+        const totalCost = playerDecs.reduce((sum, d) => sum + (d.cost_amount || 0), 0);
+        const totalRevenue = playerDecs.reduce((sum, d) => sum + (d.revenue_amount || 0), 0);
+        const net = totalRevenue - totalCost;
+        const area = areas.find(a => a.company_id === s.company_id && a.area_code === s.area_code);
+        const company = CONFIG.COMPANIES.find(c => c.id === s.company_id);
+        const areaInfo = s.area_code === 'gerente' ? { icon: '👔', name: 'Gerente' } :
+          CONFIG.AREAS.find(a => a.code === s.area_code) || { icon: '❓', name: s.area_code };
+
+        return {
+          ...s, playerDecs, totalCost, totalRevenue, net, area, company, areaInfo
+        };
+      }).sort((a, b) => b.net - a.net); // Ordenar por utilidad neta
+
+      container.innerHTML = `
+        <div class="glass-dark card" style="margin-bottom:12px">
+          <div style="font-weight:800;margin-bottom:12px;font-size:1rem">👤 Gestión Individual</div>
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:12px">
+            Ordenados por impacto neto (ingresos - gastos de sus decisiones)
+          </div>
+
+          ${playerStats.map((p, i) => `
+            <div class="glass-dark card" style="padding:12px;margin-bottom:8px;border-left:3px solid ${p.company?.color || '#666'}">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <span style="font-size:0.72rem;font-weight:800;color:rgba(255,255,255,0.4);min-width:20px">#${i+1}</span>
+                <span style="font-size:1.2rem">${p.company?.emoji || ''}</span>
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:0.9rem">${p.name}</div>
+                  <div style="font-size:0.72rem;color:rgba(255,255,255,0.5)">${p.areaInfo.icon} ${p.areaInfo.name}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:800;font-size:1rem;color:${p.net >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">
+                    ${UI.formatCOP(p.net)}
+                  </div>
+                  <div style="font-size:0.68rem;color:rgba(255,255,255,0.4)">impacto neto</div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+                <span class="pill pill-sm" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7)">
+                  📊 ${p.decisions_made} decisiones
+                </span>
+                <span class="pill pill-sm" style="background:rgba(52,199,89,0.15);color:var(--color-success)">
+                  +${UI.formatCOP(p.totalRevenue)}
+                </span>
+                <span class="pill pill-sm" style="background:rgba(255,59,48,0.15);color:var(--color-danger)">
+                  -${UI.formatCOP(p.totalCost)}
+                </span>
+              </div>
+
+              ${p.area ? `
+                <div style="display:flex;gap:12px;font-size:0.72rem;color:rgba(255,255,255,0.5)">
+                  <span>Presupuesto área: ${UI.formatCOP(p.area.budget)}</span>
+                  <span>Gastado: ${UI.formatCOP(p.area.spent)}</span>
+                  <span>Disponible: <span style="color:${(p.area.budget - p.area.spent + p.area.revenue) > 0 ? 'var(--color-success)' : 'var(--color-danger)'}">${UI.formatCOP(p.area.budget - p.area.spent + p.area.revenue)}</span></span>
+                </div>
+              ` : ''}
+
+              ${p.playerDecs.length > 0 ? `
+                <div style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">
+                  <div style="font-size:0.7rem;font-weight:600;color:rgba(255,255,255,0.4);margin-bottom:4px">Últimas decisiones:</div>
+                  ${p.playerDecs.slice(-5).reverse().map(d => {
+                    const dNet = (d.revenue_amount || 0) - (d.cost_amount || 0);
+                    return `
+                      <div style="display:flex;align-items:center;gap:6px;font-size:0.72rem;padding:2px 0">
+                        <span style="color:rgba(255,255,255,0.4);min-width:32px">Día ${d.day}</span>
+                        <span style="flex:1;color:rgba(255,255,255,0.6)">${d.narrative ? d.narrative.substring(0, 50) + '...' : d.node_id}</span>
+                        <span style="font-weight:700;color:${dNet >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">${UI.formatCOP(dNet)}</span>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              ` : '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:6px">Sin decisiones aún</div>'}
+            </div>
+          `).join('')}
+        </div>
+      `;
     }
 
     // --- Tree visualization ---
