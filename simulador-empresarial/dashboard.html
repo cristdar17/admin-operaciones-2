@@ -62,6 +62,19 @@
     <!-- Scoreboard -->
     <div class="glass card scoreboard" style="margin-bottom:20px" id="scoreboard"></div>
 
+    <!-- Reunion buttons (Feature 5) -->
+    <div class="glass card" style="margin-bottom:16px">
+      <div class="section-header">
+        <div class="section-title">🤝 Reunión de Directivos</div>
+        <span style="font-size:0.75rem;color:var(--text-secondary)">Pausa para que se coordinen (60 seg)</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="callReunion(1)">🍗 Reunión Fritanga</button>
+        <button class="btn btn-primary" onclick="callReunion(2)">🥩 Reunión Parrilla</button>
+        <button class="btn btn-warning btn-sm" onclick="endReunion()">Terminar reunión</button>
+      </div>
+    </div>
+
     <!-- Event buttons -->
     <div class="glass card" style="margin-bottom:20px">
       <div class="section-header">
@@ -481,6 +494,28 @@
           refresh();
         });
       }
+    }
+
+    // --- Reunion de directivos (Feature 5) ---
+    async function callReunion(companyId) {
+      const until = new Date(Date.now() + 60000).toISOString(); // 60 segundos
+      const reunionData = JSON.stringify({ type: 'reunion', company: companyId, until });
+      const h = { 'apikey': CONFIG.SUPABASE_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+      await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/game_state?key=eq.active_event`, {
+        method: 'PATCH', headers: h, body: JSON.stringify({ value: reunionData })
+      });
+      const compName = companyId === 1 ? 'Fritanga Express' : 'Parrilla & CO';
+      UI.toast(`🤝 Reunión convocada para ${compName} (60 seg)`, 'success');
+      await refresh();
+    }
+
+    async function endReunion() {
+      const h = { 'apikey': CONFIG.SUPABASE_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+      await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/game_state?key=eq.active_event`, {
+        method: 'PATCH', headers: h, body: JSON.stringify({ value: '' })
+      });
+      UI.toast('Reunión terminada', 'info');
+      await refresh();
     }
 
     // --- Auto-advance ---

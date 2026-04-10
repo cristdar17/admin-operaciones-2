@@ -55,8 +55,21 @@
       </div>
     </div>
 
+    <!-- REUNION banner (feature 5) -->
+    <div id="reunion-banner" style="display:none;margin-bottom:12px">
+      <div class="glass card" style="background:rgba(88,86,214,0.15);border:2px solid var(--color-indigo);padding:16px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:6px">🤝</div>
+        <div style="font-weight:800;font-size:1.1rem;color:var(--color-indigo)">¡REUNIÓN DE DIRECTIVOS!</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">El gerente convocó una reunión. Coordinen entre áreas antes de decidir.</div>
+        <div id="reunion-timer" style="font-family:var(--font-mono);font-size:1.5rem;font-weight:800;margin-top:8px;color:var(--color-indigo)"></div>
+      </div>
+    </div>
+
     <!-- Notifications -->
     <div id="notifications" style="margin-bottom:12px"></div>
+
+    <!-- Cross-area alerts with reply (feature 4) -->
+    <div id="cross-alerts" style="margin-bottom:12px"></div>
 
     <!-- Game layout -->
     <div class="game-layout">
@@ -106,6 +119,17 @@
         <div class="glass card">
           <div class="card-title">👥 Mi equipo de área</div>
           <div id="team-list" style="font-size:0.85rem"></div>
+        </div>
+
+        <!-- Messages from other areas (feature 4) -->
+        <div class="glass card">
+          <div class="card-title">💬 Mensajes entre áreas</div>
+          <div id="area-messages" style="max-height:180px;overflow-y:auto;font-size:0.82rem"></div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input type="text" id="msg-input" class="input" placeholder="Mensaje a tu empresa..." style="padding:8px 12px;font-size:0.82rem" maxlength="120"
+              onkeypress="if(event.key==='Enter')sendMessage()">
+            <button class="btn btn-primary btn-sm" onclick="sendMessage()" style="white-space:nowrap">Enviar</button>
+          </div>
         </div>
 
         <!-- Decision History -->
@@ -490,9 +514,23 @@
       if (btn) btn.disabled = selectedOptions.length === 0;
     }
 
-    // --- Confirm decision ---
+    // --- Confirm decision (con consulta obligatoria - feature 2) ---
     async function confirmDecision() {
       if (selectedOptions.length === 0) return;
+
+      // Feature 2: mostrar advertencia de cross-effects
+      const myArea = gameData.areas.find(a => a.company_id === session.company && a.area_code === session.area);
+      const node = Engine.getCurrentNode(session.area, myArea?.current_node);
+      if (node && !confirmDecision._crossAcknowledged) {
+        const warnings = getCrossWarnings(node, selectedOptions);
+        if (warnings.length > 0) {
+          const warningText = warnings.map(w => `${w.icon} ${w.area}: ${w.message}`).join('\n');
+          const ok = confirm(`⚠️ Tu decisión AFECTA a estas áreas:\n\n${warningText}\n\n¿Ya coordinaste con ellos? Confirmar de todas formas?`);
+          if (!ok) return;
+          confirmDecision._crossAcknowledged = true;
+        }
+      }
+      confirmDecision._crossAcknowledged = false;
 
       const btn = document.getElementById('btn-confirm');
       btn.disabled = true;
@@ -719,6 +757,179 @@
         </div>
       `;
     }
+
+    // ============================================================
+    // FEATURE 4: Alertas cruzadas con recomendación
+    // ============================================================
+    function renderCrossAlerts(day) {
+      const el = document.getElementById('cross-alerts');
+      const alerts = [];
+
+      // Decisiones de hoy de MI empresa que tienen crossEffects hacia MI área
+      const todayDecisions = gameData.decisions.filter(d =>
+        d.company_id === session.company && d.day === day && d.area_code !== session.area
+      );
+      todayDecisions.forEach(d => {
+        try {
+          const cross = JSON.parse(d.cross_effects || '[]');
+          cross.forEach(ce => {
+            if (ce.area === session.area) {
+              const fromArea = CONFIG.AREAS.find(a => a.code === d.area_code) || { icon: '❓', name: d.area_code };
+              alerts.push({
+                fromArea: d.area_code,
+                fromIcon: fromArea.icon,
+                fromName: fromArea.name,
+                message: ce.message || 'Decisión que impacta tu área',
+                bsc: ce.bsc || {}
+              });
+            }
+          });
+        } catch (e) {}
+      });
+
+      if (alerts.length === 0) { el.innerHTML = ''; return; }
+
+      el.innerHTML = alerts.map(a => {
+        const bscImpacts = Object.entries(a.bsc)
+          .filter(([k, v]) => v !== 0)
+          .map(([k, v]) => `<span class="pill pill-sm" style="background:${v > 0 ? 'rgba(52,199,89,0.1)' : 'rgba(255,59,48,0.1)'};color:${v > 0 ? 'var(--color-success)' : 'var(--color-danger)'}">${k.replace('bsc_', '')} ${v > 0 ? '+' : ''}${v}</span>`)
+          .join(' ');
+        return `
+          <div class="glass card" style="padding:12px;border-left:4px solid var(--color-warning);margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:1.2rem">${a.fromIcon}</span>
+              <strong style="font-size:0.85rem">${a.fromName}</strong>
+              <span style="font-size:0.75rem;color:var(--text-secondary)">afectó tu área</span>
+            </div>
+            <div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:6px">${a.message}</div>
+            ${bscImpacts ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">${bscImpacts}</div>` : ''}
+            <div style="display:flex;gap:6px">
+              <input type="text" class="input" placeholder="Responder a ${a.fromName}..." style="padding:6px 10px;font-size:0.78rem;flex:1" id="reply-${a.fromArea}" maxlength="100">
+              <button class="btn btn-sm btn-primary" onclick="sendReply('${a.fromArea}')">💬</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Enviar respuesta a otra área
+    async function sendReply(toArea) {
+      const input = document.getElementById(`reply-${toArea}`);
+      const msg = input?.value?.trim();
+      if (!msg) return;
+      input.value = '';
+
+      const fromArea = CONFIG.AREAS.find(a => a.code === session.area) || { icon: '❓', name: session.area };
+      const day = parseInt(gameData.state.day) || 0;
+
+      try {
+        await API.applyEvent(day, 'message', `${fromArea.icon} ${session.name} → ${toArea}`, msg,
+          session.company, toArea, 0, {});
+        UI.toast('💬 Mensaje enviado', 'success');
+      } catch (e) {
+        UI.toast('Error al enviar', 'error');
+      }
+    }
+
+    // ============================================================
+    // FEATURE 4b: Mensajes entre áreas (chat de empresa)
+    // ============================================================
+    let lastMsgCount = 0;
+    function renderMessages() {
+      const msgs = (gameData.events || [])
+        .filter(e => e.event_type === 'message' && e.target_company === session.company)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 15);
+
+      if (msgs.length === lastMsgCount) return;
+      lastMsgCount = msgs.length;
+
+      const el = document.getElementById('area-messages');
+      el.innerHTML = msgs.length > 0 ? msgs.map(m => `
+        <div style="padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.04)">
+          <div style="font-weight:600;font-size:0.75rem">${m.title}</div>
+          <div style="color:var(--text-secondary)">${m.description}</div>
+        </div>
+      `).join('') : '<span style="color:var(--text-tertiary)">Sin mensajes aún. Coordina con tu equipo.</span>';
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('msg-input');
+      const msg = input?.value?.trim();
+      if (!msg) return;
+      input.value = '';
+
+      const areaInfo = session.area === 'gerente' ? { icon: '👔', name: 'Gerente' } :
+        CONFIG.AREAS.find(a => a.code === session.area) || { icon: '❓', name: session.area };
+      const day = parseInt(gameData.state.day) || 0;
+
+      try {
+        await API.applyEvent(day, 'message', `${areaInfo.icon} ${session.name}`, msg,
+          session.company, null, 0, {});
+        UI.toast('💬 Enviado', 'success');
+        await refreshState();
+      } catch (e) {
+        UI.toast('Error al enviar', 'error');
+      }
+    }
+
+    // ============================================================
+    // FEATURE 5: Reunión de directivos
+    // ============================================================
+    function checkReunion() {
+      const reunionState = gameData.state.active_event;
+      const banner = document.getElementById('reunion-banner');
+      if (!reunionState) { banner.style.display = 'none'; return; }
+
+      try {
+        const reunion = JSON.parse(reunionState);
+        if (reunion.type === 'reunion' && reunion.company === session.company) {
+          const remaining = Math.max(0, Math.round((new Date(reunion.until) - Date.now()) / 1000));
+          if (remaining > 0) {
+            banner.style.display = 'block';
+            document.getElementById('reunion-timer').textContent = UI.formatTimer(remaining);
+          } else {
+            banner.style.display = 'none';
+          }
+        } else {
+          banner.style.display = 'none';
+        }
+      } catch (e) {
+        banner.style.display = 'none';
+      }
+    }
+
+    // ============================================================
+    // FEATURE 2: Consulta obligatoria (cross-effects requieren visto bueno)
+    // Cuando tu decisión afecta a otra área, muestra advertencia antes de confirmar
+    // ============================================================
+    function getCrossWarnings(node, selectedOpts) {
+      const warnings = [];
+      selectedOpts.forEach(optId => {
+        const opt = node.options.find(o => o.id === optId);
+        if (opt?.crossEffects?.length > 0) {
+          opt.crossEffects.forEach(ce => {
+            const targetArea = CONFIG.AREAS.find(a => a.code === ce.area) || { icon: '❓', name: ce.area };
+            warnings.push({
+              area: targetArea.name,
+              icon: targetArea.icon,
+              message: ce.message || 'Esta decisión impacta otra área'
+            });
+          });
+        }
+      });
+      return warnings;
+    }
+
+    // Hook into updateUI to render new features
+    const _originalUpdateUI = updateUI;
+    updateUI = function() {
+      _originalUpdateUI();
+      const day = parseInt(gameData?.state?.day) || 0;
+      renderCrossAlerts(day);
+      renderMessages();
+      checkReunion();
+    };
 
     // Periodic timer update
     setInterval(updateTimer, 1000);
