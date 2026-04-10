@@ -637,6 +637,50 @@
               `;
             }).join('')}
           </div>
+
+          <!-- Gestión individual del equipo -->
+          <div style="margin-top:16px">
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:10px">👤 Rendimiento individual</div>
+            ${(() => {
+              const myStudents = gameData.students.filter(s => s.company_id === session.company && s.area_code !== 'gerente');
+              const stats = myStudents.map(s => {
+                const decs = gameData.decisions.filter(d => d.decided_by === s.id);
+                const totalCost = decs.reduce((sum, d) => sum + (d.cost_amount || 0), 0);
+                const totalRev = decs.reduce((sum, d) => sum + (d.revenue_amount || 0), 0);
+                const net = totalRev - totalCost;
+                const areaInfo = CONFIG.AREAS.find(a => a.code === s.area_code) || { icon: '❓', name: s.area_code };
+                return { ...s, decs, totalCost, totalRev, net, areaInfo };
+              }).sort((a, b) => a.net - b.net); // peor primero para que el gerente sepa a quién ayudar
+
+              return stats.map(p => {
+                const needsHelp = p.net < 0;
+                return `
+                  <div class="glass" style="padding:10px 12px;margin-bottom:6px;border-radius:10px;border-left:3px solid ${needsHelp ? 'var(--color-danger)' : 'var(--color-success)'}">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span>${p.areaInfo.icon}</span>
+                      <div style="flex:1">
+                        <div style="font-weight:600;font-size:0.82rem">${p.name} ${needsHelp ? '🆘' : ''}</div>
+                        <div style="font-size:0.7rem;color:var(--text-tertiary)">${p.areaInfo.name} · ${p.decisions_made} decisiones</div>
+                      </div>
+                      <div style="text-align:right">
+                        <div style="font-weight:800;font-size:0.88rem;color:${p.net >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}">
+                          ${UI.formatCOP(p.net)}
+                        </div>
+                        <div style="font-size:0.65rem;color:var(--text-tertiary)">
+                          +${UI.formatCOP(p.totalRev)} / -${UI.formatCOP(p.totalCost)}
+                        </div>
+                      </div>
+                    </div>
+                    ${p.decs.length > 0 ? `
+                      <div style="font-size:0.7rem;color:var(--text-tertiary);margin-top:4px;border-top:1px solid rgba(0,0,0,0.05);padding-top:4px">
+                        Última: Día ${p.decs[p.decs.length-1].day} — ${p.decs[p.decs.length-1].narrative?.substring(0, 60) || ''}...
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('');
+            })()}
+          </div>
         </div>
 
         <!-- Gerente's own decision -->
