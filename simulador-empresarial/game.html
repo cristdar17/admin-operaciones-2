@@ -121,6 +121,17 @@
           <div id="team-list" style="font-size:0.85rem"></div>
         </div>
 
+        <!-- Help request button -->
+        <div class="glass card" style="padding:12px;text-align:center" id="help-section">
+          <button class="btn btn-warning btn-sm" onclick="requestHelp()" style="width:100%">
+            🆘 Pedir ayuda a mi empresa
+          </button>
+          <div id="help-status" style="font-size:0.72rem;color:var(--text-tertiary);margin-top:4px"></div>
+        </div>
+
+        <!-- Active help requests from my company -->
+        <div id="help-requests"></div>
+
         <!-- Messages from other areas (feature 4) -->
         <div class="glass card">
           <div class="card-title">💬 Mensajes entre áreas</div>
@@ -434,18 +445,31 @@
 
           ${!isMyTurn ? `
             <div class="notification-bar cross-effect" style="margin-bottom:16px">
-              <span>👀</span>
-              <span>Es el turno de <strong>${decider?.name || '???'}</strong> para decidir. Puedes discutir con tu equipo.</span>
+              <span>🗳️</span>
+              <span>Es el turno de <strong>${decider?.name || '???'}</strong>. <strong>¡Sugiere tu opción favorita!</strong></span>
             </div>
-          ` : `
-            <div class="notification-bar event" style="margin-bottom:16px">
+          ` : (() => {
+            const votes = getTeamVotes(day, session.area);
+            const voteSummary = votes.length > 0
+              ? `<div class="notification-bar" style="background:rgba(88,86,214,0.1);border:1px solid rgba(88,86,214,0.2);margin-bottom:12px">
+                  <span>🗳️</span>
+                  <span>Tu equipo sugiere: ${votes.map(v => '<strong>' + v.title.split('"')[1] + '</strong>').join(', ')}</span>
+                </div>`
+              : '';
+            return `
+            <div class="notification-bar event" style="margin-bottom:12px">
               <span>🎯</span>
               <span><strong>¡Es tu turno!</strong> Elige sabiamente — tu decisión afecta a toda la empresa.</span>
             </div>
-          `}
+            ${voteSummary}
+          `;
+          })()}
 
           <div class="options-grid ${colsClass}" id="options-container">
-            ${node.options.map(opt => renderOption(opt, node.type, isMyTurn)).join('')}
+            ${isMyTurn
+              ? node.options.map(opt => renderOption(opt, node.type, true)).join('')
+              : node.options.map(opt => renderVoteOption(opt, day)).join('')
+            }
           </div>
 
           ${isMyTurn ? `
@@ -478,6 +502,28 @@
             <span class="option-cost ${costClass}">${costLabel}</span>
             ${opt.crossEffects && opt.crossEffects.length > 0 ?
               `<span class="pill pill-sm" style="background:rgba(255,149,0,0.1);color:var(--color-warning)">⚡ Afecta otras áreas</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // --- Vote option (non-deciders can suggest) ---
+    function renderVoteOption(opt, day) {
+      const costNet = (opt.revenue || 0) - (opt.cost || 0);
+      const costClass = costNet > 0 ? 'positive' : costNet < 0 ? 'negative' : 'neutral';
+      const costLabel = costNet > 0 ? `+${UI.formatCOP(costNet)}` :
+        costNet < 0 ? UI.formatCOP(costNet) : 'Neutro';
+      const alreadyVoted = castTeamVote._voted;
+
+      return `
+        <div class="option-card" style="cursor:${alreadyVoted ? 'default' : 'pointer'};${alreadyVoted ? 'opacity:0.7' : ''}"
+             onclick="${alreadyVoted ? '' : `castTeamVote('${opt.id}')`}">
+          <div class="option-id">${opt.id}</div>
+          <div class="option-label">${opt.label}</div>
+          <div class="option-desc">${opt.description}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+            <span class="option-cost ${costClass}">${costLabel}</span>
+            ${!alreadyVoted ? `<span class="pill pill-sm" style="background:rgba(88,86,214,0.1);color:var(--color-indigo)">🗳️ Sugerir esta</span>` : ''}
           </div>
         </div>
       `;
@@ -680,6 +726,29 @@
                 `;
               }).join('');
             })()}
+          </div>
+
+          <!-- Transferir presupuesto a áreas -->
+          <div style="margin-top:16px">
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:10px">💸 Transferir presupuesto a un área</div>
+            <div class="glass" style="padding:12px;border-radius:10px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+                <div style="flex:1;min-width:120px">
+                  <label style="font-size:0.7rem;font-weight:600;color:var(--text-secondary)">Área destino</label>
+                  <select class="input" id="transfer-area" style="padding:8px 10px;font-size:0.82rem">
+                    ${CONFIG.AREAS.map(a => `<option value="${a.code}">${a.icon} ${a.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div style="min-width:100px">
+                  <label style="font-size:0.7rem;font-weight:600;color:var(--text-secondary)">Monto (M)</label>
+                  <input type="number" class="input" id="transfer-amount" placeholder="Ej: 10" min="1" max="50" style="padding:8px 10px;font-size:0.82rem">
+                </div>
+                <button class="btn btn-success btn-sm" onclick="transferBudget()">💸 Transferir</button>
+              </div>
+              <div style="font-size:0.7rem;color:var(--text-tertiary);margin-top:6px">
+                Sale de la caja general de la empresa. Máximo $50M por transferencia.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -965,6 +1034,126 @@
       return warnings;
     }
 
+    // ============================================================
+    // TRANSFERENCIA DE PRESUPUESTO (gerente)
+    // ============================================================
+    async function transferBudget() {
+      const areaCode = document.getElementById('transfer-area').value;
+      const amountM = parseInt(document.getElementById('transfer-amount').value);
+      if (!areaCode || !amountM || amountM < 1 || amountM > 50) {
+        UI.toast('Monto entre 1 y 50 millones', 'warning');
+        return;
+      }
+      const amount = amountM * 1000000;
+      const areaInfo = CONFIG.AREAS.find(a => a.code === areaCode);
+      const day = parseInt(gameData.state.day) || 0;
+
+      try {
+        const h = { 'apikey': CONFIG.SUPABASE_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+        const base = CONFIG.SUPABASE_URL + '/rest/v1';
+
+        // Restar de la caja de la empresa
+        const comp = gameData.companies.find(c => c.id === session.company);
+        if (comp.total_cash < amount) {
+          UI.toast('No hay suficiente caja', 'error');
+          return;
+        }
+        await fetch(`${base}/companies?id=eq.${session.company}`, {
+          method: 'PATCH', headers: h, body: JSON.stringify({
+            total_cash: comp.total_cash - amount,
+            total_costs: comp.total_costs + amount
+          })
+        });
+
+        // Sumar al presupuesto del área
+        const area = gameData.areas.find(a => a.company_id === session.company && a.area_code === areaCode);
+        await fetch(`${base}/areas?company_id=eq.${session.company}&area_code=eq.${areaCode}`, {
+          method: 'PATCH', headers: h, body: JSON.stringify({
+            budget: area.budget + amount
+          })
+        });
+
+        // Registrar como mensaje
+        await API.applyEvent(day, 'message', `👔 Gerente → ${areaInfo.icon} ${areaInfo.name}`,
+          `Transferencia de ${UI.formatCOP(amount)} al presupuesto de ${areaInfo.name}`,
+          session.company, areaCode, 0, {});
+
+        document.getElementById('transfer-amount').value = '';
+        UI.toast(`💸 ${UI.formatCOP(amount)} transferidos a ${areaInfo.name}`, 'success');
+        await refreshState();
+      } catch (e) {
+        UI.toast('Error: ' + e.message, 'error');
+      }
+    }
+
+    // ============================================================
+    // SOLICITUD DE AYUDA
+    // ============================================================
+    async function requestHelp() {
+      const areaInfo = session.area === 'gerente' ? { icon: '👔', name: 'Gerente' } :
+        CONFIG.AREAS.find(a => a.code === session.area) || { icon: '❓', name: session.area };
+      const day = parseInt(gameData.state.day) || 0;
+
+      try {
+        await API.applyEvent(day, 'help_request',
+          `🆘 ${areaInfo.icon} ${session.name} pide ayuda`,
+          `El área de ${areaInfo.name} necesita apoyo. ¡Coordinen por el chat!`,
+          session.company, null, 0, {});
+        UI.toast('🆘 Solicitud de ayuda enviada a toda la empresa', 'warning');
+        document.getElementById('help-status').textContent = '✓ Ayuda solicitada';
+      } catch (e) {
+        UI.toast('Error al pedir ayuda', 'error');
+      }
+    }
+
+    function renderHelpRequests() {
+      const el = document.getElementById('help-requests');
+      const day = parseInt(gameData?.state?.day) || 0;
+      const helps = (gameData.events || [])
+        .filter(e => e.event_type === 'help_request' && e.target_company === session.company && e.day >= day - 1)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 3);
+
+      if (helps.length === 0) { el.innerHTML = ''; return; }
+
+      el.innerHTML = helps.map(h => `
+        <div class="glass card" style="padding:10px 12px;margin-bottom:6px;border-left:3px solid var(--color-danger)">
+          <div style="font-weight:700;font-size:0.82rem">${h.title}</div>
+          <div style="font-size:0.75rem;color:var(--text-secondary)">${h.description}</div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // VOTO DEL EQUIPO (miembros no-decisores ven opciones y pueden votar)
+    // ============================================================
+    // Los votos se guardan como eventos tipo 'team_vote'
+    async function castTeamVote(optionId) {
+      const day = parseInt(gameData.state.day) || 0;
+      const areaInfo = CONFIG.AREAS.find(a => a.code === session.area) || { icon: '❓', name: session.area };
+
+      try {
+        await API.applyEvent(day, 'team_vote',
+          `🗳️ ${session.name} sugiere "${optionId}"`,
+          `Voto de ${session.name} (${areaInfo.name}) por la opción ${optionId}`,
+          session.company, session.area, 0, {});
+        UI.toast(`🗳️ Sugerencia "${optionId}" enviada al decisor`, 'success');
+        // Marcar que ya votó
+        castTeamVote._voted = true;
+        lastRenderedDay = -1; // Forzar re-render
+        await refreshState();
+      } catch (e) {
+        UI.toast('Error al votar', 'error');
+      }
+    }
+    castTeamVote._voted = false;
+
+    function getTeamVotes(day, areaCode) {
+      return (gameData.events || [])
+        .filter(e => e.event_type === 'team_vote' && e.target_company === session.company
+          && e.target_area === areaCode && e.day === day);
+    }
+
     // Hook into updateUI to render new features
     const _originalUpdateUI = updateUI;
     updateUI = function() {
@@ -973,6 +1162,7 @@
       renderCrossAlerts(day);
       renderMessages();
       checkReunion();
+      renderHelpRequests();
     };
 
     // Periodic timer update
