@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Textiles del Otún — Parcial PL v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--card:#151d30;--card2:#1a2540;
+  --amber:#f59e0b;--amber-d:#d97706;--amber-l:#fbbf24;
+  --green:#10b981;--green-d:#059669;--red:#f43f5e;--red-d:#e11d48;
+  --blue:#3b82f6;--purple:#8b5cf6;--teal:#14b8a6;--pink:#ec4899;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --radius:14px;--shadow:0 8px 32px rgba(0,0,0,.5);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+}
+h1,h2,h3{font-family:'Playfair Display',serif}
+
+/* ===== HUD (Header) ===== */
+.hud{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(10,14,26,.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  display:none;padding:.6rem 1.2rem;
+  align-items:center;justify-content:space-between;
+}
+.hud.active{display:flex}
+.hud-money{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:1.15rem}
+.hud-money .symbol{color:var(--amber);font-size:1.3rem}
+.hud-money .amount{font-variant-numeric:tabular-nums;transition:color .3s}
+.hud-chapter{font-size:.8rem;color:var(--text3);text-align:center}
+.hud-timer{font-size:1.1rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.hud-timer.ok{color:var(--green)}.hud-timer.warn{color:var(--amber)}.hud-timer.danger{color:var(--red);animation:pulse 1s infinite}
+
+/* ===== MONEY FLOAT ===== */
+.money-float{
+  position:fixed;top:55px;left:50%;transform:translateX(-50%);
+  font-size:1.6rem;font-weight:900;z-index:200;
+  pointer-events:none;animation:floatUp 1.8s ease-out forwards;
+  text-shadow:0 2px 12px rgba(0,0,0,.7);
+}
+.money-float.pos{color:var(--green)}
+.money-float.neg{color:var(--red)}
+@keyframes floatUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-60px)}}
+
+/* ===== TOASTS ===== */
+#toasts{position:fixed;top:60px;right:1rem;z-index:300;display:flex;flex-direction:column;gap:.5rem}
+.toast{
+  padding:.7rem 1.1rem;border-radius:10px;font-weight:600;font-size:.88rem;
+  max-width:380px;box-shadow:var(--shadow);
+  transform:translateX(120%);opacity:0;transition:all .4s cubic-bezier(.4,0,.2,1);
+}
+.toast.show{transform:translateX(0);opacity:1}
+.toast.info{background:var(--blue);color:#fff}
+.toast.success{background:var(--green-d);color:#fff}
+.toast.warning{background:var(--amber-d);color:#fff}
+.toast.danger{background:var(--red-d);color:#fff}
+
+/* ===== SCENE CONTAINER ===== */
+.scene{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;padding:6.5rem 1.2rem 2rem;
+  max-width:720px;margin:0 auto;
+  opacity:0;transform:translateY(15px);
+  transition:opacity .5s,transform .5s;
+}
+.scene.visible{opacity:1;transform:translateY(0)}
+
+/* ===== SCENE ILLUSTRATION ===== */
+.scene-illust{
+  text-align:center;font-size:4rem;margin-bottom:1rem;
+  filter:drop-shadow(0 4px 20px rgba(245,158,11,.2));
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ===== CHAPTER TAG ===== */
+.chapter-tag{
+  text-align:center;text-transform:uppercase;letter-spacing:5px;
+  font-size:.72rem;font-weight:700;color:var(--amber);margin-bottom:.3rem;
+}
+.scene-title{
+  text-align:center;font-size:1.8rem;margin-bottom:1.2rem;
+  background:linear-gradient(135deg,var(--amber-l),var(--amber));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* ===== NARRATIVE ===== */
+.narrative{
+  font-size:1.02rem;line-height:1.85;color:var(--text2);
+  margin-bottom:1rem;padding-bottom:1rem;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.narrative em{color:var(--amber-l);font-style:italic}
+.narrative strong{color:var(--text);font-weight:600}
+
+/* ===== DIALOGUE ===== */
+.dialogue{
+  display:flex;gap:.8rem;margin:.8rem 0;
+  animation:fadeSlide .4s ease-out both;
+}
+.dialogue .avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+}
+.dialogue .bubble{
+  background:var(--card2);border-radius:2px var(--radius) var(--radius) var(--radius);
+  padding:.8rem 1.1rem;flex:1;position:relative;
+}
+.dialogue .bubble::before{
+  content:'';position:absolute;left:-6px;top:10px;
+  border:6px solid transparent;border-right-color:var(--card2);
+}
+.dialogue .char-name{font-size:.75rem;font-weight:700;margin-bottom:.2rem}
+.dialogue .char-text{font-size:.93rem;line-height:1.6;color:var(--text2)}
+.av-hernando{background:linear-gradient(135deg,var(--amber),var(--amber-d))}
+.av-marcela{background:linear-gradient(135deg,var(--teal),#0d9488)}
+.av-camilo{background:linear-gradient(135deg,var(--purple),#7c3aed)}
+.nm-hernando{color:var(--amber)}.nm-marcela{color:var(--teal)}.nm-camilo{color:var(--purple)}
+
+/* ===== DATA TABLE (for LP data) ===== */
+.lp-table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  margin:1rem 0;border-radius:var(--radius);overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);font-size:.88rem;
+}
+.lp-table th{background:rgba(245,158,11,.1);color:var(--amber-l);padding:.6rem .8rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px}
+.lp-table td{padding:.5rem .8rem;text-align:center;border-top:1px solid rgba(255,255,255,.04);font-variant-numeric:tabular-nums}
+.lp-table .label{text-align:left;font-weight:600;color:var(--amber-l)}
+
+/* ===== CHOICES ===== */
+.choices{display:flex;flex-direction:column;gap:.7rem;margin-top:1.2rem}
+.choice-btn{
+  display:flex;align-items:flex-start;gap:.8rem;
+  padding:1rem 1.2rem;border-radius:var(--radius);
+  background:var(--card);border:2px solid rgba(255,255,255,.07);
+  cursor:pointer;transition:all .25s;text-align:left;
+  font-family:inherit;font-size:.95rem;color:var(--text);
+  line-height:1.5;width:100%;
+}
+.choice-btn:hover{background:var(--card2);border-color:rgba(245,158,11,.25);transform:translateX(4px)}
+.choice-btn:active{transform:translateX(2px) scale(.99)}
+.choice-btn .letter{
+  min-width:36px;height:36px;border-radius:50%;
+  background:rgba(245,158,11,.12);color:var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.95rem;flex-shrink:0;
+}
+.choice-btn .choice-text{padding-top:.3rem}
+.choice-btn.disabled{opacity:.5;pointer-events:none}
+.choice-btn.correct{border-color:var(--green);background:rgba(16,185,129,.08)}
+.choice-btn.wrong{border-color:var(--red);background:rgba(244,63,94,.06);opacity:.6}
+.choice-btn.selected-correct{border-color:var(--green);background:rgba(16,185,129,.15);box-shadow:0 0 20px rgba(16,185,129,.15)}
+.choice-btn.selected-wrong{border-color:var(--red);background:rgba(244,63,94,.12);box-shadow:0 0 20px rgba(244,63,94,.15)}
+
+/* ===== FEEDBACK ===== */
+.feedback{
+  margin-top:1rem;padding:1.2rem;border-radius:var(--radius);
+  animation:fadeSlide .4s ease-out both;
+}
+.feedback.correct{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+.feedback.wrong{background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.15)}
+.feedback .fb-icon{font-size:1.5rem;margin-bottom:.3rem}
+.feedback .fb-text{color:var(--text2);line-height:1.6;font-size:.92rem}
+.feedback .fb-money{font-size:1.2rem;font-weight:800;margin-top:.5rem}
+
+/* ===== CONTINUE BUTTON ===== */
+.btn-continue{
+  display:block;width:100%;padding:1rem;margin-top:1.2rem;
+  border:none;border-radius:var(--radius);font-family:inherit;
+  font-size:1.05rem;font-weight:700;cursor:pointer;
+  transition:all .25s;
+}
+.btn-continue.primary{
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  color:#000;box-shadow:0 4px 20px rgba(245,158,11,.25);
+}
+.btn-continue.primary:hover{box-shadow:0 6px 30px rgba(245,158,11,.4);transform:translateY(-1px)}
+.btn-continue.success{background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff}
+.btn-continue.danger{background:linear-gradient(135deg,var(--red),var(--red-d));color:#fff}
+.btn-continue:active{transform:scale(.98)}
+
+/* ===== SPLASH (REGISTRATION) ===== */
+.splash{text-align:center;padding-top:0 !important;justify-content:center}
+.splash-icon{font-size:4.5rem;margin-bottom:.8rem;animation:float 3s ease-in-out infinite}
+.splash h1{font-size:2.6rem;line-height:1.1;margin-bottom:.3rem;background:linear-gradient(135deg,var(--amber-l),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.splash .sub{font-size:1.15rem;color:var(--text2);font-weight:300;margin-bottom:2rem}
+.reg-card{
+  background:var(--card);border:1px solid rgba(255,255,255,.06);
+  border-radius:var(--radius);padding:1.5rem;max-width:500px;
+  margin:0 auto;box-shadow:var(--shadow);text-align:left;
+}
+.form-row{display:flex;gap:.8rem;margin-bottom:.8rem}
+.form-row .fg{flex:1}
+.fg label{display:block;font-weight:600;font-size:.82rem;color:var(--text2);margin-bottom:.3rem}
+.input{
+  width:100%;padding:.65rem .9rem;border-radius:8px;
+  border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);
+  color:var(--text);font-size:.95rem;font-family:inherit;transition:all .2s;
+}
+.input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+.pair-label{font-size:.8rem;color:var(--amber);font-weight:600;text-align:center;margin-bottom:.6rem}
+
+/* ===== RESULTS ===== */
+.result-big{font-size:5rem;font-weight:900;font-family:'Playfair Display',serif;text-align:center}
+.result-sub{text-align:center;font-size:1.15rem;color:var(--text2);margin-top:.3rem}
+.grade-bar{height:10px;background:rgba(255,255,255,.06);border-radius:20px;overflow:hidden;margin:.8rem 0}
+.grade-fill{height:100%;border-radius:20px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.grade-fill.high{background:linear-gradient(90deg,var(--green),var(--green-d))}
+.grade-fill.mid{background:linear-gradient(90deg,var(--amber),var(--amber-d))}
+.grade-fill.low{background:linear-gradient(90deg,var(--red),var(--red-d))}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1rem 0}
+.stat-item{background:var(--card);border-radius:10px;padding:.8rem;text-align:center}
+.stat-item .stat-val{font-size:1.3rem;font-weight:800}
+.stat-item .stat-lbl{font-size:.75rem;color:var(--text3);margin-top:.2rem}
+
+/* ===== CONFETTI ===== */
+.confetti{position:fixed;width:8px;height:8px;top:-10px;z-index:400;animation:confettiFall 3s ease-out forwards}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .splash h1{font-size:2rem}
+  .scene-title{font-size:1.4rem}
+  .form-row{flex-direction:column;gap:.5rem}
+  .hud{padding:.4rem .8rem;font-size:.9rem}
+  .hud-money{font-size:1rem}
+}
+
+/* ===== HUD PROGRESS BAR ===== */
+.hud-progress{
+  position:fixed;top:44px;left:0;right:0;z-index:99;
+  background:rgba(10,14,26,.9);padding:2px 1.2rem 4px;
+  display:none;align-items:center;gap:.8rem;
+}
+.hud-progress.active{display:flex}
+.hud-progress-bar{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.hud-progress-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--green));border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1);width:0}
+.hud-progress-text{font-size:.72rem;color:var(--text3);white-space:nowrap;font-weight:600}
+
+/* ===== QUESTION NUMBER BADGE ===== */
+.q-number-badge{
+  text-align:center;font-size:.85rem;font-weight:800;
+  letter-spacing:4px;text-transform:uppercase;
+  color:var(--amber);margin-bottom:.5rem;
+  background:rgba(245,158,11,.08);padding:.4rem 1.2rem;
+  border-radius:20px;display:inline-block;
+  margin-left:auto;margin-right:auto;
+  width:fit-content;
+}
+.scene .q-number-badge{display:block;margin:0 auto .5rem}
+
+/* ===== SCREEN FLASH ===== */
+.screen-flash{
+  position:fixed;inset:0;z-index:500;pointer-events:none;
+  animation:flashAnim .6s ease-out forwards;
+}
+.correct-flash{background:rgba(16,185,129,.15)}
+.wrong-flash{background:rgba(244,63,94,.1)}
+@keyframes flashAnim{0%{opacity:1}100%{opacity:0}}
+
+/* ===== SHAKE ON WRONG ===== */
+.shake-anim{animation:shakeScene .4s ease-out}
+@keyframes shakeScene{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+/* ===== CELEBRATION FEEDBACK ===== */
+.fb-celebrate{text-align:center;margin-bottom:.8rem}
+.fb-icon-big{font-size:3rem;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275)}
+.fb-title-correct{
+  font-size:1.5rem;font-weight:900;
+  background:linear-gradient(135deg,var(--green),var(--teal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-top:.3rem;
+}
+.fb-money-big{
+  text-align:center;font-size:1.8rem;font-weight:900;
+  margin:.8rem 0;color:var(--green);
+  animation:popIn .5s cubic-bezier(.175,.885,.32,1.275) .2s both;
+}
+.fb-money-big.pos{color:var(--green)}
+@keyframes popIn{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ===== SPARKLE PARTICLES ===== */
+.sparkle{
+  position:fixed;top:50px;z-index:200;font-size:1.2rem;
+  pointer-events:none;animation:sparkleAnim 1.2s ease-out forwards;
+}
+@keyframes sparkleAnim{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-40px) scale(.5) rotate(20deg)}}
+
+/* ===== PROCEDURE TEXTAREA ===== */
+.procedure-box{
+  margin:1rem 0 .4rem;padding:1rem 1.1rem;
+  background:rgba(245,158,11,.05);
+  border:1px solid rgba(245,158,11,.18);
+  border-radius:var(--radius);
+}
+.procedure-label{
+  display:block;font-size:.78rem;font-weight:800;
+  color:var(--amber);margin-bottom:.5rem;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.procedure-hint{font-size:.72rem;color:var(--text3);margin-top:.4rem;font-style:italic}
+.procedure-input{
+  width:100%;min-height:100px;padding:.75rem .95rem;
+  border-radius:10px;
+  border:1.5px solid rgba(255,255,255,.1);
+  background:rgba(10,14,26,.55);color:var(--text);
+  font-size:.88rem;font-family:ui-monospace,'Courier New',monospace;
+  resize:vertical;line-height:1.55;transition:all .2s;
+}
+.procedure-input:focus{
+  outline:none;border-color:var(--amber);
+  box-shadow:0 0 0 3px rgba(245,158,11,.15);
+  background:rgba(10,14,26,.75);
+}
+.procedure-saved{
+  display:inline-block;font-size:.7rem;color:var(--green);
+  margin-left:.5rem;opacity:0;transition:opacity .3s;
+}
+.procedure-saved.show{opacity:1}
+
+/* ===== RESUME BANNER ===== */
+.resume-banner{
+  background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(139,92,246,.15));
+  border:1px solid rgba(59,130,246,.3);border-radius:var(--radius);
+  padding:1rem 1.2rem;margin:1rem 0;text-align:left;
+}
+.resume-banner h4{color:var(--blue);font-family:inherit;font-size:.95rem;margin-bottom:.3rem}
+.resume-banner p{font-size:.85rem;color:var(--text2);margin-bottom:.7rem}
+.resume-banner .resume-actions{display:flex;gap:.6rem}
+.resume-banner button{
+  flex:1;padding:.6rem;border:none;border-radius:8px;
+  font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;
+}
+.btn-resume{background:var(--blue);color:#fff}
+.btn-restart{background:rgba(255,255,255,.08);color:var(--text2)}
+</style>
+</head>
+<body>
+
+<div class="hud" id="hud">
+  <div class="hud-money"><span class="symbol">💰</span> $<span class="amount" id="hudMoney">100,000,000</span></div>
+  <div class="hud-chapter" id="hudChapter"></div>
+  <div class="hud-timer ok" id="hudTimer">01:25:00</div>
+</div>
+<div class="hud-progress" id="hudProgress">
+  <div class="hud-progress-bar"><div class="hud-progress-fill" id="hudProgressFill"></div></div>
+  <span class="hud-progress-text" id="hudProgressText">Pregunta 0 de 14</span>
+</div>
+<div id="toasts"></div>
+<div id="moneyFloats"></div>
+<div id="app"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════ */
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbypn0lbCvbnqJBva6fnSTioT_mIiLA8L5yjz8IwT73ZTnGYZgRyKFcy0ardXGXpGKHPiQ/exec';
+const TOTAL_TIME = 85 * 60;
+const START_MONEY = 100_000_000;
+const TEACHER_KEY = 'profe2025';
+
+/* ═══════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════ */
+function mulberry32(s){return function(){let t=s+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function seedFromStr(s){let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0;return Math.abs(h)||12345}
+function ri(rng,a,b){return Math.floor(rng()*(b-a+1))+a}
+function fmt$(n){return'$'+n.toLocaleString('es-CO')}
+function fmtK(n){return fmt$(n*1000)}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`}
+function shuffle(arr,rng){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ═══════════════════════════════════════════
+   SIMPLEX SOLVER
+   ═══════════════════════════════════════════ */
+function simplex(c,A,b){
+  const m=A.length,n=c.length,T=[];
+  for(let i=0;i<m;i++){const r=[...A[i]];for(let j=0;j<m;j++)r.push(i===j?1:0);r.push(b[i]);T.push(r)}
+  const obj=c.map(v=>-v);for(let j=0;j<m;j++)obj.push(0);obj.push(0);T.push(obj);
+  const cols=n+m+1,basis=Array.from({length:m},(_,i)=>n+i);
+  for(let it=0;it<200;it++){
+    let pc=-1,mv=-1e-9;for(let j=0;j<cols-1;j++)if(T[m][j]<mv){mv=T[m][j];pc=j}
+    if(pc===-1)break;
+    let pr=-1,mr=Infinity;for(let i=0;i<m;i++)if(T[i][pc]>1e-9){const r=T[i][cols-1]/T[i][pc];if(r<mr){mr=r;pr=i}}
+    if(pr===-1)return null;
+    const pv=T[pr][pc];for(let j=0;j<cols;j++)T[pr][j]/=pv;
+    for(let i=0;i<=m;i++){if(i===pr)continue;const f=T[i][pc];for(let j=0;j<cols;j++)T[i][j]-=f*T[pr][j]}
+    basis[pr]=pc;
+  }
+  const sol=new Array(n).fill(0);for(let i=0;i<m;i++)if(basis[i]<n)sol[basis[i]]=Math.round(T[i][cols-1]*100)/100;
+  const Z=Math.round(T[m][cols-1]*100)/100;
+  const sl=[];for(let i=0;i<m;i++){let u=0;for(let j=0;j<n;j++)u+=A[i][j]*sol[j];sl.push(Math.round((b[i]-u)*100)/100)}
+  // Shadow prices: dual variables from objective row at slack columns
+  const shadow=[];for(let i=0;i<m;i++)shadow.push(Math.round(T[m][n+i]*100)/100);
+  return{sol,Z,sl,shadow};
+}
+
+/* ═══════════════════════════════════════════
+   GENERATE LP DATA (per student seed)
+   ═══════════════════════════════════════════ */
+function genData(rng) {
+  const c = [ri(rng,100,150), ri(rng,70,120), ri(rng,80,130)];
+  const A = [
+    [ri(rng,3,5), ri(rng,4,6), ri(rng,2,3)],
+    [ri(rng,4,6), ri(rng,2,4), ri(rng,1,2)],
+    [ri(rng,1,2), ri(rng,2,3), ri(rng,2,3)],
+    [ri(rng,1,2), ri(rng,1,2), ri(rng,1,2)],
+  ];
+  const b = [ri(rng,80,120)*10, ri(rng,50,80)*10, ri(rng,18,28)*10, ri(rng,25,45)*10];
+  const res = simplex(c,A,b);
+  // 2-var problem for final
+  const c2 = [ri(rng,60,110), ri(rng,50,100)];
+  const A2 = [[ri(rng,2,4),ri(rng,3,5)],[ri(rng,3,5),ri(rng,1,3)],[ri(rng,1,2),ri(rng,2,3)]];
+  const b2 = [ri(rng,50,90)*10, ri(rng,40,70)*10, ri(rng,20,40)*10];
+  const res2 = simplex(c2,A2,b2);
+  // Chorizo for expansion
+  const c4 = [...c, ri(rng,90,160)];
+  const A4 = A.map((r,i) => [...r, ri(rng,1,3)]);
+  const b4 = b.map(v => v + ri(rng,5,15)*10);
+  const res4 = simplex(c4,A4,b4);
+  return {c,A,b,res, c2,A2,b2,res2, c4,A4,b4,res4, rng};
+}
+
+/* ═══════════════════════════════════════════
+   BUILD SCENES
+   ═══════════════════════════════════════════ */
+const PRODS = ['Camisetas estampadas','Sudaderas con capota','Gorras bordadas'];
+const EMOJI = ['👕','🧥','🧢'];
+const RES = ['Tela de algodón','Hilo','Horas de máquina','Horas de corte'];
+
+function buildScenes(d) {
+  const {c,A,b,res,c2,A2,b2,res2,c4,A4,b4,res4} = d;
+  let bindingIdx = res ? res.sl.indexOf(Math.min(...res.sl)) : 0;
+  let slackIdx = res ? res.sl.indexOf(Math.max(...res.sl)) : 3;
+  // Guard: binding and slack cannot be the same resource
+  if (bindingIdx === slackIdx && res) {
+    const sorted = res.sl.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
+    slackIdx = sorted[0].i === bindingIdx ? sorted[1].i : sorted[0].i;
+  }
+  // Real shadow price of queso (constraint 1) from simplex dual variables
+  const shadowQueso = res && res.shadow ? Math.round(res.shadow[1]) : 500;
+
+  function wrongSols(sol,Z,n){
+    const w=[];
+    // Opción cercana pero con x desbalanceadas
+    w.push({x:sol.map((v,i)=>Math.round(v+(i===0?5:-3)))});
+    // Opción que reparte recursos parejo (error típico de estudiante)
+    w.push({x:sol.map((_,i)=>Math.round(sol[i]*0.75+ri(d.rng,2,8)))});
+    // Opción con una variable en 0 (extremo del poliedro)
+    const zeroVar = ri(d.rng,0,n-1);
+    w.push({x:sol.map((v,i)=>i===zeroVar?0:Math.round(v*1.15+ri(d.rng,1,5)))});
+    w.forEach(o=>{o.Z=0;for(let i=0;i<n;i++)o.Z+=c[i]*(o.x[i]||0);o.Z=Math.round(o.Z)});
+    return w;
+  }
+
+  const scenes = {
+    /* ────── ACT 1: LLEGADA ────── */
+    intro: {
+      ch:'Prólogo', title:'Pereira, 7:00 AM', icon:'🌅',
+      narr: `El sol apenas sale sobre el río Otún. Tu celular vibra con un WhatsApp urgente de una amiga de tu mamá.`,
+      dial:[{c:'luisa',t:`¡Hola! Soy Luisa Ramírez, dueña de <em>Textiles del Otún</em>, aquí en Cuba. Necesito que vengas al taller <strong>ya mismo</strong>, tengo un problema serio con la producción de esta semana.`}],
+      next:'arrive',
+    },
+    arrive: {
+      ch:'Capítulo 1 — Llegada', title:'El Taller en Cuba', icon:'🏭',
+      narr:`Llegas al taller. El zumbido de las máquinas Singer y el olor a tela nueva llenan el aire. Doña Luisa te espera en la oficina con Andrés, el jefe de producción.`,
+      dial:[
+        {c:'luisa',t:`Producimos tres líneas: <strong>${PRODS.join(', ')}</strong>. Cada lote son 100 prendas.`},
+        {c:'andres',t:`Manejamos <strong>4 recursos limitados</strong>: tela, hilo, horas de máquina y horas de corte. Necesitamos sacar el máximo provecho.`},
+        {c:'luisa',t:`Tu primera misión: ayúdanos a plantear esto como un modelo de programación lineal. Arranquemos por lo básico.`},
+      ],
+      next:'q_variables',
+    },
+
+    /* ────── Q1: VARIABLES ────── */
+    q_variables: {
+      ch:'Capítulo 1', title:'¿Qué Estamos Decidiendo?', icon:'🤔',
+      narr:`Doña Luisa te mira expectante. El primer paso para optimizar es definir <strong>qué controlamos</strong>.`,
+      dial:[{c:'andres',t:`¿Cómo definirías las <em>variables de decisión</em> para nuestro modelo?`}],
+      choices:[
+        {l:'A',t:`x₁ = metros de tela, x₂ = conos de hilo, x₃ = horas de máquina, x₄ = horas de corte`,$:-6e6,
+         fb:`No. Los recursos son <strong>limitaciones</strong> (restricciones), no decisiones. Las variables deben representar lo que CONTROLAMOS: cuánto producir.`,
+         react:{c:'andres',t:'La tela y el hilo son restricciones, no variables de decisión.'},nx:'q_objective'},
+        {l:'B',t:`x₁ = prendas de ${PRODS[0]}, x₂ = prendas de ${PRODS[1]}, x₃ = prendas de ${PRODS[2]} a producir`,$:-3e6,
+         fb:`Casi, pero hay un detalle: producimos por <strong>lotes de 100 prendas</strong>, no por prenda individual. Las variables deben ser lotes, no prendas sueltas.`,
+         react:{c:'andres',t:'Producimos por lotes, no por prenda. Revisa el enunciado.'},nx:'q_objective'},
+        {l:'C',t:`x₁ = lotes de ${PRODS[0]}, x₂ = lotes de ${PRODS[1]}, x₃ = lotes de ${PRODS[2]} a producir por semana`,ok:true,$:10e6,
+         fb:`¡Perfecto! Las variables representan lo que <strong>decidimos</strong>: cuántos lotes producir de cada línea por semana.`,
+         react:{c:'luisa',t:'¡Exacto! Así se piensa. Sigamos.'},nx:'q_objective'},
+        {l:'D',t:`x₁ = ganancia semanal de ${PRODS[0]}, x₂ = ganancia de ${PRODS[1]}, x₃ = ganancia de ${PRODS[2]}`,$:-5e6,
+         fb:`La ganancia es el <strong>resultado</strong> de optimizar (función objetivo), no una variable de decisión.`,
+         react:{c:'luisa',t:'La ganancia es lo que queremos MAXIMIZAR, no una variable.'},nx:'q_objective'},
+      ],
+    },
+
+    /* ────── Q2: FUNCIÓN OBJETIVO ────── */
+    q_objective: {
+      ch:'Capítulo 1', title:'El Objetivo del Negocio', icon:'🎯',
+      narr:`Andrés te muestra las ganancias por lote: ${PRODS.map((p,i)=>`<strong>${EMOJI[i]} ${p}: ${fmtK(c[i])}</strong>`).join(', ')}.`,
+      dial:[{c:'luisa',t:`Queremos ganar lo máximo posible esta semana. ¿Cómo escribimos eso matemáticamente?`}],
+      choices:[
+        {l:'A',t:`Max Z = ${c[0]}x₁ × ${c[1]}x₂ × ${c[2]}x₃`,$:-8e6,
+         fb:`La función objetivo es una suma ponderada, NO un producto. Se SUMA la ganancia de cada línea, no se multiplican entre sí.`,
+         react:{c:'valentina',t:'En PL la función objetivo siempre es LINEAL: sumas, no multiplicaciones.'},nx:'q_constraint1'},
+        {l:'B',t:`Max Z = ${A[0][0]}x₁ + ${A[0][1]}x₂ + ${A[0][2]}x₃`,$:-7e6,
+         fb:`Esos son los coeficientes de CONSUMO de tela, no las ganancias. Los coeficientes de Z deben ser las ganancias: ${c[0]}, ${c[1]}, ${c[2]}.`,
+         react:{c:'andres',t:'Esos números son de la restricción de tela, no de la ganancia.'},nx:'q_constraint1'},
+        {l:'C',t:`Min Z = ${c[0]}x₁ + ${c[1]}x₂ + ${c[2]}x₃ (para reducir costos)`,$:-6e6,
+         fb:`Los coeficientes están bien, pero la dirección está mal. Aquí son GANANCIAS, no costos. Queremos MAXIMIZAR, no minimizar.`,
+         react:{c:'luisa',t:'¡Queremos ganar más, no menos! Es Max, no Min.'},nx:'q_constraint1'},
+        {l:'D',t:`Max Z = ${c[0]}x₁ + ${c[1]}x₂ + ${c[2]}x₃ (en miles de pesos)`,ok:true,$:10e6,
+         fb:`¡Correcto! Maximizamos la ganancia total: cada coeficiente es la ganancia por lote y cada variable es cuántos lotes producir.`,
+         react:{c:'andres',t:'¡Perfecto! Esa es la función objetivo.'},nx:'q_constraint1'},
+      ],
+    },
+
+    /* ────── Q3: RESTRICCIÓN 1 ────── */
+    q_constraint1: {
+      ch:'Capítulo 2 — Restricciones', title:'El Límite de la Tela', icon:'🧵',
+      narr:`Andrés abre su libreta: <em>"Tenemos ${b[0]} metros de tela de algodón por semana."</em> Cada lote usa: ${PRODS.map((p,i)=>`${EMOJI[i]} ${p}: ${A[0][i]} m`).join(', ')}.`,
+      dial:[{c:'andres',t:`¿Cómo se escribe la restricción de tela?`}],
+      choices:[
+        {l:'A',t:`${A[0][0]}x₁ + ${A[0][1]}x₂ + ${A[0][2]}x₃ ≥ ${b[0]}`,$:-8e6,
+         fb:`El signo está al revés. ≥ se usa para <strong>demanda mínima</strong>, no para recursos limitados. Aquí el consumo debe ser MENOR O IGUAL a lo disponible.`,
+         react:{c:'luisa',t:'Si fuera ≥, estaríamos obligadas a gastar TODA la tela. No tiene sentido.'},nx:'q_constraint2'},
+        {l:'B',t:`${A[0][0]}x₁ + ${A[0][1]}x₂ + ${A[0][2]}x₃ ≤ ${b[0]}`,ok:true,$:8e6,
+         fb:`¡Exacto! El consumo total de tela no puede exceder lo disponible. Se usa ≤ porque es un recurso limitado.`,
+         react:{c:'andres',t:'¡Así es! No podemos usar más tela de la que hay en bodega.'},nx:'q_constraint2'},
+        {l:'C',t:`x₁ + x₂ + x₃ ≤ ${b[0]}`,$:-5e6,
+         fb:`Faltan los coeficientes. Cada prenda consume una cantidad DIFERENTE de tela por lote.`,
+         react:{c:'andres',t:'No todas las prendas usan la misma cantidad de tela...'},nx:'q_constraint2'},
+      ],
+    },
+
+    /* ────── Q4: RESTRICCIÓN 2 ────── */
+    q_constraint2: {
+      ch:'Capítulo 2', title:'El Hilo de Medellín', icon:'🪡',
+      narr:`<em>"El hilo lo traemos de Medellín. Tenemos ${b[1]} conos semanales."</em> Consumo por lote: ${PRODS.map((p,i)=>`${EMOJI[i]} ${A[1][i]} conos`).join(', ')}.`,
+      dial:[{c:'luisa',t:`¿Y la restricción del hilo? Es caro y complicado de conseguir.`}],
+      choices:[
+        {l:'A',t:`${A[1][0]}x₁ + ${A[1][1]}x₂ + ${A[1][2]}x₃ ≤ ${b[1]}`,ok:true,$:8e6,
+         fb:`¡Bien! Misma lógica: el consumo total de hilo ≤ disponibilidad.`,
+         react:{c:'luisa',t:'¡Perfecto! Ya tienes 2 restricciones.'},nx:'q_noneg'},
+        {l:'B',t:`${A[1][0]}x₁ + ${A[1][1]}x₂ + ${A[1][2]}x₃ = ${b[1]}`,$:-3e6,
+         fb:`Usar = obligaría a consumir TODO el hilo. En PL usamos ≤ para recursos: se puede usar menos del máximo.`,
+         react:{c:'andres',t:'Con = no tendríamos flexibilidad. Usamos ≤.'},nx:'q_noneg'},
+        {l:'C',t:`${A[1][2]}x₁ + ${A[1][0]}x₂ + ${A[1][1]}x₃ ≤ ${b[1]}`,$:-6e6,
+         fb:`Los coeficientes están en el orden equivocado. x₁ es ${PRODS[0]} y usa ${A[1][0]} conos, no ${A[1][2]}.`,
+         react:{c:'andres',t:'¡Cuidado con el orden de los coeficientes!'},nx:'q_noneg'},
+      ],
+    },
+
+    /* ────── Q5: NO NEGATIVIDAD ────── */
+    q_noneg: {
+      ch:'Capítulo 2', title:'Una Restricción Obvia', icon:'🚫',
+      narr:`Ya tienes la función objetivo y las restricciones de recursos. Pero falta algo...`,
+      dial:[{c:'valentina',t:`Hola, soy Valentina, la analista financiera. Hay una restricción que muchos olvidan. ¿Cuál es?`}],
+      choices:[
+        {l:'A',t:`x₁ + x₂ + x₃ ≤ ${Math.round(b[0]/3)} — No podemos producir más de ${Math.round(b[0]/3)} lotes en total`,$:-5e6,
+         fb:`No hay restricción de producción total. El límite viene de cada recurso individual, no de un tope global. La restricción que falta es más fundamental.`,
+         react:{c:'valentina',t:'No hay tope global de producción. Lo que falta es otra cosa.'},nx:'q_solve1'},
+        {l:'B',t:`x₁, x₂, x₃ ≥ 0 — Las variables no pueden tomar valores negativos`,ok:true,$:7e6,
+         fb:`¡Correcto! La no negatividad es fundamental en PL. No tiene sentido producir -50 lotes. Sin esto, el Simplex podría dar soluciones absurdas.`,
+         react:{c:'valentina',t:'¡Bien! Parece obvio, pero sin esto el modelo se rompe.'},nx:'q_solve1'},
+        {l:'C',t:`x₁, x₂, x₃ deben ser enteros — No se pueden producir fracciones de lote`,$:-4e6,
+         fb:`Eso sería Programación Lineal <strong>Entera</strong> (PLE), no PL estándar. En PL relajamos esa condición y permitimos fracciones. Lo que falta es la no negatividad.`,
+         react:{c:'valentina',t:'Los enteros son de PLE, no de PL. Aquí permitimos decimales.'},nx:'q_solve1'},
+        {l:'D',t:`No falta nada — con la FO y las 4 restricciones el modelo está completo`,$:-6e6,
+         fb:`Sí falta. Sin la condición x₁, x₂, x₃ ≥ 0, el Simplex podría sugerir producir cantidades negativas, lo cual no tiene sentido físico.`,
+         react:{c:'andres',t:'¿Producir -20 lotes de sudaderas? Eso no existe.'},nx:'q_solve1'},
+      ],
+    },
+
+    /* ────── Q6: RESOLVER EL MODELO ────── */
+    q_solve1: {
+      ch:'Capítulo 3 — Solución', title:'Hora de Resolver', icon:'💻',
+      narr: `<strong>El modelo completo es:</strong><br>
+Max Z = ${c[0]}x₁ + ${c[1]}x₂ + ${c[2]}x₃<br>
+s.a.<br>
+${RES.map((r,i) => `${A[i].map((a,j)=>`${a}x${j+1}`).join(' + ')} ≤ ${b[i]} <em>(${r})</em>`).join('<br>')}<br>
+x₁, x₂, x₃ ≥ 0<br><br>
+<em>💡 Puedes abrir Excel y usar Solver para encontrar la solución. Tómate tu tiempo.</em>`,
+      dial:[{c:'luisa',t:`Ya tenemos el modelo. ¡Resuélvelo! ¿Cuál es la producción óptima?`}],
+      choices: (function(){
+        if(!res) return [{l:'A',t:'Error en el modelo',ok:true,$:0,fb:'Error generando',nx:'branch1'}];
+        const correct = {l:'?',t:`${PRODS.map((p,i)=>`${EMOJI[i]} ${p}: ${res.sol[i].toFixed(1)} lotes`).join(', ')} → Z = ${fmtK(res.Z)}`,ok:true,$:12e6,
+          fb:`¡Excelente! Esa es la solución óptima del Simplex. La ganancia máxima es ${fmtK(res.Z)}.`,
+          react:{c:'luisa',t:'¡Increíble! Con esos números vamos a romperla esta semana.'},nx:'q_binding'};
+        const ws = wrongSols(res.sol,res.Z,3);
+        const wrongs = ws.map(w=>({l:'?',t:`${PRODS.map((p,i)=>`${EMOJI[i]} ${p}: ${w.x[i]} lotes`).join(', ')} → Z = ${fmtK(w.Z)}`,$:-8e6,
+          fb:`No es la solución óptima. La respuesta correcta da Z = ${fmtK(res.Z)}, que es mayor. Revisa tu modelo en Excel.`,
+          react:{c:'andres',t:'Hmm, esos números no cuadran con lo que veo en el taller.'},nx:'q_binding'}));
+        const all = [correct,...wrongs];
+        const letters = ['A','B','C','D'];
+        const shuffled = shuffle(all, d.rng);
+        shuffled.forEach((o,i)=>o.l=letters[i]);
+        return shuffled;
+      })(),
+    },
+
+    /* ────── Q7: RESTRICCIÓN ACTIVA ────── */
+    q_binding: {
+      ch:'Capítulo 3', title:'El Cuello de Botella', icon:'🔒',
+      narr:`Con la solución óptima en mano, Andrés necesita saber dónde enfocar la atención operativa. Una <strong>restricción activa</strong> (binding) es aquella donde el recurso se consume AL 100% — no sobra nada.`,
+      dial:[{c:'andres',t:`Sustituye los valores de la solución óptima en cada restricción. <strong>¿Cuál recurso se agota por completo?</strong>`}],
+      choices: RES.map((r,i) => ({
+        l:['A','B','C','D'][i], t:`${r}`,
+        ok: i===bindingIdx, $: i===bindingIdx ? 8e6 : -5e6,
+        fb: i===bindingIdx
+          ? `¡Correcto! ${r} se consume al 100% (holgura ≈ 0). Es el <strong>cuello de botella</strong> de la producción.`
+          : `No. ${r} tiene holgura de ${res?res.sl[i].toFixed(1):0} unidades — no se agota. El cuello de botella es <strong>${RES[bindingIdx]}</strong>.`,
+        react: i===bindingIdx
+          ? {c:'andres',t:'¡Ese es nuestro cuello de botella! Sin más de ese recurso, no podemos crecer.'}
+          : {c:'andres',t:'Ese recurso aún tiene sobrante. Revisa sustituyendo en cada restricción.'},
+        nx:'q_slack',
+      })),
+    },
+
+    /* ────── Q8: HOLGURA ────── */
+    q_slack: {
+      ch:'Capítulo 3', title:'Recursos Sobrantes', icon:'📦',
+      narr:`Valentina revisa los contratos con proveedores: <em>"Si estamos pagando por recursos que no usamos del todo, estamos botando plata."</em>`,
+      dial:[{c:'valentina',t:`Según la solución óptima, ¿cuál recurso NO se usa completamente? Es decir, ¿dónde podríamos <strong>renegociar el contrato</strong> para ahorrar?`}],
+      choices: RES.map((r,i) => ({
+        l:['A','B','C','D'][i], t:`${r}`,
+        ok: i===slackIdx, $: i===slackIdx ? 8e6 : -4e6,
+        fb: i===slackIdx
+          ? `¡Bien! ${r} tiene la mayor holgura (${res?res.sl[i].toFixed(1):0} unidades sin usar). Podríamos reducir ese contrato y ahorrar.`
+          : `No. ${r} ${res&&res.sl[i]<1?'se agota casi por completo':'tiene menos holgura que otro recurso'}. El que más sobra es <strong>${RES[slackIdx]}</strong>.`,
+        react: i===slackIdx
+          ? {c:'valentina',t:'Con ese sobrante podemos renegociar el contrato y ahorrar plata.'}
+          : {c:'valentina',t:'Ese recurso se usa bastante. Piensa cuál se usa MENOS.'},
+        nx:'branch1',
+      })),
+    },
+
+    /* ────── BRANCH 1 ────── */
+    branch1: {
+      branch: (st) => st.money >= 120e6 ? 'path_a_intro' : st.money >= 95e6 ? 'path_b_intro' : 'path_c_intro',
+    },
+
+    /* ═══════ PATH A: EXPANSIÓN ═══════ */
+    path_a_intro: {
+      ch:'Capítulo 4 — Expansión', title:'Nuevos Horizontes', icon:'🚀',
+      narr:`Doña Luisa está <strong>impresionada</strong>. Tu análisis fue preciso y el taller optimizó su producción.`,
+      dial:[
+        {c:'luisa',t:'¡Esto es increíble! Con estos resultados, quiero meter una cuarta línea: <strong>chaquetas impermeables</strong>.'},
+        {c:'andres',t:'Las chaquetas son un mercado muy rentable en Pereira por la lluvia. Pero el modelo cambia...'},
+      ],
+      next:'q_new_var',
+    },
+    q_new_var: {
+      ch:'Capítulo 4', title:'Agregar una Variable', icon:'➕',
+      narr:`Al agregar chaquetas, el modelo pasa de 3 a 4 variables. ¿Qué cambia?`,
+      dial:[{c:'valentina',t:`Si agregamos x₄ = lotes de chaquetas, ¿qué hay que modificar?`}],
+      choices:[
+        {l:'A',t:'Solo agregar x₄ a la función objetivo con su ganancia, las restricciones quedan igual',$:-7e6,
+         fb:'Incorrecto. Las chaquetas también CONSUMEN recursos (tela, hilo, etc). Si no actualizas las restricciones, el modelo ignora ese consumo.',
+         react:{c:'andres',t:'¿Y de dónde sale la tela para las chaquetas? Hay que incluirla.'},nx:'q_expand_solve'},
+        {l:'B',t:'Solo agregar x₄ a las restricciones, la función objetivo no cambia',$:-6e6,
+         fb:'Incorrecto. Si las chaquetas generan ganancia, hay que sumar su contribución a la FO también. Sin eso, el modelo no las considera.',
+         react:{c:'valentina',t:'Si no está en la FO, el Simplex no sabe que genera ganancia.'},nx:'q_expand_solve'},
+        {l:'C',t:'Agregar x₄ a la función objetivo Y a TODAS las restricciones de recursos',ok:true,$:9e6,
+         fb:'¡Correcto! El nuevo producto consume recursos (va en restricciones) y genera ganancia (va en la FO). Todo se actualiza.',
+         react:{c:'valentina',t:'¡Exacto! Cada variable nueva afecta tanto la FO como las restricciones.'},nx:'q_expand_solve'},
+      ],
+    },
+    q_expand_solve: {
+      ch:'Capítulo 4', title:'El Modelo Expandido', icon:'📊',
+      narr:`<strong>Modelo expandido (4 productos):</strong><br>
+Max Z = ${c4.map((v,i)=>`${v}x${i+1}`).join(' + ')}<br>
+${RES.map((r,i) => `${A4[i].map((a,j)=>`${a}x${j+1}`).join(' + ')} ≤ ${b4[i]} <em>(${r})</em>`).join('<br>')}<br>
+x₁, x₂, x₃, x₄ ≥ 0<br><br>
+<em>💡 Monta este modelo en Excel con Solver. x₄ = lotes de chaquetas.</em>`,
+      dial:[{c:'luisa',t:'¿Cuánto ganamos ahora con las 4 líneas?'}],
+      choices:(function(){
+        if(!res4)return[{l:'A',t:'Error',$:0,ok:true,fb:'Error',nx:'crisis_call'}];
+        const opts = [
+          {t:`Z* = ${fmtK(res4.Z)} — se incluyen las chaquetas en la producción`,ok:true,$:12e6,fb:`¡Correcto! Con chaquetas la ganancia sube a ${fmtK(res4.Z)}.`,react:{c:'luisa',t:'¡Las chaquetas fueron una genialidad!'}},
+          {t:`Z* = ${fmtK(Math.round(res4.Z*0.8))} — las chaquetas no se producen`,$:-6e6,fb:`No. El Solver SÍ incluye chaquetas porque son rentables. La respuesta correcta es Z* = ${fmtK(res4.Z)}.`,react:{c:'andres',t:'Revisa el modelo en Excel.'}},
+          {t:`Z* = ${fmtK(Math.round(res4.Z*1.2))} — producción masiva de todo`,$:-7e6,fb:`Eso excede los recursos disponibles. La solución óptima real es ${fmtK(res4.Z)}.`,react:{c:'valentina',t:'Esos números violan las restricciones.'}},
+        ];
+        const letters=['A','B','C'];
+        const sh=shuffle(opts,d.rng);sh.forEach((o,i)=>{o.l=letters[i];o.nx='crisis_call'});
+        return sh;
+      })(),
+    },
+
+    /* ═══════ PATH B: OPERACIÓN NORMAL ═══════ */
+    path_b_intro: {
+      ch:'Capítulo 4 — Operaciones', title:'El Día a Día', icon:'⚙️',
+      narr:`Tu análisis estuvo bien, pero no brillante. Doña Luisa decide mantener las 3 líneas actuales y enfocarse en eficiencia.`,
+      dial:[{c:'andres',t:'Vamos a analizar más a fondo la solución. Hay información valiosa escondida en los números.'}],
+      next:'q_interpret_zero',
+    },
+    q_interpret_zero: {
+      ch:'Capítulo 4', title:'¿Por Qué Cero?', icon:'🔍',
+      narr:`${res && res.sol.some(v=>v<0.5) ? `La solución óptima indica producir <strong>0 lotes</strong> de uno de los productos.` : 'Imagina que la solución dice producir 0 de un producto.'} Doña Luisa está preocupada porque ese producto tiene clientes fieles.`,
+      dial:[{c:'valentina',t:'Si el Simplex dice que x₂ = 0 (no producir sudaderas), ¿qué debemos interpretar?'}],
+      choices:[
+        {l:'A',t:'Que las sudaderas tienen ganancia negativa y deberíamos eliminarlas del catálogo',$:-6e6,
+         fb:'No. Las sudaderas SÍ tienen ganancia positiva. Pero con los recursos limitados, conviene destinarlos a prendas que aprovechen mejor cada metro de tela.',
+         react:{c:'valentina',t:'Ganancia positiva no significa que convenga producirlas con recursos limitados.'},nx:'q_improve'},
+        {l:'B',t:'Que con los recursos actuales, destinar esos insumos a otros productos genera MÁS ganancia total',ok:true,$:8e6,
+         fb:'¡Correcto! El Simplex NO dice que las sudaderas sean malas. Dice que, dados los recursos limitados, es más rentable asignarlos a otras prendas.',
+         react:{c:'valentina',t:'Exacto. Es una cuestión de prioridad con recursos escasos, no de calidad del producto.'},nx:'q_improve'},
+        {l:'C',t:'Que hay un error en el modelo — si el producto es popular, debería producirse algo',$:-5e6,
+         fb:'No hay error. El Simplex optimiza matemáticamente. La popularidad no entra en el modelo — solo entran ganancias y restricciones de recursos.',
+         react:{c:'andres',t:'El Simplex no sabe de popularidad. Solo optimiza con los datos que le damos.'},nx:'q_improve'},
+        {l:'D',t:'Que necesitamos agregar una restricción x₂ ≥ 1 para forzar al menos un lote',$:-3e6,
+         fb:'Agregar esa restricción es posible, pero cambia el modelo y probablemente REDUCE la ganancia óptima. x₂=0 ES la decisión óptima sin esa restricción.',
+         react:{c:'valentina',t:'Forzar producción es posible pero reduce Z*. La pregunta es si vale la pena.'},nx:'q_improve'},
+      ],
+    },
+    q_improve: {
+      ch:'Capítulo 4', title:'Mejorar el Plan', icon:'📈',
+      narr:`Doña Luisa quiere saber cómo ganar MÁS. La clave está en las restricciones activas.`,
+      dial:[{c:'luisa',t:'Si pudiera conseguir más de UN recurso, ¿cuál me conviene más?'}],
+      choices:[
+        {l:'A',t:`Más ${RES[slackIdx]} — siempre es bueno tener más materia prima`,$:-6e6,
+         fb:`${RES[slackIdx]} ya tiene holgura — sobra. Agregar más de un recurso que ya sobra no mejora la ganancia.`,
+         react:{c:'valentina',t:'Ese recurso ya sobra. No vale la pena invertir ahí.'},nx:'crisis_call'},
+        {l:'B',t:`Más ${RES[bindingIdx]} — es el recurso que se agota completamente`,ok:true,$:9e6,
+         fb:`¡Exacto! Al ser la restricción activa, ampliar ${RES[bindingIdx]} permite producir más y aumentar Z*.`,
+         react:{c:'luisa',t:'¡A negociar con el proveedor de ' + RES[bindingIdx].toLowerCase() + '!'},nx:'crisis_call'},
+        {l:'C',t:'No importa cuál, cualquier recurso extra ayuda por igual',$:-4e6,
+         fb:'No es cierto. Solo los recursos que se agotan (restricciones activas) impactan la ganancia al ampliarse. Los que sobran no.',
+         react:{c:'andres',t:'Los recursos con holgura no cambian nada si los aumentas.'},nx:'crisis_call'},
+      ],
+    },
+
+    /* ═══════ PATH C: SUPERVIVENCIA ═══════ */
+    path_c_intro: {
+      ch:'Capítulo 4 — Crisis', title:'Alerta Financiera', icon:'🔴',
+      narr:`Las cosas no van bien. Los errores en el análisis inicial preocupan a los inversionistas del taller.`,
+      dial:[
+        {c:'valentina',t:'Los inversionistas quieren que <strong>minimicemos costos</strong> en vez de maximizar ganancias. Hay que cambiar el enfoque.'},
+        {c:'luisa',t:'Es duro, pero toca adaptarse. ¿Sabes cómo cambia el modelo?'},
+      ],
+      next:'q_min_max',
+    },
+    q_min_max: {
+      ch:'Capítulo 4', title:'¿Maximizar o Minimizar?', icon:'⚖️',
+      narr:`La situación cambió. Ya no se trata de ganar más, sino de <strong>gastar menos</strong> cumpliendo con los compromisos.`,
+      dial:[{c:'valentina',t:'Si tenemos que cumplir una demanda mínima de cada prenda, ¿qué tipo de modelo es?'}],
+      choices:[
+        {l:'A',t:'Minimizar costo total, sujeto a restricciones de demanda mínima (≥)',ok:true,$:9e6,
+         fb:'¡Correcto! Cuando el objetivo es eficiencia de costos con demanda obligatoria, se minimiza con restricciones ≥.',
+         react:{c:'valentina',t:'¡Exacto! Es el modelo dual: minimizar en vez de maximizar.'},nx:'q_geq'},
+        {l:'B',t:'Maximizar ganancia pero con menos recursos (≤)',$:-5e6,
+         fb:'No. El cambio es de OBJETIVO: pasamos de Max a Min. Las restricciones de demanda usan ≥, no ≤.',
+         react:{c:'luisa',t:'No, no. Es MINIMIZAR costos, no maximizar con menos.'},nx:'q_geq'},
+        {l:'C',t:'Da igual, Max o Min dan el mismo resultado',$:-8e6,
+         fb:'Absolutamente no. Max y Min son problemas fundamentalmente diferentes. Max busca el punto más alto, Min el más bajo de la región factible.',
+         react:{c:'valentina',t:'Son problemas opuestos. Dan soluciones completamente distintas.'},nx:'q_geq'},
+      ],
+    },
+    q_geq: {
+      ch:'Capítulo 4', title:'Restricciones de Demanda', icon:'📋',
+      narr:`Una cadena de colegios pide mínimo 20 lotes de camisetas y 15 de gorras por semana. Son contratos fijos.`,
+      dial:[{c:'andres',t:'¿Cómo escribirías la restricción "mínimo 20 lotes de camisetas"?'}],
+      choices:[
+        {l:'A',t:'x₁ ≤ 20',$:-7e6,
+         fb:'Al revés. x₁ ≤ 20 significaría "MÁXIMO 20", pero necesitamos MÍNIMO 20. El signo debe ir al contrario.',
+         react:{c:'valentina',t:'≤ es para límites superiores. Aquí necesitamos un piso mínimo.'},nx:'crisis_call'},
+        {l:'B',t:'x₁ = 20',$:-3e6,
+         fb:'Parcialmente. Con = obligas a producir EXACTAMENTE 20, sin flexibilidad. Lo correcto es ≥ que permite 20 o más.',
+         react:{c:'andres',t:'Con = no hay flexibilidad. ≥ da más espacio para optimizar.'},nx:'crisis_call'},
+        {l:'C',t:'x₁ ≥ 20',ok:true,$:8e6,
+         fb:'¡Correcto! El signo ≥ indica "como mínimo". Debemos producir AL MENOS 20 lotes, pero podemos hacer más.',
+         react:{c:'andres',t:'¡Perfecto! ≥ para demanda mínima, ≤ para recursos máximos.'},nx:'crisis_call'},
+      ],
+    },
+
+    /* ═══════ CONVERGENCIA: CRISIS DEL PROVEEDOR ═══════ */
+    crisis_call: {
+      ch:'Capítulo 5 — Giro Inesperado', title:'La Llamada', icon:'📞',
+      narr:`<strong>*RING RING*</strong> — El teléfono de Doña Luisa interrumpe la reunión.`,
+      dial:[
+        {c:'luisa',t:'¿Aló? ... ¿QUÉ? La fábrica de hilos en Medellín solo puede enviar la <strong>mitad del pedido</strong>. Un paro camionero tiene bloqueada la vía.'},
+        {c:'andres',t:`Esto complica todo. El hilo pasa de ${b[1]} conos a solo <strong>${Math.floor(b[1]/2)} conos</strong> esta semana.`},
+        {c:'luisa',t:'Sea cual sea la situación actual, necesito que analices el impacto de esta restricción. ¿Qué nos dicen los números?'},
+      ],
+      next:'q_impact',
+    },
+    q_impact: {
+      ch:'Capítulo 5', title:'Impacto en la Producción', icon:'📉',
+      narr:`Con la mitad del hilo, la solución óptima anterior <strong>ya no es válida</strong> — hay que recalcular. Pero antes de resolver, piensa lógicamente.`,
+      dial:[{c:'andres',t:`Si el hilo se reduce a la mitad, ¿qué le pasa a la ganancia óptima Z*?`}],
+      choices:[
+        {l:'A',t:'Z* podría aumentar, porque al tener menos hilo la empresa se enfoca en prendas que no usan tanto hilo',$:-6e6,
+         fb:'No. Aunque cambie el MIX de productos, la ganancia total no puede SUBIR con menos recursos. La región factible se reduce, nunca se amplía.',
+         react:{c:'andres',t:'Menos recursos nunca da más ganancia. Puede cambiar qué produces, pero Z* baja.'},nx:'q_whatif'},
+        {l:'B',t:'Es imposible saberlo sin resolver de nuevo el Simplex',$:-3e6,
+         fb:'No necesitas resolver para saber la DIRECCIÓN del cambio. Si reduces un recurso, la ganancia no puede subir — es lógica básica de PL.',
+         react:{c:'valentina',t:'La dirección se puede deducir sin recalcular. Solo la magnitud exacta necesita Simplex.'},nx:'q_whatif'},
+        {l:'C',t:'Z* no cambia porque el hilo no es importante para el modelo',$:-8e6,
+         fb:'El hilo SÍ afecta el modelo — es una restricción. Si se reduce y era restricción activa, Z* baja significativamente.',
+         react:{c:'luisa',t:'¡El hilo es clave! Claro que afecta la ganancia.'},nx:'q_whatif'},
+        {l:'D',t:'Z* disminuye o se mantiene igual, porque tenemos MENOS de un recurso que antes',ok:true,$:10e6,
+         fb:'¡Correcto! Al reducir un recurso, la región factible se encoge. El óptimo no puede mejorar — solo puede empeorar o quedarse igual.',
+         react:{c:'valentina',t:'Exacto. Menos recursos = región factible más pequeña = Z* igual o peor.'},nx:'q_whatif'},
+      ],
+    },
+    q_whatif: {
+      ch:'Capítulo 5', title:'¿Dónde Invertir?', icon:'🔮',
+      narr:`Doña Luisa tiene presupuesto limitado para mejorar UN solo recurso. Puede ampliar la capacidad de cualquiera de los 4 recursos.`,
+      dial:[{c:'luisa',t:`Si solo puedo invertir en ampliar UN recurso para ganar más plata, ¿cuál elijo?`}],
+      choices:[
+        {l:'A',t:`${RES[slackIdx]} — como es el que más sobra, aumentarlo nos da más flexibilidad`,$:-7e6,
+         fb:`Al contrario: si ya sobra, agregar más no cambia la producción ni la ganancia. Hay que invertir en lo que se AGOTA, no en lo que sobra.`,
+         react:{c:'valentina',t:'Invertir en lo que sobra es botar plata.'},nx:'branch2'},
+        {l:'B',t:`${RES[(bindingIdx+1)%4]} — porque es el más caro y vale la pena optimizarlo`,$:-4e6,
+         fb:'El costo del recurso no determina dónde invertir. Lo que importa es si se agota o no. Un recurso barato que se agota es más valioso que uno caro que sobra.',
+         react:{c:'valentina',t:'El costo del recurso no tiene que ver. Lo que importa es si es restricción activa.'},nx:'branch2'},
+        {l:'C',t:`${RES[bindingIdx]} — es el que se agota completamente (restricción activa)`,ok:true,$:10e6,
+         fb:`¡Exacto! Solo tiene sentido ampliar un recurso que se usa al 100%. ${RES[bindingIdx]} es el cuello de botella — ahí es donde la inversión impacta Z*.`,
+         react:{c:'luisa',t:'¡Inversión inteligente! Donde más duele, más impacta.'},nx:'branch2'},
+        {l:'D',t:'Cualquiera, todos los recursos aportan igual a la ganancia',$:-5e6,
+         fb:'Falso. Solo los recursos que se agotan (restricciones activas) impactan la ganancia al ampliarse.',
+         react:{c:'andres',t:'No todos los recursos son iguales. El que se agota es el que vale la pena.'},nx:'branch2'},
+      ],
+    },
+
+    /* ────── BRANCH 2 ────── */
+    branch2: {
+      branch: (st) => st.money >= 130e6 ? 'opp_intro' : 'emergency_intro',
+    },
+
+    /* ═══════ PATH: OPORTUNIDAD ═══════ */
+    opp_intro: {
+      ch:'Capítulo 6 — La Oportunidad', title:'El Cliente de Armenia', icon:'🌟',
+      narr:`Tu buen análisis atrajo la atención de un colegio privado grande en Armenia. Quieren uniformes deportivos y batas de laboratorio.`,
+      dial:[{c:'luisa',t:'¡Nos buscan para un contrato nuevo! Pero necesitamos analizar si nos conviene con los recursos que tenemos.'}],
+      next:'q_solve2',
+    },
+
+    /* ═══════ PATH: EMERGENCIA ═══════ */
+    emergency_intro: {
+      ch:'Capítulo 6 — Emergencia', title:'Decisiones Difíciles', icon:'🆘',
+      narr:`La crisis del hilo golpeó fuerte. Pero hay una posible salida: un colegio en <strong>Armenia</strong> acaba de llamar preguntando si podemos fabricarles uniformes deportivos y batas de laboratorio — un negocio diferente con otros insumos.`,
+      dial:[
+        {c:'luisa',t:'Antes de aceptar ese contrato, necesitamos verificar algo básico: con los recursos actuales, ¿todavía podemos operar?'},
+        {c:'andres',t:'Con menos hilo, ¿el modelo actual sigue siendo <strong>factible</strong>? Si no, estamos en problemas serios.'},
+      ],
+      next:'q_feasible',
+    },
+    q_feasible: {
+      ch:'Capítulo 6', title:'¿Es Factible?', icon:'❓',
+      narr:`Si reducimos el hilo a la mitad (${Math.floor(b[1]/2)} conos), ¿el modelo sigue teniendo solución?`,
+      dial:[{c:'valentina',t:'Un modelo es <strong>infactible</strong> cuando ninguna combinación de variables cumple TODAS las restricciones simultáneamente.'}],
+      choices:[
+        {l:'A',t:'No, si cortamos un recurso a la mitad el modelo se vuelve infactible',$:-7e6,
+         fb:'No. Un modelo con restricciones ≤ y no negatividad siempre es factible — la solución x₁=x₂=x₃=0 (no producir nada) cumple todas las restricciones.',
+         react:{c:'valentina',t:'x=0 siempre cumple restricciones ≤. Es factible, solo que la ganancia sería $0.'},nx:'q_solve2'},
+        {l:'B',t:'Sí, sigue siendo factible — x₁=x₂=x₃=0 siempre cumple restricciones ≤',ok:true,$:9e6,
+         fb:'¡Correcto! Con restricciones ≤ y no negatividad, no producir nada (x=0) SIEMPRE es factible. El Z* será menor, pero solución existe.',
+         react:{c:'valentina',t:'Exacto. Factible sí, pero la solución óptima será peor que antes.'},nx:'q_solve2'},
+        {l:'C',t:'Depende del valor exacto — hay que resolver el Simplex para saber si es factible',$:-3e6,
+         fb:'Con restricciones ≤ y variables ≥ 0, x=0 siempre es factible sin importar los valores. No necesitas Simplex para saberlo.',
+         react:{c:'andres',t:'Para restricciones ≤, x=0 siempre funciona. Es lógica, no cálculo.'},nx:'q_solve2'},
+      ],
+    },
+
+    /* ═══════ CONVERGENCIA FINAL: RESOLVER PROBLEMA 2 ═══════ */
+    q_solve2: {
+      ch:'Capítulo 7 — Ronda Final', title:'Último Modelo', icon:'⚡',
+      narr:`El colegio de Armenia quiere <strong>uniformes deportivos</strong> (x₁) y <strong>batas de laboratorio</strong> (x₂) — una línea nueva que usa dril y tela antifluidos en vez de algodón e hilo normal. Es un modelo diferente al del taller principal.<br><br>
+Max Z = ${c2[0]}x₁ + ${c2[1]}x₂<br>
+${['Dril','Antifluido','M. especial'].map((r,i) => `${A2[i][0]}x₁ + ${A2[i][1]}x₂ ≤ ${b2[i]} <em>(${r})</em>`).join('<br>')}<br>
+x₁, x₂ ≥ 0<br><br><em>💡 Último modelo. Resuélvelo en Excel Solver.</em>`,
+      dial:[{c:'luisa',t:'Es la prueba de fuego. ¿Cuánto podemos ganar con este contrato?'}],
+      choices:(function(){
+        if(!res2)return[{l:'A',t:'Error',$:0,ok:true,fb:'Error',nx:'q_final_decision'}];
+        const opts=[
+          {t:`x₁=${res2.sol[0].toFixed(1)}, x₂=${res2.sol[1].toFixed(1)} → Z = ${fmtK(res2.Z)}`,ok:true,$:12e6,
+           fb:`¡Perfecto! La solución óptima genera ${fmtK(res2.Z)} de ganancia.`,react:{c:'luisa',t:'¡Brillante! Ese contrato es nuestro.'}},
+          {t:`x₁=${Math.round(res2.sol[0]*0.7+3)}, x₂=${Math.round(res2.sol[1]*0.7+2)} → Z = ${fmtK(Math.round(c2[0]*(res2.sol[0]*0.7+3)+c2[1]*(res2.sol[1]*0.7+2)))}`,$:-7e6,
+           fb:`No es la solución óptima. La correcta es x₁=${res2.sol[0].toFixed(1)}, x₂=${res2.sol[1].toFixed(1)} con Z=${fmtK(res2.Z)}.`,react:{c:'andres',t:'Revisa en Excel.'}},
+          {t:`x₁=${Math.round(res2.sol[0]*1.2+5)}, x₂=${Math.max(0,Math.round(res2.sol[1]*0.5-2))} → Z = ${fmtK(Math.round(c2[0]*(res2.sol[0]*1.2+5)+c2[1]*Math.max(0,res2.sol[1]*0.5-2)))}`,$:-5e6,
+           fb:`Esa combinación no es óptima (puede incluso violar alguna restricción). La correcta es Z=${fmtK(res2.Z)}.`,react:{c:'valentina',t:'Verifica las restricciones en Excel.'}},
+        ];
+        const sh=shuffle(opts,d.rng);['A','B','C'].forEach((l,i)=>{sh[i].l=l;sh[i].nx='q_final_decision'});
+        return sh;
+      })(),
+    },
+
+    /* ────── DECISIÓN FINAL ────── */
+    q_final_decision: {
+      ch:'Capítulo 7', title:'La Gran Decisión', icon:'🏆',
+      narr:`Ha sido una semana intensa. Doña Luisa te pide una última recomendación estratégica para el futuro del taller.`,
+      dial:[{c:'luisa',t:'Con todo lo que aprendimos esta semana, ¿cuál debería ser nuestra prioridad estratégica?'}],
+      choices:[
+        {l:'A',t:'Diversificar con 10 prendas nuevas para llegar a más mercados y diluir el riesgo',$:-6e6,
+         fb:'Diversificar suena bien en teoría, pero sin ampliar recursos primero, agregar productos solo fragmenta la capacidad. Primero hay que resolver los cuellos de botella.',
+         react:{c:'valentina',t:'Sin recursos adicionales, más productos = menos de cada uno. No es óptimo.'},nx:'epilogue'},
+        {l:'B',t:'Ampliar la capacidad del recurso que se agota (cuello de botella) — es donde la inversión más impacta Z*',ok:true,$:12e6,
+         fb:'¡Excelente! La PL enseña que invertir en restricciones activas tiene el mayor retorno. Ampliar el cuello de botella permite producir más y ganar más.',
+         react:{c:'luisa',t:'¡Así se habla! Inversión inteligente basada en datos.'},nx:'epilogue'},
+        {l:'C',t:'Reducir costos recortando todos los recursos proporcionalmente un 15%',$:-5e6,
+         fb:'Recortar parejo ignora que algunos recursos ya son cuellos de botella. Recortar uno que se agota destruye la producción. Solo se recorta donde hay holgura.',
+         react:{c:'andres',t:'Si recortas el recurso que ya se agota, la producción colapsa.'},nx:'epilogue'},
+        {l:'D',t:'Subir los precios de venta un 20% para maximizar la ganancia sin cambiar la producción',$:-4e6,
+         fb:'Los precios los pone el mercado, no nosotros (son datos fijos en el modelo). Y aunque pudieras subirlos, la PL dice que la estructura de producción óptima también puede cambiar.',
+         react:{c:'valentina',t:'Los precios son datos del modelo, no variables. No podemos cambiarlos así.'},nx:'epilogue'},
+      ],
+    },
+
+    /* ────── EPILOGO ────── */
+    epilogue: { epilogue: true },
+  };
+
+  return scenes;
+}
+
+/* ═══════════════════════════════════════════
+   GAME STATE
+   ═══════════════════════════════════════════ */
+const G = {
+  nombre:'', codigo:'', nombre2:'', codigo2:'',
+  seed:0, money:START_MONEY, scene:'splash',
+  history:[], // {sceneId, choiceIdx, money, correct}
+  procedures:{}, // {sceneId: texto}
+  data:null, scenes:null,
+  remaining:TOTAL_TIME, interval:null, timerStarted:false,
+  notifs:new Set(), submitted:false,
+  streak:0,
+};
+
+/* ═══════════════════════════════════════════
+   LOCAL STORAGE PERSISTENCE
+   ═══════════════════════════════════════════ */
+const STORAGE_PREFIX = 'parcialV2_';
+function storageKey(codigo){ return STORAGE_PREFIX + (codigo||'anon'); }
+function saveState(){
+  if(!G.codigo) return;
+  try{
+    const s = {
+      nombre:G.nombre, codigo:G.codigo, nombre2:G.nombre2, codigo2:G.codigo2,
+      seed:G.seed, money:G.money, scene:G.scene,
+      history:G.history, procedures:G.procedures||{},
+      remaining:G.remaining, notifs:[...(G.notifs||[])],
+      streak:G.streak, submitted:G.submitted, ts:Date.now(),
+    };
+    localStorage.setItem(storageKey(G.codigo), JSON.stringify(s));
+  }catch(e){}
+}
+function loadState(codigo){
+  try{
+    const raw = localStorage.getItem(storageKey(codigo));
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function clearState(codigo){
+  try{ localStorage.removeItem(storageKey(codigo)); }catch(e){}
+}
+function saveProcedure(sceneId, value){
+  if(!G.procedures) G.procedures = {};
+  G.procedures[sceneId] = value;
+  saveState();
+  const ind=document.getElementById('proc_saved_'+sceneId);
+  if(ind){ind.classList.add('show');clearTimeout(ind._t);ind._t=setTimeout(()=>ind.classList.remove('show'),1500);}
+}
+
+/* ═══════════════════════════════════════════
+   TOAST + MONEY FLOAT
+   ═══════════════════════════════════════════ */
+function toast(msg,type='info',dur=5000){
+  const el=document.createElement('div');el.className='toast '+type;el.innerHTML=msg;
+  document.getElementById('toasts').appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),400)},dur);
+}
+function showMoneyFloat(amount){
+  const el=document.createElement('div');
+  el.className='money-float '+(amount>=0?'pos':'neg');
+  el.textContent=(amount>=0?'+':'')+fmt$(amount);
+  document.getElementById('moneyFloats').appendChild(el);
+  setTimeout(()=>el.remove(),2000);
+  if(amount > 0) {
+    for(let i=0;i<6;i++){
+      const p=document.createElement('div');
+      p.className='sparkle';
+      p.style.left=(40+Math.random()*20)+'vw';
+      p.style.animationDelay=(Math.random()*.3)+'s';
+      p.textContent=['\u2728','\uD83D\uDCB0','\u2B50','\uD83C\uDFAF'][Math.floor(Math.random()*4)];
+      document.getElementById('moneyFloats').appendChild(p);
+      setTimeout(()=>p.remove(),1500);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════
+   TIMER
+   ═══════════════════════════════════════════ */
+function startTimer(){
+  G.timerStarted=true;
+  document.getElementById('hud').classList.add('active');
+  document.getElementById('hudProgress').classList.add('active');
+  let tick=0;
+  G.interval=setInterval(()=>{
+    G.remaining--;
+    if(G.remaining<=0){G.remaining=0;clearInterval(G.interval);toast('⏰ ¡Tiempo! Enviando resultados...','danger',8000);setTimeout(()=>showEpilogue(),2000)}
+    updateHUD();checkNotifs();
+    // Persist every 5 seconds
+    if(++tick % 5 === 0) saveState();
+  },1000);
+}
+function updateHUD(){
+  const el=document.getElementById('hudTimer');
+  el.textContent=fmtTime(G.remaining);
+  const pct=G.remaining/TOTAL_TIME;
+  el.className='hud-timer '+(pct>.35?'ok':pct>.12?'warn':'danger');
+  document.getElementById('hudMoney').textContent=G.money.toLocaleString('es-CO');
+  const progFill=document.getElementById('hudProgressFill');
+  const progText=document.getElementById('hudProgressText');
+  if(progFill&&progText){
+    const total=14;
+    const done=G.history.length;
+    progFill.style.width=(done/total*100)+'%';
+    progText.textContent='Pregunta '+done+' de '+total;
+  }
+}
+function checkNotifs(){
+  const m=Math.floor(G.remaining/60),ns=G.notifs;
+  if(m===60&&!ns.has('60')){ns.add('60');toast('☕ Doña Luisa te manda un tinto. Llevas 25 minutos.','info')}
+  if(m===42&&!ns.has('42')){ns.add('42');toast('⏱️ Mitad del tiempo. ¿Cómo va el taller?','warning')}
+  if(m===15&&!ns.has('15')){ns.add('15');toast('⚡ ¡15 minutos! Doña Luisa está nerviosa.','danger',7000)}
+  if(m===5&&!ns.has('5')){ns.add('5');toast('🔥 ¡5 MINUTOS! Los inversionistas esperan resultados.','danger',10000)}
+}
+
+/* ═══════════════════════════════════════════
+   RENDER ENGINE
+   ═══════════════════════════════════════════ */
+const app=document.getElementById('app');
+
+function renderScene(id){
+  G.scene=id;
+  const sc=G.scenes[id];
+  if(!sc){showEpilogue();return}
+  if(sc.branch){const next=sc.branch(G);renderScene(next);return}
+  if(sc.epilogue){showEpilogue();return}
+
+  // Shuffle determinístico por (código + sceneId) — asegura que la letra
+  // correcta varíe entre estudiantes y entre preguntas, pero sea estable
+  // al reanudar el mismo intento.
+  if(sc.choices && !sc._shuffled){
+    const shSeed = seedFromStr((G.codigo||'x')+':'+id);
+    const shRng = mulberry32(shSeed);
+    sc.choices = shuffle(sc.choices, shRng);
+    const letters = ['A','B','C','D','E','F'];
+    sc.choices.forEach((c,i)=>c.l=letters[i]);
+    sc._shuffled = true;
+  }
+
+  document.getElementById('hudChapter').textContent=sc.ch||'';
+  let html=`<div class="scene" id="currentScene">`;
+  if(sc.icon) html+=`<div class="scene-illust">${sc.icon}</div>`;
+  if(sc.choices){
+    const qNum=G.history.length+1;
+    html+=`<div class="q-number-badge">PREGUNTA ${qNum}</div>`;
+  }
+  if(sc.ch) html+=`<div class="chapter-tag">${sc.ch}</div>`;
+  if(sc.title) html+=`<h2 class="scene-title">${sc.title}</h2>`;
+  if(sc.narr) html+=`<div class="narrative">${sc.narr}</div>`;
+  if(sc.dial) sc.dial.forEach(d=>{html+=dialogue(d.c,d.t)});
+  if(sc.choices){
+    // Textarea de procedimiento (se guarda automáticamente en localStorage)
+    const savedProc = (G.procedures && G.procedures[id]) || '';
+    const safeProc = savedProc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html+=`<div class="procedure-box">
+      <label class="procedure-label">📝 Procedimiento <span class="procedure-saved" id="proc_saved_${id}">✓ guardado</span></label>
+      <textarea class="procedure-input" id="proc_${id}"
+        oninput="saveProcedure('${id}', this.value)"
+        placeholder="Pega o escribe aquí el procedimiento que usaste para llegar a tu respuesta (planteo, cálculos, resultado del Solver, etc.)">${safeProc}</textarea>
+      <div class="procedure-hint">Se guarda automáticamente — si cierras la página, al volver con el mismo código puedes reanudar.</div>
+    </div>`;
+    html+=`<div class="choices" id="choices">`;
+    sc.choices.forEach((ch,i)=>{
+      html+=`<button class="choice-btn" data-idx="${i}" onclick="makeChoice(${i})">
+        <span class="letter">${ch.l}</span>
+        <span class="choice-text">${ch.t}</span>
+      </button>`;
+    });
+    html+=`</div>`;
+  } else {
+    html+=`<button class="btn-continue primary" onclick="goNext('${sc.next}')">${sc.next==='arrive'?'Ir al taller →':'Continuar →'}</button>`;
+  }
+  html+=`</div>`;
+  app.innerHTML=html;
+  window.scrollTo({top:0,behavior:'smooth'});
+  requestAnimationFrame(()=>document.getElementById('currentScene').classList.add('visible'));
+  saveState();
+}
+
+function dialogue(char,text){
+  const avClass={luisa:'av-hernando',andres:'av-marcela',valentina:'av-camilo'}[char]||'';
+  const nmClass={luisa:'nm-hernando',andres:'nm-marcela',valentina:'nm-camilo'}[char]||'';
+  const emoji={luisa:'👩‍💼',andres:'🧑‍🔧',valentina:'👩‍💻'}[char]||'';
+  const name={luisa:'Doña Luisa',andres:'Andrés',valentina:'Valentina'}[char]||'';
+  return `<div class="dialogue">
+    <span class="avatar ${avClass}">${emoji}</span>
+    <div class="bubble">
+      <div class="char-name ${nmClass}">${name}</div>
+      <div class="char-text">${text}</div>
+    </div>
+  </div>`;
+}
+
+function makeChoice(idx){
+  const sc=G.scenes[G.scene];
+  const ch=sc.choices[idx];
+  // Disable all buttons
+  document.querySelectorAll('.choice-btn').forEach((btn,i)=>{
+    btn.classList.add('disabled');
+    if(i===idx) btn.classList.add(ch.ok?'selected-correct':'selected-wrong');
+    else if(ch.ok===true && sc.choices[i].ok) btn.classList.add('correct');
+    else if(ch.ok && !sc.choices[i].ok) btn.classList.add('wrong');
+    else if(!ch.ok && sc.choices[i].ok) btn.classList.add('correct');
+    else btn.classList.add('wrong');
+  });
+  // Update money
+  G.money += ch.$;
+  showMoneyFloat(ch.$);
+  updateHUD();
+  // Record
+  G.history.push({scene:G.scene, choice:idx, money:ch.$, correct:!!ch.ok});
+  // Dopamine effects
+  if(ch.ok) {
+    const flash=document.createElement('div');
+    flash.className='screen-flash correct-flash';
+    document.body.appendChild(flash);
+    setTimeout(()=>flash.remove(),800);
+    G.streak=(G.streak||0)+1;
+    if(G.streak>=3){toast('\uD83D\uDD25 \u00A1RACHA DE '+G.streak+'! \u00A1Imparable!','success',3000)}
+  } else {
+    G.streak=0;
+    document.getElementById('currentScene')?.classList.add('shake-anim');
+    setTimeout(()=>document.getElementById('currentScene')?.classList.remove('shake-anim'),500);
+  }
+  // Show feedback
+  const fbDiv=document.createElement('div');
+  fbDiv.className='feedback '+(ch.ok?'correct':'wrong');
+  fbDiv.innerHTML=ch.ok?`
+    <div class="fb-celebrate">
+      <div class="fb-icon-big">\u2705</div>
+      <div class="fb-title-correct">\u00A1CORRECTO!</div>
+    </div>
+    <div class="fb-text">${ch.fb}</div>
+    <div class="fb-money-big pos">+${fmt$(ch.$)}</div>
+    ${ch.react?dialogue(ch.react.c,ch.react.t):''}
+    <button class="btn-continue success" onclick="goNext('${ch.nx}')">Continuar \u2192</button>
+  `:`
+    <div class="fb-icon">\u274C</div>
+    <div class="fb-text">${ch.fb}</div>
+    <div class="fb-money" style="color:var(--red)">${fmt$(ch.$)}</div>
+    ${ch.react?dialogue(ch.react.c,ch.react.t):''}
+    <button class="btn-continue danger" onclick="goNext('${ch.nx}')">Continuar \u2192</button>
+  `;
+  document.getElementById('choices').after(fbDiv);
+  fbDiv.scrollIntoView({behavior:'smooth',block:'nearest'});
+  saveState();
+}
+
+function goNext(id){
+  // Fade out
+  const sc=document.getElementById('currentScene');
+  if(sc){sc.style.opacity='0';sc.style.transform='translateY(-10px)'}
+  setTimeout(()=>renderScene(id),350);
+}
+
+/* ═══════════════════════════════════════════
+   EPILOGUE / RESULTS
+   ═══════════════════════════════════════════ */
+function calcGrade(money){
+  return Math.min(5.0, Math.max(0.5, Math.round(((money - 40e6) / (180e6 - 40e6)) * 45 + 5) / 10));
+}
+function showEpilogue(){
+  if(G.interval)clearInterval(G.interval);
+  const money=G.money;
+  const grade = calcGrade(money);
+  const timeUsed=Math.round((TOTAL_TIME-G.remaining)/60);
+  const correct=G.history.filter(h=>h.correct).length;
+  const total=G.history.length;
+
+  let emoji,msg,cls;
+  if(grade>=4.5){emoji='🏆';msg='¡EXCEPCIONAL! Eres un crack de la PL.';cls='high'}
+  else if(grade>=4.0){emoji='⭐';msg='¡Excelente! Dominas la programación lineal.';cls='high'}
+  else if(grade>=3.5){emoji='💪';msg='Muy bien. Sólido conocimiento de PL.';cls='high'}
+  else if(grade>=3.0){emoji='👍';msg='Aprobado. Hay margen de mejora.';cls='mid'}
+  else if(grade>=2.0){emoji='📖';msg='Necesitas reforzar los conceptos.';cls='low'}
+  else{emoji='📚';msg='A estudiar más. ¡La PL es tu amiga!';cls='low'}
+
+  app.innerHTML=`<div class="scene visible" style="padding-top:5rem">
+    <div class="scene-illust">${emoji}</div>
+    <div class="chapter-tag">Fin de la Historia</div>
+    <h2 class="scene-title">Tu Legado en Textiles del Otún</h2>
+
+    <div style="text-align:center;margin:1.5rem 0;padding:1.5rem;background:var(--card);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)">
+      <div class="result-big" style="color:${grade>=3?'var(--green)':grade>=2?'var(--amber)':'var(--red)'}">${grade.toFixed(1)}</div>
+      <div class="result-sub">de 5.0</div>
+      <p style="color:var(--text2);margin-top:.5rem">${msg}</p>
+      <div class="grade-bar" style="margin-top:.8rem"><div class="grade-fill ${cls}" style="width:${grade/5*100}%"></div></div>
+    </div>
+
+    <div style="background:var(--card);border-radius:var(--radius);padding:1.2rem;margin:1rem 0;border:1px solid rgba(255,255,255,.06)">
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-val" style="color:var(--amber)">${fmt$(money)}</div><div class="stat-lbl">Capital Final</div></div>
+        <div class="stat-item"><div class="stat-val">${correct}/${total}</div><div class="stat-lbl">Respuestas Correctas</div></div>
+        <div class="stat-item"><div class="stat-val">${timeUsed} min</div><div class="stat-lbl">Tiempo Usado</div></div>
+        <div class="stat-item"><div class="stat-val">${G.history.length}</div><div class="stat-lbl">Decisiones Tomadas</div></div>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border-radius:var(--radius);padding:1rem;margin:1rem 0;border:1px solid rgba(255,255,255,.06)">
+      <p><span style="color:var(--text3)">Integrante 1:</span> <strong>${G.nombre}</strong> (${G.codigo})</p>
+      ${G.nombre2?`<p><span style="color:var(--text3)">Integrante 2:</span> <strong>${G.nombre2}</strong> (${G.codigo2})</p>`:''}
+    </div>
+
+    ${dialogue('luisa', grade>=3
+      ? `Ha sido un placer, <strong>${G.nombre.split(' ')[0]}${G.nombre2?' y '+G.nombre2.split(' ')[0]:''}</strong>. Textiles del Otún tiene futuro gracias a personas como ustedes.`
+      : `<strong>${G.nombre.split(' ')[0]}${G.nombre2?' y '+G.nombre2.split(' ')[0]:''}</strong>, la PL es una herramienta poderosa. ¡A practicar más!`)}
+
+    <div style="text-align:center;margin:1.5rem 0">
+      ${SHEETS_URL?`<button class="btn-continue success" id="submitBtn" onclick="finalSubmit()">Enviar Resultados al Profesor 📨</button>`
+      :'<p style="color:var(--amber)">⚠️ Sin Google Sheets configurado. Toma pantallazo.</p>'}
+    </div>
+
+    <p style="text-align:center;color:var(--text3);font-size:.8rem;margin-top:2rem">
+      Administración de Operaciones 2 — UTP — ${new Date().toLocaleDateString('es-CO')}<br>
+      Textiles del Otún — Parcial PL v2
+    </p>
+  </div>`;
+
+  if(grade>=4.0) launchConfetti();
+}
+
+function launchConfetti(){
+  const colors=['#f59e0b','#10b981','#3b82f6','#8b5cf6','#f43f5e','#14b8a6'];
+  for(let i=0;i<40;i++){
+    const p=document.createElement('div');p.className='confetti';
+    p.style.left=Math.random()*100+'vw';p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration=(2+Math.random()*2)+'s';p.style.animationDelay=Math.random()*1.5+'s';
+    p.style.width=(6+Math.random()*8)+'px';p.style.height=p.style.width;
+    p.style.borderRadius=Math.random()>.5?'50%':'2px';
+    document.body.appendChild(p);setTimeout(()=>p.remove(),5000);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   GOOGLE SHEETS
+   ═══════════════════════════════════════════ */
+async function registerSheets(){
+  if(!SHEETS_URL)return;
+  try{await fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({action:'register',nombre1:G.nombre,codigo1:G.codigo,nombre2:G.nombre2,codigo2:G.codigo2}),headers:{'Content-Type':'text/plain'},mode:'no-cors'})}catch(e){}
+}
+async function finalSubmit(){
+  if(G.submitted)return;
+  const btn=document.getElementById('submitBtn');
+  if(btn){btn.disabled=true;btn.textContent='Enviando...'}
+  const grade=calcGrade(G.money);
+  try{
+    await fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({
+      action:'update',codigo1:G.codigo,
+      nombre1:G.nombre, nombre2:G.nombre2, codigo2:G.codigo2,
+      notaCap1:'-',notaCap2:'-',notaCap3:'-',
+      notaFinal:grade.toFixed(1),
+      tiempoUsado:Math.round((TOTAL_TIME-G.remaining)/60),
+      ruta:`${G.history.filter(h=>h.correct).length}/${G.history.length} correctas`,
+      respuestas:G.history,
+      procedimientos:G.procedures||{},
+    }),headers:{'Content-Type':'text/plain'},mode:'no-cors'});
+    G.submitted=true;
+    saveState();
+    // Clear local state so next attempt starts fresh
+    setTimeout(()=>clearState(G.codigo), 1000);
+    toast('✅ ¡Resultados enviados!','success',8000);
+    if(btn)btn.textContent='✅ Enviado';
+  }catch(e){
+    toast('Error al enviar. Toma pantallazo.','danger',8000);
+    if(btn){btn.disabled=false;btn.textContent='Reintentar'}
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SPLASH / REGISTRATION
+   ═══════════════════════════════════════════ */
+function showSplash(){
+  app.innerHTML=`<div class="scene splash visible">
+    <div class="splash-icon">🧵</div>
+    <h1>Textiles<br>del Otún</h1>
+    <p class="sub">Parcial de PL v2 — Taller de confección en Pereira</p>
+    <div class="reg-card">
+      <div class="pair-label">Individual o en parejas</div>
+      <div class="form-row">
+        <div class="fg" style="flex:2"><label>Integrante 1 — Nombre</label><input class="input" id="rn1" placeholder="Nombre completo..." autofocus></div>
+        <div class="fg"><label>Código</label><input class="input" id="rc1" placeholder="1088..."></div>
+      </div>
+      <div class="form-row" style="opacity:.5;transition:opacity .3s" id="pair" onfocusin="this.style.opacity='1'">
+        <div class="fg" style="flex:2"><label>Integrante 2 <span style="color:var(--text3)">(opcional)</span></label><input class="input" id="rn2" placeholder="Compañero/a..."></div>
+        <div class="fg"><label>Código</label><input class="input" id="rc2" placeholder="1088..."></div>
+      </div>
+      <button class="btn-continue primary" onclick="startGame()">Comenzar la Historia 🚀</button>
+    </div>
+    <p style="color:var(--text3);font-size:.8rem;margin-top:2rem">Administración de Operaciones 2 — UTP</p>
+  </div>`;
+}
+
+function startGame(){
+  const n1=(document.getElementById('rn1')||{}).value?.trim();
+  const c1=(document.getElementById('rc1')||{}).value?.trim();
+  if(!n1||!c1){toast('Completa nombre y código del integrante 1','warning');return}
+
+  // Check for resumable saved state BEFORE overwriting G
+  const saved = loadState(c1);
+  if(saved && !saved.submitted && saved.scene && saved.scene!=='splash'){
+    showResumePrompt(saved, n1, c1);
+    return;
+  }
+
+  G.nombre=n1;G.codigo=c1;
+  G.nombre2=(document.getElementById('rn2')||{}).value?.trim()||'';
+  G.codigo2=(document.getElementById('rc2')||{}).value?.trim()||'';
+  G.seed=seedFromStr(c1);
+  const rng=mulberry32(G.seed);
+  G.data=genData(rng);
+  G.scenes=buildScenes(G.data);
+  G.procedures={};
+  G.history=[];
+  G.money=START_MONEY;
+  G.remaining=TOTAL_TIME;
+  G.notifs=new Set();
+  G.streak=0;
+  G.submitted=false;
+  registerSheets();
+  saveState();
+  startTimer();
+  renderScene('intro');
+}
+
+function showResumePrompt(saved, n1, c1){
+  const minsLeft = Math.floor((saved.remaining||0)/60);
+  const qDone = (saved.history||[]).length;
+  app.innerHTML = `<div class="scene splash visible">
+    <div class="splash-icon">🔁</div>
+    <h1>Intento previo<br>encontrado</h1>
+    <p class="sub">Tienes un parcial en progreso con este código</p>
+    <div class="reg-card">
+      <div class="resume-banner">
+        <h4>📂 Datos guardados</h4>
+        <p><strong>${saved.nombre}</strong> (${saved.codigo})<br>
+        Preguntas respondidas: <strong>${qDone}/14</strong><br>
+        Tiempo restante: <strong>${minsLeft} min</strong><br>
+        Dinero actual: <strong>${fmt$(saved.money)}</strong></p>
+        <div class="resume-actions">
+          <button class="btn-resume" onclick="resumeGame()">Reanudar ▶</button>
+          <button class="btn-restart" onclick="restartGame('${c1.replace(/'/g,"\\'")}','${n1.replace(/'/g,"\\'")}')">Empezar de nuevo</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function resumeGame(){
+  const c1 = (document.getElementById('rc1')||{}).value?.trim() || G.codigo;
+  const saved = loadState(c1);
+  if(!saved){toast('No se pudo cargar el intento guardado','danger');return;}
+  G.nombre = saved.nombre;
+  G.codigo = saved.codigo;
+  G.nombre2 = saved.nombre2 || '';
+  G.codigo2 = saved.codigo2 || '';
+  G.seed = saved.seed || seedFromStr(saved.codigo);
+  G.money = saved.money;
+  G.history = saved.history || [];
+  G.procedures = saved.procedures || {};
+  G.remaining = saved.remaining;
+  G.notifs = new Set(saved.notifs || []);
+  G.streak = saved.streak || 0;
+  G.submitted = false;
+  const rng = mulberry32(G.seed);
+  G.data = genData(rng);
+  G.scenes = buildScenes(G.data);
+  startTimer();
+  renderScene(saved.scene || 'intro');
+  toast('✅ Intento reanudado','success',4000);
+}
+
+function restartGame(c1, n1){
+  clearState(c1);
+  // Re-populate inputs and re-trigger
+  const rn1=document.getElementById('rn1'); if(rn1) rn1.value=n1;
+  const rc1=document.getElementById('rc1'); if(rc1) rc1.value=c1;
+  showSplash();
+  setTimeout(()=>{
+    const a=document.getElementById('rn1'); if(a)a.value=n1;
+    const b=document.getElementById('rc1'); if(b)b.value=c1;
+  },50);
+}
+
+/* ═══════════════════════════════════════════
+   TEACHER MODE
+   ═══════════════════════════════════════════ */
+function checkTeacher(){
+  const p=new URLSearchParams(location.search);
+  if(p.get('mode')==='teacher'){
+    const pwd=prompt('Contraseña:');
+    if(pwd===TEACHER_KEY){showTeacher();return true}
+  }
+  return false;
+}
+function showTeacher(){
+  app.innerHTML=`<div class="scene visible" style="padding-top:2rem;text-align:center">
+    <h1 style="color:var(--amber);font-size:2rem;-webkit-text-fill-color:var(--amber)">📋 Modo Profesor</h1>
+    <p style="color:var(--text2);margin:1rem 0">Ingresa código de estudiante para ver datos del modelo:</p>
+    <input class="input" id="tc" placeholder="Código" style="max-width:300px;margin:0 auto">
+    <button class="btn-continue primary" style="max-width:300px;margin:1rem auto" onclick="showTeacherData()">Ver Datos</button>
+    <div id="teacherOut"></div>
+  </div>`;
+}
+function showTeacherData(){
+  const code=(document.getElementById('tc')||{}).value?.trim();if(!code)return;
+  const seed=seedFromStr(code);const rng=mulberry32(seed);const d=genData(rng);
+  const {c,A,b,res,c2,A2,b2,res2,c4,res4}=d;
+  document.getElementById('teacherOut').innerHTML=`
+    <div style="text-align:left;margin-top:1rem;background:var(--card);padding:1.2rem;border-radius:var(--radius)">
+      <h3 style="color:var(--amber)">Seed: ${seed}</h3>
+      <p><strong>FO:</strong> Max Z = ${c.join('x + ')}x</p>
+      <p><strong>Restricciones:</strong></p>
+      ${A.map((r,i)=>`<p>${RES[i]}: ${r.join(', ')} ≤ ${b[i]}</p>`).join('')}
+      ${res?`<p><strong>Solución:</strong> ${res.sol.map((v,i)=>`x${i+1}=${v.toFixed(2)}`).join(', ')} | Z=${res.Z.toFixed(2)}</p>
+      <p><strong>Holguras:</strong> ${res.sl.map((v,i)=>`${RES[i]}:${v.toFixed(1)}`).join(', ')}</p>`:''}
+      <hr style="border-color:rgba(255,255,255,.1);margin:.8rem 0">
+      <p><strong>Prob 2 (2var):</strong> Max ${c2[0]}x₁+${c2[1]}x₂</p>
+      ${res2?`<p>Sol: x₁=${res2.sol[0].toFixed(2)}, x₂=${res2.sol[1].toFixed(2)} | Z=${res2.Z.toFixed(2)}</p>`:''}
+      <hr style="border-color:rgba(255,255,255,.1);margin:.8rem 0">
+      <p><strong>Expansión (4var):</strong> Z*=${res4?res4.Z.toFixed(2):'?'}</p>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════ */
+if(!checkTeacher()) showSplash();
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&G.scene==='splash')startGame()});
+</script>
+</body>
+</html>
