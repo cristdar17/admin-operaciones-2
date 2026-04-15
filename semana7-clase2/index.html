@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Variables Binarias con Solver — Administración de Operaciones 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--card:#151d30;--card2:#1a2540;
+  --amber:#f59e0b;--amber-d:#d97706;--amber-l:#fbbf24;
+  --green:#10b981;--green-d:#059669;--red:#f43f5e;--red-d:#e11d48;
+  --blue:#3b82f6;--purple:#8b5cf6;--teal:#14b8a6;--pink:#ec4899;
+  --cyan:#06b6d4;--orange:#f97316;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --radius:14px;--shadow:0 8px 32px rgba(0,0,0,.5);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+}
+h1,h2,h3{font-family:'Playfair Display',serif}
+
+/* ===== NAV ===== */
+.top-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(10,14,26,.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  padding:.7rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+}
+.top-nav .brand{display:flex;align-items:center;gap:.6rem}
+.top-nav .brand-icon{font-size:1.4rem}
+.top-nav .brand-text{font-weight:800;font-size:1rem;
+  background:linear-gradient(135deg,var(--amber-l),var(--amber));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.top-nav .nav-tag{
+  font-size:.7rem;font-weight:600;padding:.3rem .8rem;border-radius:20px;
+  background:rgba(245,158,11,.1);color:var(--amber);text-transform:uppercase;letter-spacing:1px;
+}
+
+/* ===== HERO ===== */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:6rem 1.5rem 3rem;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:-50%;width:200%;height:200%;
+  background:radial-gradient(circle at 30% 40%,rgba(245,158,11,.08) 0%,transparent 50%),
+             radial-gradient(circle at 70% 60%,rgba(20,184,166,.06) 0%,transparent 40%),
+             radial-gradient(circle at 50% 80%,rgba(139,92,246,.05) 0%,transparent 30%);
+  animation:bgPulse 8s ease-in-out infinite alternate;
+}
+@keyframes bgPulse{0%{transform:scale(1)}100%{transform:scale(1.05)}}
+.hero>*{position:relative;z-index:1}
+.hero-icon{font-size:5rem;margin-bottom:1rem;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.hero h1{
+  font-size:clamp(2.2rem,5vw,3.5rem);font-weight:900;line-height:1.1;margin-bottom:.5rem;
+  background:linear-gradient(135deg,var(--amber-l),var(--amber),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero .sub{font-size:1.15rem;color:var(--text2);font-weight:300;margin-bottom:2rem;max-width:600px}
+.hero .scroll-hint{
+  margin-top:2rem;color:var(--text3);font-size:.85rem;
+  animation:bounce 2s ease-in-out infinite;
+}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ===== CHAPTER ===== */
+.chapter{
+  max-width:900px;margin:0 auto;padding:4rem 1.5rem;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .6s,transform .6s;
+}
+.chapter.visible{opacity:1;transform:translateY(0)}
+.chapter-num{
+  font-size:.75rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--amber);margin-bottom:.5rem;
+}
+.chapter h2{
+  font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:900;margin-bottom:1rem;
+  background:linear-gradient(135deg,var(--text),var(--text2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.chapter p,.chapter li{color:var(--text2);line-height:1.7;font-size:.95rem}
+.chapter ul,.chapter ol{padding-left:1.5rem;margin:.8rem 0}
+.chapter li{margin-bottom:.4rem}
+
+/* ===== CARDS ===== */
+.card{
+  background:var(--card);border:1px solid rgba(255,255,255,.06);
+  border-radius:var(--radius);padding:1.8rem;margin:1.5rem 0;
+  box-shadow:var(--shadow);
+}
+.card-accent{border-left:4px solid var(--amber)}
+.card-green{border-left:4px solid var(--green)}
+.card-blue{border-left:4px solid var(--blue)}
+.card-purple{border-left:4px solid var(--purple)}
+.card-teal{border-left:4px solid var(--teal)}
+.card-pink{border-left:4px solid var(--pink)}
+.card h3{font-size:1.2rem;margin-bottom:.8rem;color:var(--text)}
+.card p{margin-bottom:.6rem}
+
+/* ===== CONCEPT BOX ===== */
+.concept-box{
+  background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(249,115,22,.05));
+  border:1px solid rgba(245,158,11,.2);
+  border-radius:var(--radius);padding:2rem;margin:1.5rem 0;
+}
+.concept-box h3{color:var(--amber-l);font-size:1.3rem;margin-bottom:1rem}
+.concept-box .formula{
+  background:rgba(0,0,0,.3);border-radius:10px;padding:1.2rem;
+  font-family:'Courier New',monospace;font-size:1rem;
+  color:var(--amber-l);text-align:center;margin:.8rem 0;
+  border:1px solid rgba(245,158,11,.15);
+}
+
+/* ===== EXCEL TABLE ===== */
+.excel-wrapper{
+  overflow-x:auto;margin:1rem 0;border-radius:10px;
+  border:1px solid rgba(255,255,255,.1);
+}
+.excel-table{
+  width:100%;border-collapse:collapse;font-size:.82rem;
+  font-family:'Courier New',monospace;
+}
+.excel-table th{
+  background:linear-gradient(135deg,#1e3a5f,#1a2d4a);
+  color:var(--amber-l);font-weight:700;
+  padding:.6rem .8rem;text-align:center;
+  border:1px solid rgba(255,255,255,.08);
+  font-size:.75rem;letter-spacing:1px;
+}
+.excel-table td{
+  padding:.5rem .8rem;text-align:center;
+  border:1px solid rgba(255,255,255,.06);
+  color:var(--text2);
+}
+.excel-table .col-header{
+  background:rgba(59,130,246,.1);color:var(--blue);font-weight:600;
+  font-size:.7rem;letter-spacing:.5px;
+}
+.excel-table .row-header{
+  background:rgba(139,92,246,.08);color:var(--purple);
+  font-weight:600;text-align:left;
+}
+.excel-table .result{
+  background:rgba(16,185,129,.1);color:var(--green);font-weight:700;
+}
+.excel-table .decision{
+  background:rgba(245,158,11,.1);color:var(--amber-l);font-weight:700;
+}
+.excel-table .formula-cell{
+  background:rgba(6,182,212,.08);color:var(--cyan);font-size:.72rem;
+}
+
+/* ===== SOLVER STEPS ===== */
+.solver-steps{
+  display:grid;gap:1rem;margin:1rem 0;
+}
+.solver-step{
+  display:flex;gap:1rem;align-items:flex-start;
+  background:rgba(255,255,255,.03);border-radius:10px;padding:1rem 1.2rem;
+  border:1px solid rgba(255,255,255,.05);
+}
+.solver-step .step-num{
+  min-width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--orange));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.85rem;color:#0a0e1a;flex-shrink:0;
+}
+.solver-step .step-content{flex:1}
+.solver-step .step-content strong{color:var(--text);font-weight:600}
+.solver-step .step-content p{font-size:.88rem;margin-top:.2rem}
+
+/* ===== KEY POINT ===== */
+.key-point{
+  display:flex;gap:.8rem;align-items:flex-start;
+  background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);
+  border-radius:10px;padding:1rem 1.2rem;margin:.8rem 0;
+}
+.key-point .kp-icon{font-size:1.3rem;flex-shrink:0;margin-top:.1rem}
+.key-point p{font-size:.9rem;color:var(--text2)}
+.key-point strong{color:var(--green)}
+
+/* ===== WARNING ===== */
+.warning{
+  display:flex;gap:.8rem;align-items:flex-start;
+  background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.15);
+  border-radius:10px;padding:1rem 1.2rem;margin:.8rem 0;
+}
+.warning .w-icon{font-size:1.3rem;flex-shrink:0;margin-top:.1rem}
+.warning p{font-size:.9rem;color:var(--text2)}
+.warning strong{color:var(--red)}
+
+/* ===== EXAMPLE HEADER ===== */
+.example-header{
+  display:flex;align-items:center;gap:.8rem;margin-bottom:1rem;
+}
+.example-num{
+  background:linear-gradient(135deg,var(--amber),var(--orange));
+  color:#0a0e1a;font-weight:900;font-size:1.1rem;
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.example-title{
+  font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;
+  color:var(--text);
+}
+
+/* ===== EXERCISE ===== */
+.exercise{
+  background:var(--card2);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);padding:1.8rem;margin:1.5rem 0;
+  position:relative;
+}
+.exercise-badge{
+  position:absolute;top:-12px;left:20px;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:#fff;font-weight:800;font-size:.72rem;
+  padding:.35rem 1rem;border-radius:20px;
+  letter-spacing:1px;text-transform:uppercase;
+}
+.exercise h3{margin-top:.5rem;color:var(--text);font-size:1.1rem}
+
+/* ===== SPOILER / ANSWER ===== */
+.answer-toggle{
+  background:linear-gradient(135deg,var(--green-d),var(--teal));
+  color:#fff;border:none;border-radius:8px;
+  padding:.6rem 1.2rem;font-weight:700;font-size:.85rem;
+  cursor:pointer;margin-top:1rem;
+  transition:transform .2s,box-shadow .2s;
+}
+.answer-toggle:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(16,185,129,.3)}
+.answer-content{
+  display:none;margin-top:1rem;
+  background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);
+  border-radius:10px;padding:1.2rem;
+}
+.answer-content.show{display:block}
+.answer-content p,.answer-content li{font-size:.9rem}
+
+/* ===== DIVIDER ===== */
+.divider{
+  height:1px;margin:3rem auto;max-width:200px;
+  background:linear-gradient(90deg,transparent,rgba(245,158,11,.3),transparent);
+}
+
+/* ===== COMPARISON TABLE ===== */
+.comparison{
+  display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0;
+}
+.comparison .comp-card{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;padding:1.2rem;text-align:center;
+}
+.comparison .comp-card h4{font-size:.85rem;color:var(--text3);margin-bottom:.5rem;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:1px}
+.comparison .comp-card .val{font-size:1.8rem;font-weight:800;font-family:'Playfair Display',serif}
+.val-amber{color:var(--amber-l)}
+.val-green{color:var(--green)}
+.val-blue{color:var(--blue)}
+.val-purple{color:var(--purple)}
+
+/* ===== INLINE CODE ===== */
+code{
+  background:rgba(245,158,11,.1);color:var(--amber-l);
+  padding:.15rem .4rem;border-radius:4px;font-size:.85rem;
+}
+
+/* ===== TOC ===== */
+.toc{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin:1.5rem 0;
+}
+.toc a{
+  display:flex;align-items:center;gap:.6rem;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;padding:.8rem 1rem;
+  text-decoration:none;color:var(--text2);font-size:.85rem;font-weight:500;
+  transition:all .3s;
+}
+.toc a:hover{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);color:var(--amber-l)}
+.toc .toc-num{
+  min-width:28px;height:28px;border-radius:50%;
+  background:rgba(245,158,11,.15);color:var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.75rem;flex-shrink:0;
+}
+
+/* ===== FOOTER ===== */
+.footer{
+  text-align:center;padding:3rem 1.5rem;
+  color:var(--text3);font-size:.8rem;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .comparison{grid-template-columns:1fr}
+  .toc{grid-template-columns:1fr}
+  .card,.exercise{padding:1.2rem}
+  .excel-table{font-size:.72rem}
+  .excel-table td,.excel-table th{padding:.4rem .5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+  <div class="brand">
+    <span class="brand-icon">🔢</span>
+    <span class="brand-text">Operaciones 2</span>
+  </div>
+  <span class="nav-tag">Semana 7 &bull; Clase 2</span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-icon">🎯</div>
+  <h1>Variables Binarias<br>con Solver</h1>
+  <p class="sub">Decisiones de todo o nada: aprende a modelar problemas donde la respuesta es <strong>SÍ (1)</strong> o <strong>NO (0)</strong> usando Excel Solver.</p>
+  <p class="scroll-hint">↓ Scroll para explorar</p>
+</section>
+
+<!-- ============================== -->
+<!--   CONCEPTO: VARIABLES BINARIAS -->
+<!-- ============================== -->
+<section class="chapter" id="concepto">
+  <div class="chapter-num">Concepto Fundamental</div>
+  <h2>¿Qué es una variable binaria?</h2>
+
+  <div class="concept-box">
+    <h3>Definición</h3>
+    <p>Una <strong>variable binaria</strong> (también llamada variable 0-1 o booleana) es una variable de decisión que solo puede tomar dos valores:</p>
+    <div class="formula">
+      x<sub>i</sub> = { 0 si NO se elige la opción i &nbsp;|&nbsp; 1 si SÍ se elige la opción i }
+    </div>
+    <p>Se usan cuando las decisiones son de tipo <strong>"todo o nada"</strong>: invertir o no invertir, abrir o no abrir, asignar o no asignar. No puedes hacer "medio proyecto" ni abrir "media tienda".</p>
+  </div>
+
+  <div class="card card-accent">
+    <h3>¿Cuándo se usan variables binarias?</h3>
+    <ul>
+      <li><strong>Selección de proyectos:</strong> ¿En cuáles invertimos dado un presupuesto limitado?</li>
+      <li><strong>Apertura de locales:</strong> ¿Cuáles sedes abrimos con restricciones de recursos?</li>
+      <li><strong>Asignación de tareas:</strong> ¿Quién hace qué tarea para minimizar costos o tiempos?</li>
+      <li><strong>Restricciones lógicas:</strong> "Si elegimos A, debemos elegir B", "No se pueden elegir A y B juntos"</li>
+    </ul>
+  </div>
+
+  <div class="key-point">
+    <span class="kp-icon">💡</span>
+    <p><strong>Diferencia con PL clásica:</strong> En Programación Lineal normal, las variables pueden tomar cualquier valor continuo (3.5 unidades, 12.7 horas). Con variables binarias, la respuesta es solo <strong>0 o 1</strong>. Esto cambia cómo se configura Solver.</p>
+  </div>
+</section>
+
+<!-- ============================== -->
+<!--   CÓMO CONFIGURAR EN SOLVER    -->
+<!-- ============================== -->
+<section class="chapter" id="solver-config">
+  <div class="chapter-num">Paso a Paso</div>
+  <h2>Configuración en Excel Solver</h2>
+
+  <p>Antes de ver los ejemplos, aprendamos cómo se arma un modelo binario en Excel paso a paso.</p>
+
+  <div class="card card-blue">
+    <h3>Estructura general en Excel</h3>
+    <p>Todo modelo binario en Excel tiene <strong>4 zonas</strong>:</p>
+
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th>
+        </tr>
+        <tr>
+          <td class="col-header">1</td>
+          <td class="row-header">Opciones</td>
+          <td>Opción 1</td><td>Opción 2</td><td>Opción 3</td><td></td>
+        </tr>
+        <tr>
+          <td class="col-header">2</td>
+          <td class="row-header">Decisión (0 o 1)</td>
+          <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
+          <td style="color:var(--text3);font-size:.7rem">← Celdas que Solver cambia</td>
+        </tr>
+        <tr>
+          <td class="col-header">3</td>
+          <td class="row-header">Coef. Objetivo</td>
+          <td>valor</td><td>valor</td><td>valor</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="col-header">4</td>
+          <td class="row-header">F. Objetivo</td>
+          <td colspan="3" class="formula-cell">=SUMAPRODUCTO(B2:D2, B3:D3)</td>
+          <td class="result">← Maximizar o minimizar</td>
+        </tr>
+        <tr>
+          <td class="col-header">5</td>
+          <td class="row-header">Coef. Restricción</td>
+          <td>valor</td><td>valor</td><td>valor</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="col-header">6</td>
+          <td class="row-header">Uso (lado izq.)</td>
+          <td colspan="3" class="formula-cell">=SUMAPRODUCTO(B2:D2, B5:D5)</td>
+          <td class="result">≤ Límite</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-green">
+    <h3>Pasos para configurar Solver</h3>
+    <div class="solver-steps">
+      <div class="solver-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Armar la tabla en Excel</strong>
+          <p>Colocar los datos del problema: nombres, coeficientes del objetivo y coeficientes de cada restricción.</p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Crear las celdas de decisión</strong>
+          <p>Una fila donde cada celda representa una opción. Inicialmente todas en <code>0</code>. Estas son las que Solver va a cambiar.</p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Escribir la función objetivo</strong>
+          <p>Usar <code>=SUMAPRODUCTO(decisiones, coeficientes)</code> para calcular el valor total.</p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Escribir las restricciones (lado izquierdo)</strong>
+          <p>Cada restricción tiene su propio <code>=SUMAPRODUCTO(decisiones, coeficientes_restricción)</code>.</p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <strong>Abrir Solver</strong>
+          <p>Menú <strong>Datos → Solver</strong>. Si no aparece: Archivo → Opciones → Complementos → Complementos de Excel → Solver.</p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <strong>Configurar Solver</strong>
+          <p>
+            <strong>Objetivo:</strong> celda de la función objetivo.<br>
+            <strong>Cambiar celdas:</strong> rango de celdas de decisión.<br>
+            <strong>Restricciones:</strong> agregar las restricciones del modelo.<br>
+          </p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">7</div>
+        <div class="step-content">
+          <strong>Agregar restricción BINARIA</strong>
+          <p>Click en <strong>"Agregar"</strong> → seleccionar las celdas de decisión → en el operador elegir <strong>"bin"</strong> (binario). Esto restringe las variables a 0 o 1.</p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">8</div>
+        <div class="step-content">
+          <strong>Método de resolución</strong>
+          <p>Seleccionar <strong>"Simplex LP"</strong> (si todo es lineal) y hacer clic en <strong>Resolver</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warning">
+    <span class="w-icon">⚠️</span>
+    <p><strong>Error común:</strong> Olvidar agregar la restricción binaria. Si no la agregas, Solver tratará las variables como continuas y podrá dar resultados como 0.73 (seleccionar 73% de un proyecto), lo cual no tiene sentido.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============================== -->
+<!--   TABLA DE CONTENIDOS           -->
+<!-- ============================== -->
+<section class="chapter" id="toc-section">
+  <div class="chapter-num">Contenido</div>
+  <h2>Ejemplos y Ejercicios</h2>
+  <div class="toc">
+    <a href="#ej1"><span class="toc-num">1</span> Selección de Inversiones</a>
+    <a href="#ej2"><span class="toc-num">2</span> Apertura de Locales</a>
+    <a href="#ej3"><span class="toc-num">3</span> Asignación de Tareas</a>
+    <a href="#ej4"><span class="toc-num">4</span> Restricciones Lógicas</a>
+    <a href="#ejercicios"><span class="toc-num">+4</span> Ejercicios Propuestos</a>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============================== -->
+<!--   EJEMPLO 1: SELECCIÓN          -->
+<!-- ============================== -->
+<section class="chapter" id="ej1">
+  <div class="example-header">
+    <div class="example-num">1</div>
+    <div class="example-title">Selección de Inversiones</div>
+  </div>
+
+  <div class="card card-accent">
+    <h3>Problema</h3>
+    <p>Un emprendedor de Pereira tiene <strong>$80 millones COP</strong> y quiere elegir entre 5 proyectos de inversión para <strong>maximizar la ganancia total</strong>. Cada proyecto se ejecuta completo o no se hace.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Proyecto</th><th>Inversión (M COP)</th><th>Ganancia esperada (M COP)</th></tr>
+        <tr><td class="row-header">1. App de domicilios</td><td>25</td><td>40</td></tr>
+        <tr><td class="row-header">2. Café especial</td><td>30</td><td>48</td></tr>
+        <tr><td class="row-header">3. Food truck</td><td>15</td><td>20</td></tr>
+        <tr><td class="row-header">4. Tienda online</td><td>20</td><td>30</td></tr>
+        <tr><td class="row-header">5. Coworking</td><td>35</td><td>52</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-blue">
+    <h3>Paso 1 — Formulación matemática</h3>
+    <p><strong>Variables de decisión:</strong> x<sub>i</sub> = 1 si se invierte en el proyecto i, 0 si no.</p>
+    <div class="concept-box" style="margin:.8rem 0">
+      <div class="formula">Maximizar Z = 40x₁ + 48x₂ + 20x₃ + 30x₄ + 52x₅</div>
+      <p style="text-align:center;margin-top:.5rem;font-size:.9rem">Sujeto a:</p>
+      <div class="formula">25x₁ + 30x₂ + 15x₃ + 20x₄ + 35x₅ ≤ 80</div>
+      <div class="formula" style="font-size:.9rem">x₁, x₂, x₃, x₄, x₅ ∈ {0, 1}</div>
+    </div>
+  </div>
+
+  <div class="card card-green">
+    <h3>Paso 2 — Armado en Excel</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th>
+        </tr>
+        <tr>
+          <td class="col-header">1</td>
+          <td class="row-header">Proyecto</td>
+          <td>App</td><td>Café</td><td>Food truck</td><td>Tienda</td><td>Coworking</td><td></td>
+        </tr>
+        <tr>
+          <td class="col-header">2</td>
+          <td class="row-header">Decisión</td>
+          <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
+          <td style="font-size:.7rem;color:var(--text3)">← Solver cambia</td>
+        </tr>
+        <tr>
+          <td class="col-header">3</td>
+          <td class="row-header">Ganancia (M)</td>
+          <td>40</td><td>48</td><td>20</td><td>30</td><td>52</td><td></td>
+        </tr>
+        <tr>
+          <td class="col-header">4</td>
+          <td class="row-header">Inversión (M)</td>
+          <td>25</td><td>30</td><td>15</td><td>20</td><td>35</td><td></td>
+        </tr>
+        <tr>
+          <td class="col-header">5</td>
+          <td class="row-header">F. Objetivo</td>
+          <td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td>
+          <td class="result">← MAX</td>
+        </tr>
+        <tr>
+          <td class="col-header">6</td>
+          <td class="row-header">Total inversión</td>
+          <td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td>
+          <td class="result">≤ 80</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-purple">
+    <h3>Paso 3 — Configuración de Solver</h3>
+    <div class="solver-steps">
+      <div class="solver-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Establecer objetivo:</strong>
+          <p>Celda de F. Objetivo (fila 5) → <strong>Máximo</strong></p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Cambiando las celdas:</strong>
+          <p>Rango de decisión: <code>B2:F2</code></p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Restricción 1 — Presupuesto:</strong>
+          <p>Total inversión (fila 6) <strong>≤ 80</strong></p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Restricción 2 — Binarias:</strong>
+          <p><code>B2:F2</code> → operador <strong>"bin"</strong></p>
+        </div>
+      </div>
+      <div class="solver-step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <strong>Método:</strong> Simplex LP → <strong>Resolver</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-green">
+    <h3>Resultado</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr>
+          <th></th><th>App</th><th>Café</th><th>Food truck</th><th>Tienda</th><th>Coworking</th>
+        </tr>
+        <tr>
+          <td class="row-header">Decisión</td>
+          <td class="decision">1</td><td class="decision">0</td><td class="decision">0</td><td class="decision">1</td><td class="decision">1</td>
+        </tr>
+      </table>
+    </div>
+    <div class="comparison" style="margin-top:1rem">
+      <div class="comp-card">
+        <h4>Ganancia máxima</h4>
+        <div class="val val-green">$122M</div>
+      </div>
+      <div class="comp-card">
+        <h4>Inversión total</h4>
+        <div class="val val-amber">$80M</div>
+      </div>
+    </div>
+    <p style="margin-top:.8rem"><strong>Invertir en:</strong> App de domicilios ($25M), Tienda online ($20M) y Coworking ($35M).</p>
+    <p>Inversión total: 25 + 20 + 35 = <strong>$80M</strong> (usa todo el presupuesto).</p>
+    <p>Ganancia total: 40 + 30 + 52 = <strong>$122M</strong>.</p>
+  </div>
+
+  <div class="key-point">
+    <span class="kp-icon">💡</span>
+    <p><strong>¿Por qué no el Café?</strong> Aunque el café da $48M de ganancia, requiere $30M. Combinando App + Tienda + Coworking se usan los $80M de forma más eficiente ($122M total vs. cualquier otra combinación factible).</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============================== -->
+<!--   EJEMPLO 2: APERTURA DE LOCALES -->
+<!-- ============================== -->
+<section class="chapter" id="ej2">
+  <div class="example-header">
+    <div class="example-num">2</div>
+    <div class="example-title">Apertura de Locales</div>
+  </div>
+
+  <div class="card card-accent">
+    <h3>Problema</h3>
+    <p>Una cadena de heladerías quiere abrir sucursales en Pereira. Tiene un <strong>presupuesto de $100 millones COP</strong> y solo cuenta con <strong>15 empleados disponibles</strong>. Quiere <strong>maximizar la ganancia mensual</strong>.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Local</th><th>Costo apertura (M)</th><th>Ganancia mensual (M)</th><th>Personal requerido</th></tr>
+        <tr><td class="row-header">1. Cuba</td><td>30</td><td>8</td><td>5</td></tr>
+        <tr><td class="row-header">2. Circunvalar</td><td>50</td><td>12</td><td>7</td></tr>
+        <tr><td class="row-header">3. Dosquebradas</td><td>25</td><td>6</td><td>4</td></tr>
+        <tr><td class="row-header">4. Centro</td><td>45</td><td>10</td><td>6</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-blue">
+    <h3>Formulación</h3>
+    <p><strong>Variables:</strong> y<sub>i</sub> = 1 si se abre el local i, 0 si no.</p>
+    <div class="concept-box" style="margin:.8rem 0">
+      <div class="formula">Maximizar Z = 8y₁ + 12y₂ + 6y₃ + 10y₄</div>
+      <p style="text-align:center;margin-top:.5rem;font-size:.9rem">Sujeto a:</p>
+      <div class="formula">30y₁ + 50y₂ + 25y₃ + 45y₄ ≤ 100 &nbsp; (presupuesto)</div>
+      <div class="formula">5y₁ + 7y₂ + 4y₃ + 6y₄ ≤ 15 &nbsp; (personal)</div>
+      <div class="formula" style="font-size:.9rem">y₁, y₂, y₃, y₄ ∈ {0, 1}</div>
+    </div>
+  </div>
+
+  <div class="card card-green">
+    <h3>Armado en Excel</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th>
+        </tr>
+        <tr>
+          <td class="col-header">1</td>
+          <td class="row-header">Local</td>
+          <td>Cuba</td><td>Circunvalar</td><td>Dosquebradas</td><td>Centro</td><td></td>
+        </tr>
+        <tr>
+          <td class="col-header">2</td>
+          <td class="row-header">Decisión</td>
+          <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
+          <td style="font-size:.7rem;color:var(--text3)">← Solver</td>
+        </tr>
+        <tr>
+          <td class="col-header">3</td>
+          <td class="row-header">Ganancia (M)</td>
+          <td>8</td><td>12</td><td>6</td><td>10</td><td></td>
+        </tr>
+        <tr>
+          <td class="col-header">4</td>
+          <td class="row-header">Costo (M)</td>
+          <td>30</td><td>50</td><td>25</td><td>45</td><td></td>
+        </tr>
+        <tr>
+          <td class="col-header">5</td>
+          <td class="row-header">Personal</td>
+          <td>5</td><td>7</td><td>4</td><td>6</td><td></td>
+        </tr>
+        <tr>
+          <td class="col-header">6</td>
+          <td class="row-header">F. Objetivo</td>
+          <td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B3:E3)</td>
+          <td class="result">← MAX</td>
+        </tr>
+        <tr>
+          <td class="col-header">7</td>
+          <td class="row-header">Total costo</td>
+          <td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B4:E4)</td>
+          <td class="result">≤ 100</td>
+        </tr>
+        <tr>
+          <td class="col-header">8</td>
+          <td class="row-header">Total personal</td>
+          <td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B5:E5)</td>
+          <td class="result">≤ 15</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-purple">
+    <h3>Solver: Restricciones</h3>
+    <ul>
+      <li>Total costo (fila 7) <strong>≤ 100</strong></li>
+      <li>Total personal (fila 8) <strong>≤ 15</strong></li>
+      <li><code>B2:E2</code> → <strong>bin</strong> (binarias)</li>
+    </ul>
+  </div>
+
+  <div class="card card-green">
+    <h3>Resultado</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr><th></th><th>Cuba</th><th>Circunvalar</th><th>Dosquebradas</th><th>Centro</th></tr>
+        <tr>
+          <td class="row-header">Decisión</td>
+          <td class="decision">1</td><td class="decision">0</td><td class="decision">1</td><td class="decision">1</td>
+        </tr>
+      </table>
+    </div>
+    <div class="comparison" style="margin-top:1rem">
+      <div class="comp-card"><h4>Ganancia mensual</h4><div class="val val-green">$24M</div></div>
+      <div class="comp-card"><h4>Costo apertura</h4><div class="val val-amber">$100M</div></div>
+    </div>
+    <p style="margin-top:.8rem"><strong>Abrir:</strong> Cuba ($30M, 5 empl.), Dosquebradas ($25M, 4 empl.) y Centro ($45M, 6 empl.).</p>
+    <p>Costo total: 30 + 25 + 45 = <strong>$100M</strong> (usa todo el presupuesto).</p>
+    <p>Personal total: 5 + 4 + 6 = <strong>15</strong> (usa todo el personal).</p>
+    <p>Ganancia: 8 + 6 + 10 = <strong>$24M/mes</strong>.</p>
+  </div>
+
+  <div class="key-point">
+    <span class="kp-icon">💡</span>
+    <p><strong>¿Por qué no Circunvalar?</strong> Aunque da la mayor ganancia individual ($12M), requiere $50M y 7 empleados. Abriendo los otros 3 locales juntos se obtiene más ganancia total ($24M vs $22M con Circunvalar+Centro) y se aprovechan todos los recursos.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============================== -->
+<!--   EJEMPLO 3: ASIGNACIÓN         -->
+<!-- ============================== -->
+<section class="chapter" id="ej3">
+  <div class="example-header">
+    <div class="example-num">3</div>
+    <div class="example-title">Asignación de Tareas</div>
+  </div>
+
+  <div class="card card-accent">
+    <h3>Problema</h3>
+    <p>Una empresa de logística en Pereira tiene <strong>3 repartidores</strong> y <strong>3 zonas de entrega</strong>. Cada repartidor tiene un tiempo diferente según la zona (en minutos por ruta). Se quiere <strong>minimizar el tiempo total</strong> asignando exactamente un repartidor a cada zona.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Repartidor</th><th>Zona Centro</th><th>Zona Cuba</th><th>Zona Dosquebradas</th></tr>
+        <tr><td class="row-header">Juan</td><td>25</td><td>35</td><td>45</td></tr>
+        <tr><td class="row-header">María</td><td>30</td><td>20</td><td>40</td></tr>
+        <tr><td class="row-header">Pedro</td><td>40</td><td>30</td><td>25</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-blue">
+    <h3>Formulación</h3>
+    <p><strong>Variables:</strong> x<sub>ij</sub> = 1 si el repartidor i se asigna a la zona j, 0 si no.</p>
+    <div class="concept-box" style="margin:.8rem 0">
+      <div class="formula" style="font-size:.85rem">Min Z = 25x₁₁ + 35x₁₂ + 45x₁₃ + 30x₂₁ + 20x₂₂ + 40x₂₃ + 40x₃₁ + 30x₃₂ + 25x₃₃</div>
+      <p style="text-align:center;margin-top:.8rem;font-size:.88rem">Sujeto a:</p>
+      <div class="formula" style="font-size:.85rem">Cada repartidor va a exactamente 1 zona (suma fila = 1)</div>
+      <div class="formula" style="font-size:.85rem">Cada zona recibe exactamente 1 repartidor (suma columna = 1)</div>
+      <div class="formula" style="font-size:.85rem">x<sub>ij</sub> ∈ {0, 1}</div>
+    </div>
+    <div class="key-point">
+      <span class="kp-icon">📋</span>
+      <p><strong>Restricciones detalladas:</strong><br>
+        <strong>Filas (repartidores):</strong> x₁₁+x₁₂+x₁₃ = 1, x₂₁+x₂₂+x₂₃ = 1, x₃₁+x₃₂+x₃₃ = 1<br>
+        <strong>Columnas (zonas):</strong> x₁₁+x₂₁+x₃₁ = 1, x₁₂+x₂₂+x₃₂ = 1, x₁₃+x₂₃+x₃₃ = 1
+      </p>
+    </div>
+  </div>
+
+  <div class="card card-green">
+    <h3>Armado en Excel</h3>
+    <p>Este ejemplo es diferente: las variables de decisión forman una <strong>matriz</strong> (no una fila). Necesitamos una tabla de decisiones espejo de la tabla de tiempos.</p>
+
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <td class="col-header">1</td>
+          <td class="row-header"></td><td style="font-weight:700">Centro</td><td style="font-weight:700">Cuba</td><td style="font-weight:700">Dosqueb.</td><td></td>
+        </tr>
+        <tr><td class="col-header">2</td><td class="row-header">TIEMPOS</td><td colspan="3" style="text-align:center;color:var(--text3)">Tabla de datos</td><td></td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">Juan</td><td>25</td><td>35</td><td>45</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">María</td><td>30</td><td>20</td><td>40</td><td></td></tr>
+        <tr><td class="col-header">5</td><td class="row-header">Pedro</td><td>40</td><td>30</td><td>25</td><td></td></tr>
+        <tr><td class="col-header">6</td><td colspan="5" style="height:8px"></td></tr>
+        <tr><td class="col-header">7</td><td class="row-header">DECISIONES</td><td colspan="3" style="text-align:center;color:var(--text3)">Celdas que Solver cambia</td><td style="font-size:.7rem;color:var(--text3)">Suma fila</td></tr>
+        <tr><td class="col-header">8</td><td class="row-header">Juan</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B8:D8) = 1</td></tr>
+        <tr><td class="col-header">9</td><td class="row-header">María</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B9:D9) = 1</td></tr>
+        <tr><td class="col-header">10</td><td class="row-header">Pedro</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B10:D10) = 1</td></tr>
+        <tr><td class="col-header">11</td><td class="row-header">Suma col</td>
+          <td class="formula-cell">=SUMA(B8:B10)</td><td class="formula-cell">=SUMA(C8:C10)</td><td class="formula-cell">=SUMA(D8:D10)</td>
+          <td></td>
+        </tr>
+        <tr><td class="col-header">12</td><td class="row-header"></td><td class="result">= 1</td><td class="result">= 1</td><td class="result">= 1</td><td></td></tr>
+        <tr><td class="col-header">13</td><td colspan="5" style="height:8px"></td></tr>
+        <tr><td class="col-header">14</td><td class="row-header">F. Objetivo</td>
+          <td colspan="3" class="formula-cell">=SUMAPRODUCTO(B3:D5, B8:D10)</td>
+          <td class="result">← MIN</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-purple">
+    <h3>Solver: Restricciones</h3>
+    <ul>
+      <li><code>E8:E10</code> (sumas de filas) <strong>= 1</strong> (cada repartidor a exactamente 1 zona)</li>
+      <li><code>B11:D11</code> (sumas de columnas) <strong>= 1</strong> (cada zona con exactamente 1 repartidor)</li>
+      <li><code>B8:D10</code> → <strong>bin</strong> (binarias)</li>
+      <li>Objetivo: <strong>Mínimo</strong></li>
+    </ul>
+  </div>
+
+  <div class="card card-green">
+    <h3>Resultado</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr><th>Decisiones</th><th>Centro</th><th>Cuba</th><th>Dosquebradas</th></tr>
+        <tr><td class="row-header">Juan</td><td class="decision">1</td><td class="decision">0</td><td class="decision">0</td></tr>
+        <tr><td class="row-header">María</td><td class="decision">0</td><td class="decision">1</td><td class="decision">0</td></tr>
+        <tr><td class="row-header">Pedro</td><td class="decision">0</td><td class="decision">0</td><td class="decision">1</td></tr>
+      </table>
+    </div>
+    <div class="comparison" style="margin-top:1rem">
+      <div class="comp-card"><h4>Tiempo total mínimo</h4><div class="val val-green">70 min</div></div>
+      <div class="comp-card"><h4>Asignación</h4><div class="val val-amber" style="font-size:1rem">Juan→Centro, María→Cuba, Pedro→Dosq.</div></div>
+    </div>
+    <p style="margin-top:.8rem"><strong>Verificación:</strong> Juan al Centro (25) + María a Cuba (20) + Pedro a Dosquebradas (25) = <strong>70 minutos</strong>.</p>
+  </div>
+
+  <div class="key-point">
+    <span class="kp-icon">💡</span>
+    <p><strong>Truco de la asignación:</strong> Cada persona va a la zona donde es más eficiente, pero respetando que no pueden ir dos a la misma zona. La solución óptima no siempre es asignar cada persona a su mejor zona individual — Solver encuentra la combinación global que minimiza el total.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============================== -->
+<!--   EJEMPLO 4: RESTRICCIONES LÓGICAS -->
+<!-- ============================== -->
+<section class="chapter" id="ej4">
+  <div class="example-header">
+    <div class="example-num">4</div>
+    <div class="example-title">Selección con Restricciones Lógicas</div>
+  </div>
+
+  <div class="card card-accent">
+    <h3>Problema</h3>
+    <p>Una empresa de Pereira quiere elegir campañas de marketing para <strong>maximizar el impacto</strong> con un <strong>presupuesto de $40 millones</strong>. Pero hay condiciones especiales:</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Campaña</th><th>Costo (M COP)</th><th>Impacto (puntos)</th></tr>
+        <tr><td class="row-header">1. Redes sociales</td><td>8</td><td>25</td></tr>
+        <tr><td class="row-header">2. Radio local</td><td>12</td><td>30</td></tr>
+        <tr><td class="row-header">3. Vallas publicitarias</td><td>15</td><td>35</td></tr>
+        <tr><td class="row-header">4. Influencers</td><td>10</td><td>28</td></tr>
+        <tr><td class="row-header">5. Evento presencial</td><td>20</td><td>45</td></tr>
+        <tr><td class="row-header">6. Email marketing</td><td>5</td><td>15</td></tr>
+      </table>
+    </div>
+
+    <div style="margin-top:1rem">
+      <p><strong>Restricciones lógicas:</strong></p>
+      <ul>
+        <li>Si se elige <strong>Redes sociales</strong> (1), se <em>debe</em> elegir también <strong>Influencers</strong> (4).</li>
+        <li>Se deben elegir <strong>al menos 2</strong> campañas.</li>
+        <li><strong>No</strong> se pueden hacer Vallas (3) y Evento (5) al mismo tiempo (compiten por el mismo equipo).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card card-blue">
+    <h3>Formulación — Cómo traducir restricciones lógicas</h3>
+
+    <div class="key-point">
+      <span class="kp-icon">🔑</span>
+      <p><strong>"Si A, entonces B"</strong> se traduce como: <code>x₁ ≤ x₄</code> (o equivalente: x₁ − x₄ ≤ 0). Así, si x₁=1, entonces x₄ debe ser 1.</p>
+    </div>
+
+    <div class="key-point">
+      <span class="kp-icon">🔑</span>
+      <p><strong>"Al menos N opciones"</strong> se traduce como: <code>x₁+x₂+...+xₙ ≥ N</code></p>
+    </div>
+
+    <div class="key-point">
+      <span class="kp-icon">🔑</span>
+      <p><strong>"No ambas a la vez"</strong> (mutuamente excluyentes) se traduce como: <code>x₃ + x₅ ≤ 1</code></p>
+    </div>
+
+    <div class="concept-box" style="margin-top:1rem">
+      <div class="formula">Maximizar Z = 25x₁ + 30x₂ + 35x₃ + 28x₄ + 45x₅ + 15x₆</div>
+      <p style="text-align:center;margin-top:.5rem;font-size:.88rem">Sujeto a:</p>
+      <div class="formula">8x₁ + 12x₂ + 15x₃ + 10x₄ + 20x₅ + 5x₆ ≤ 40 &nbsp; (presupuesto)</div>
+      <div class="formula">x₁ − x₄ ≤ 0 &nbsp; (si redes, entonces influencers)</div>
+      <div class="formula">x₁ + x₂ + x₃ + x₄ + x₅ + x₆ ≥ 2 &nbsp; (mínimo 2)</div>
+      <div class="formula">x₃ + x₅ ≤ 1 &nbsp; (no ambas)</div>
+      <div class="formula" style="font-size:.9rem">x₁,...,x₆ ∈ {0, 1}</div>
+    </div>
+  </div>
+
+  <div class="card card-green">
+    <h3>Armado en Excel</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th>
+        </tr>
+        <tr><td class="col-header">1</td><td class="row-header">Campaña</td>
+          <td>Redes</td><td>Radio</td><td>Vallas</td><td>Influenc.</td><td>Evento</td><td>Email</td><td></td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Decisión</td>
+          <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
+          <td style="font-size:.7rem;color:var(--text3)">← Solver</td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">Impacto</td>
+          <td>25</td><td>30</td><td>35</td><td>28</td><td>45</td><td>15</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Costo (M)</td>
+          <td>8</td><td>12</td><td>15</td><td>10</td><td>20</td><td>5</td><td></td></tr>
+        <tr><td class="col-header">5</td><td class="row-header">F. Objetivo</td>
+          <td colspan="6" class="formula-cell">=SUMAPRODUCTO(B2:G2, B3:G3)</td><td class="result">← MAX</td></tr>
+        <tr><td class="col-header">6</td><td class="row-header">Total costo</td>
+          <td colspan="6" class="formula-cell">=SUMAPRODUCTO(B2:G2, B4:G4)</td><td class="result">≤ 40</td></tr>
+        <tr><td class="col-header">7</td><td class="row-header">Si→Entonces</td>
+          <td colspan="6" class="formula-cell">=B2 − E2 (Redes − Influencers)</td><td class="result">≤ 0</td></tr>
+        <tr><td class="col-header">8</td><td class="row-header">Mínimo 2</td>
+          <td colspan="6" class="formula-cell">=SUMA(B2:G2)</td><td class="result">≥ 2</td></tr>
+        <tr><td class="col-header">9</td><td class="row-header">Exclusión</td>
+          <td colspan="6" class="formula-cell">=D2 + F2 (Vallas + Evento)</td><td class="result">≤ 1</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card card-green">
+    <h3>Resultado</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr><th></th><th>Redes</th><th>Radio</th><th>Vallas</th><th>Influenc.</th><th>Evento</th><th>Email</th></tr>
+        <tr>
+          <td class="row-header">Decisión</td>
+          <td class="decision">1</td><td class="decision">0</td><td class="decision">1</td><td class="decision">1</td><td class="decision">0</td><td class="decision">1</td>
+        </tr>
+      </table>
+    </div>
+    <div class="comparison" style="margin-top:1rem">
+      <div class="comp-card"><h4>Impacto máximo</h4><div class="val val-green">103 pts</div></div>
+      <div class="comp-card"><h4>Costo total</h4><div class="val val-amber">$38M</div></div>
+    </div>
+    <p style="margin-top:.8rem"><strong>Campañas elegidas:</strong> Redes ($8M), Vallas ($15M), Influencers ($10M) y Email ($5M).</p>
+    <p>Costo: 8 + 15 + 10 + 5 = <strong>$38M</strong> ≤ 40M.</p>
+    <p>Impacto: 25 + 35 + 28 + 15 = <strong>103 puntos</strong>.</p>
+
+    <p style="margin-top:.8rem;font-size:.88rem"><strong>Verificación de restricciones lógicas:</strong></p>
+    <ul style="font-size:.88rem">
+      <li>Si Redes (x₁=1) → Influencers (x₄=1): 1 − 1 = 0 ≤ 0 ✓</li>
+      <li>Mínimo 2 campañas: 1+0+1+1+0+1 = 4 ≥ 2 ✓</li>
+      <li>No Vallas+Evento juntos: 1 + 0 = 1 ≤ 1 ✓</li>
+    </ul>
+  </div>
+
+  <div class="card card-teal" style="margin-top:1.5rem">
+    <h3>Resumen: Traducción de restricciones lógicas</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr><th>Condición en español</th><th>Restricción matemática</th></tr>
+        <tr><td class="row-header">Si A, entonces B</td><td>x<sub>A</sub> ≤ x<sub>B</sub></td></tr>
+        <tr><td class="row-header">A y B siempre juntas</td><td>x<sub>A</sub> = x<sub>B</sub></td></tr>
+        <tr><td class="row-header">No ambas a la vez</td><td>x<sub>A</sub> + x<sub>B</sub> ≤ 1</td></tr>
+        <tr><td class="row-header">Al menos una de las dos</td><td>x<sub>A</sub> + x<sub>B</sub> ≥ 1</td></tr>
+        <tr><td class="row-header">Exactamente N de un grupo</td><td>x₁ + x₂ + ... + xₖ = N</td></tr>
+        <tr><td class="row-header">Como máximo N de un grupo</td><td>x₁ + x₂ + ... + xₖ ≤ N</td></tr>
+        <tr><td class="row-header">Si A, entonces NO B</td><td>x<sub>A</sub> + x<sub>B</sub> ≤ 1</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============================== -->
+<!--   EJERCICIOS PROPUESTOS         -->
+<!-- ============================== -->
+<section class="chapter" id="ejercicios">
+  <div class="chapter-num">Práctica</div>
+  <h2>Ejercicios Propuestos</h2>
+  <p>Resuelve cada ejercicio en Excel con Solver. Luego verifica tu respuesta.</p>
+
+  <!-- EJERCICIO 1 -->
+  <div class="exercise" id="ex1">
+    <div class="exercise-badge">Ejercicio 1</div>
+    <h3>Electivas universitarias</h3>
+    <p style="margin-top:.5rem">Un estudiante de Administración quiere elegir materias electivas para <strong>maximizar su puntuación de competencias</strong>. Solo puede dedicar <strong>14 horas/semana</strong> a electivas.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Electiva</th><th>Horas/semana</th><th>Puntuación</th></tr>
+        <tr><td class="row-header">1. Marketing digital</td><td>4</td><td>9</td></tr>
+        <tr><td class="row-header">2. Finanzas</td><td>6</td><td>14</td></tr>
+        <tr><td class="row-header">3. Logística</td><td>5</td><td>11</td></tr>
+        <tr><td class="row-header">4. Emprendimiento</td><td>3</td><td>6</td></tr>
+        <tr><td class="row-header">5. Comercio exterior</td><td>7</td><td>15</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:.5rem"><strong>Formulación:</strong><br>
+    Max Z = 9x₁ + 14x₂ + 11x₃ + 6x₄ + 15x₅<br>
+    s.t. 4x₁ + 6x₂ + 5x₃ + 3x₄ + 7x₅ ≤ 14<br>
+    x<sub>i</sub> ∈ {0, 1}</p>
+
+    <button class="answer-toggle" onclick="toggleAnswer('ans1')">Ver respuesta</button>
+    <div class="answer-content" id="ans1">
+      <p><strong>Respuesta:</strong> x₂ = 1, x₃ = 1, x₄ = 1 (Finanzas + Logística + Emprendimiento)</p>
+      <p><strong>Horas usadas:</strong> 6 + 5 + 3 = <strong>14</strong> ≤ 14 ✓</p>
+      <p><strong>Puntuación máxima: Z = 14 + 11 + 6 = 31</strong></p>
+      <p style="margin-top:.5rem;font-size:.85rem"><strong>Verificación de otras combinaciones factibles:</strong></p>
+      <ul style="font-size:.85rem">
+        <li>x₁+x₅+x₄: horas = 4+7+3 = 14, Z = 9+15+6 = 30</li>
+        <li>x₁+x₂+x₄: horas = 4+6+3 = 13, Z = 9+14+6 = 29</li>
+        <li>x₂+x₅: horas = 6+7 = 13, Z = 14+15 = 29</li>
+        <li>x₁+x₃+x₄: horas = 4+5+3 = 12, Z = 9+11+6 = 26</li>
+        <li>Ninguna combinación factible supera Z = 31 ✓</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- EJERCICIO 2 -->
+  <div class="exercise" id="ex2">
+    <div class="exercise-badge">Ejercicio 2</div>
+    <h3>Cadena de pizzerías</h3>
+    <p style="margin-top:.5rem">Una cadena de pizzerías quiere abrir locales en Pereira para <strong>maximizar la ganancia estimada</strong>. Tiene <strong>presupuesto de $10 millones</strong> y necesita cubrir <strong>al menos 500 pizzas/día</strong> de capacidad total.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Local</th><th>Alquiler mensual (M)</th><th>Ganancia estimada (M)</th><th>Capacidad (pizzas/día)</th></tr>
+        <tr><td class="row-header">1. UniCenter</td><td>3</td><td>7</td><td>200</td></tr>
+        <tr><td class="row-header">2. Victoria</td><td>4</td><td>9</td><td>250</td></tr>
+        <tr><td class="row-header">3. Arboleda</td><td>5</td><td>12</td><td>300</td></tr>
+        <tr><td class="row-header">4. Parque Olaya</td><td>2</td><td>5</td><td>150</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:.5rem"><strong>Formulación:</strong><br>
+    Max Z = 7y₁ + 9y₂ + 12y₃ + 5y₄<br>
+    s.t.<br>
+    3y₁ + 4y₂ + 5y₃ + 2y₄ ≤ 10 (presupuesto)<br>
+    200y₁ + 250y₂ + 300y₃ + 150y₄ ≥ 500 (capacidad mínima)<br>
+    y<sub>i</sub> ∈ {0, 1}</p>
+
+    <button class="answer-toggle" onclick="toggleAnswer('ans2')">Ver respuesta</button>
+    <div class="answer-content" id="ans2">
+      <p><strong>Respuesta:</strong> y₁ = 1, y₃ = 1, y₄ = 1 (UniCenter + Arboleda + Parque Olaya)</p>
+      <p><strong>Alquiler total:</strong> 3 + 5 + 2 = <strong>$10M</strong> ≤ 10 ✓</p>
+      <p><strong>Capacidad total:</strong> 200 + 300 + 150 = <strong>650 pizzas/día</strong> ≥ 500 ✓</p>
+      <p><strong>Ganancia máxima: Z = 7 + 12 + 5 = $24M</strong></p>
+      <p style="margin-top:.5rem;font-size:.85rem"><strong>Verificación de combinaciones factibles (presupuesto ≤ 10 Y capacidad ≥ 500):</strong></p>
+      <ul style="font-size:.85rem">
+        <li>y₁+y₂+y₄: alquiler=9, cap=600, Z=21</li>
+        <li>y₁+y₃: alquiler=8, cap=500, Z=19</li>
+        <li>y₂+y₃: alquiler=9, cap=550, Z=21</li>
+        <li>y₁+y₃+y₄: alquiler=10, cap=650, Z=24 ← Óptimo</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- EJERCICIO 3 -->
+  <div class="exercise" id="ex3">
+    <div class="exercise-badge">Ejercicio 3</div>
+    <h3>Asignación de domiciliarios</h3>
+    <p style="margin-top:.5rem">Una app de domicilios tiene <strong>3 domiciliarios</strong> y <strong>3 zonas</strong>. Asignar cada domiciliario a exactamente una zona para <strong>minimizar el tiempo total</strong> de entrega (minutos por ruta).</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Domiciliario</th><th>Zona Norte</th><th>Zona Sur</th><th>Zona Oriente</th></tr>
+        <tr><td class="row-header">Andrés</td><td>20</td><td>30</td><td>25</td></tr>
+        <tr><td class="row-header">Sofía</td><td>28</td><td>18</td><td>22</td></tr>
+        <tr><td class="row-header">Luis</td><td>35</td><td>25</td><td>15</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:.5rem"><strong>Restricciones:</strong> Cada domiciliario va a exactamente 1 zona. Cada zona recibe exactamente 1 domiciliario.</p>
+
+    <button class="answer-toggle" onclick="toggleAnswer('ans3')">Ver respuesta</button>
+    <div class="answer-content" id="ans3">
+      <p><strong>Respuesta:</strong> Andrés → Norte (20), Sofía → Sur (18), Luis → Oriente (15)</p>
+      <p><strong>Tiempo total mínimo: Z = 20 + 18 + 15 = 53 minutos</strong></p>
+      <p style="margin-top:.5rem;font-size:.85rem"><strong>Verificación de las 6 asignaciones posibles (3! = 6):</strong></p>
+      <ul style="font-size:.85rem">
+        <li>Andrés→N, Sofía→S, Luis→O: 20+18+15 = <strong>53</strong> ← Óptimo</li>
+        <li>Andrés→N, Sofía→O, Luis→S: 20+22+25 = 67</li>
+        <li>Andrés→S, Sofía→N, Luis→O: 30+28+15 = 73</li>
+        <li>Andrés→S, Sofía→O, Luis→N: 30+22+35 = 87</li>
+        <li>Andrés→O, Sofía→N, Luis→S: 25+28+25 = 78</li>
+        <li>Andrés→O, Sofía→S, Luis→N: 25+18+35 = 78</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- EJERCICIO 4 -->
+  <div class="exercise" id="ex4">
+    <div class="exercise-badge">Ejercicio 4</div>
+    <h3>Capacitaciones con restricciones lógicas</h3>
+    <p style="margin-top:.5rem">Una empresa quiere elegir programas de capacitación para <strong>maximizar el aumento de productividad</strong> con un <strong>presupuesto de $15 millones</strong>.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Programa</th><th>Costo (M COP)</th><th>Productividad (+%)</th></tr>
+        <tr><td class="row-header">1. Excel avanzado</td><td>3</td><td>8</td></tr>
+        <tr><td class="row-header">2. Liderazgo</td><td>5</td><td>12</td></tr>
+        <tr><td class="row-header">3. Inglés</td><td>7</td><td>15</td></tr>
+        <tr><td class="row-header">4. Scrum</td><td>4</td><td>10</td></tr>
+        <tr><td class="row-header">5. Comunicación</td><td>3</td><td>7</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:.5rem"><strong>Restricciones lógicas:</strong></p>
+    <ul>
+      <li>Si eligen Scrum (4), <strong>deben elegir</strong> Liderazgo (2): x₄ ≤ x₂</li>
+      <li>Deben elegir <strong>al menos 2</strong> programas.</li>
+      <li><strong>No</strong> pueden elegir Excel (1) e Inglés (3) juntos: x₁ + x₃ ≤ 1</li>
+    </ul>
+
+    <button class="answer-toggle" onclick="toggleAnswer('ans4')">Ver respuesta</button>
+    <div class="answer-content" id="ans4">
+      <p><strong>Respuesta:</strong> x₁ = 1, x₂ = 1, x₄ = 1, x₅ = 1 (Excel + Liderazgo + Scrum + Comunicación)</p>
+      <p><strong>Costo total:</strong> 3 + 5 + 4 + 3 = <strong>$15M</strong> ≤ 15 ✓</p>
+      <p><strong>Productividad máxima: Z = 8 + 12 + 10 + 7 = 37%</strong></p>
+      <p style="margin-top:.5rem;font-size:.85rem"><strong>Verificación de restricciones:</strong></p>
+      <ul style="font-size:.85rem">
+        <li>x₄ ≤ x₂: 1 ≤ 1 ✓ (Scrum requiere Liderazgo)</li>
+        <li>Mínimo 2: 1+1+0+1+1 = 4 ≥ 2 ✓</li>
+        <li>x₁ + x₃ ≤ 1: 1 + 0 = 1 ≤ 1 ✓ (no Excel+Inglés juntos)</li>
+      </ul>
+      <p style="margin-top:.5rem;font-size:.85rem"><strong>Verificación vs. otras opciones factibles:</strong></p>
+      <ul style="font-size:.85rem">
+        <li>x₃+x₂+x₅: costo=15, Z=15+12+7=34</li>
+        <li>x₃+x₂: costo=12, Z=15+12=27</li>
+        <li>x₃+x₂+x₄: costo=16 > 15 ✗</li>
+        <li>x₁+x₂+x₄+x₅: costo=15, Z=37 ← Óptimo</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============================== -->
+<!--   RESUMEN FINAL                 -->
+<!-- ============================== -->
+<section class="chapter" id="resumen">
+  <div class="chapter-num">Resumen</div>
+  <h2>Claves para recordar</h2>
+
+  <div class="card card-accent">
+    <h3>Checklist para problemas binarios con Solver</h3>
+    <ol>
+      <li>Identificar las <strong>opciones</strong> (cada una es una variable 0-1).</li>
+      <li>Definir qué se quiere <strong>maximizar o minimizar</strong> (función objetivo).</li>
+      <li>Traducir las <strong>restricciones</strong> del problema a desigualdades.</li>
+      <li>Armar la tabla en Excel con <code>SUMAPRODUCTO</code>.</li>
+      <li>En Solver: agregar la restricción <strong>"bin"</strong> a las celdas de decisión.</li>
+      <li>Usar <strong>Simplex LP</strong> y resolver.</li>
+      <li><strong>Verificar</strong> que la solución cumple todas las restricciones.</li>
+    </ol>
+  </div>
+
+  <div class="card card-teal">
+    <h3>Tipos de problemas binarios</h3>
+    <div class="excel-wrapper">
+      <table class="excel-table">
+        <tr><th>Tipo</th><th>Pregunta clave</th><th>Ejemplo</th></tr>
+        <tr><td class="row-header">Selección (Knapsack)</td><td>¿Cuáles elijo?</td><td>Proyectos, inversiones</td></tr>
+        <tr><td class="row-header">Apertura / Ubicación</td><td>¿Dónde abro?</td><td>Tiendas, plantas</td></tr>
+        <tr><td class="row-header">Asignación</td><td>¿Quién hace qué?</td><td>Tareas, turnos, rutas</td></tr>
+        <tr><td class="row-header">Lógicas / Condicionales</td><td>¿Bajo qué condiciones?</td><td>Dependencias, exclusiones</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>Administración de Operaciones 2 — Semana 7, Clase 2</p>
+  <p>Universidad Tecnológica de Pereira — 2026-I</p>
+</footer>
+
+<script>
+// Scroll reveal
+const chapters = document.querySelectorAll('.chapter');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+chapters.forEach(ch => obs.observe(ch));
+
+// Toggle answers
+function toggleAnswer(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('show');
+  const btn = el.previousElementSibling;
+  btn.textContent = el.classList.contains('show') ? 'Ocultar respuesta' : 'Ver respuesta';
+}
+</script>
+</body>
+</html>
