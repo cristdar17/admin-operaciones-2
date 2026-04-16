@@ -1594,7 +1594,7 @@ code{
 const chapters = document.querySelectorAll('.chapter');
 const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.1 });
+}, { threshold: 0.01, rootMargin: '0px 0px 100px 0px' });
 chapters.forEach(ch => obs.observe(ch));
 
 // Toggle answers
