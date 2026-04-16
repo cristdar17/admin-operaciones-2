@@ -369,50 +369,66 @@ code{
   <p>Antes de ver los ejemplos, aprendamos cómo se arma un modelo binario en Excel paso a paso.</p>
 
   <div class="card card-blue">
-    <h3>Estructura general en Excel</h3>
-    <p>Todo modelo binario en Excel tiene <strong>4 zonas</strong>:</p>
+    <h3>Framework estándar en Excel</h3>
+    <p>Para que siempre sepas cómo armar cualquier modelo, usaremos este <strong>formato único</strong>:</p>
+
+    <ul style="margin:.8rem 0">
+      <li><strong>Una columna por variable</strong> (x₁, x₂, x₃, ...)</li>
+      <li><strong>Tres columnas fijas al final:</strong> <code>LI</code> (lado izquierdo = fórmula), <code>Signo</code> (≤, ≥, =), <code>LD</code> (lado derecho = valor límite)</li>
+      <li><strong>Fila de Valor:</strong> las celdas 0/1 que Solver cambia</li>
+      <li><strong>Fila de F. Objetivo:</strong> coeficientes de Z y el resultado calculado</li>
+      <li><strong>Una fila por restricción:</strong> coeficientes, LI calculado, signo y límite</li>
+    </ul>
 
     <div class="excel-wrapper">
       <table class="excel-table">
         <tr>
-          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th>
         </tr>
         <tr>
           <td class="col-header">1</td>
-          <td class="row-header">Opciones</td>
-          <td>Opción 1</td><td>Opción 2</td><td>Opción 3</td><td></td>
+          <td class="row-header">Variables</td>
+          <td>x₁</td><td>x₂</td><td>x₃</td>
+          <td style="font-weight:700">LI</td>
+          <td style="font-weight:700">Signo</td>
+          <td style="font-weight:700">LD</td>
         </tr>
         <tr>
           <td class="col-header">2</td>
-          <td class="row-header">Decisión (0 o 1)</td>
+          <td class="row-header">Valor</td>
           <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
-          <td style="color:var(--text3);font-size:.7rem">← Celdas que Solver cambia</td>
+          <td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver cambia B2:D2</td>
         </tr>
         <tr>
           <td class="col-header">3</td>
-          <td class="row-header">Coef. Objetivo</td>
-          <td>valor</td><td>valor</td><td>valor</td>
+          <td class="row-header">F. Objetivo</td>
+          <td>c₁</td><td>c₂</td><td>c₃</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:D2, B3:D3)</td>
+          <td class="result">MAX/MIN</td>
           <td></td>
         </tr>
         <tr>
           <td class="col-header">4</td>
-          <td class="row-header">F. Objetivo</td>
-          <td colspan="3" class="formula-cell">=SUMAPRODUCTO(B2:D2, B3:D3)</td>
-          <td class="result">← Maximizar o minimizar</td>
+          <td class="row-header">Restricción 1</td>
+          <td>a₁</td><td>a₂</td><td>a₃</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:D2, B4:D4)</td>
+          <td class="result">≤</td>
+          <td class="result">b₁</td>
         </tr>
         <tr>
           <td class="col-header">5</td>
-          <td class="row-header">Coef. Restricción</td>
-          <td>valor</td><td>valor</td><td>valor</td>
-          <td></td>
-        </tr>
-        <tr>
-          <td class="col-header">6</td>
-          <td class="row-header">Uso (lado izq.)</td>
-          <td colspan="3" class="formula-cell">=SUMAPRODUCTO(B2:D2, B5:D5)</td>
-          <td class="result">≤ Límite</td>
+          <td class="row-header">Restricción 2</td>
+          <td>a₁</td><td>a₂</td><td>a₃</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:D2, B5:D5)</td>
+          <td class="result">≥</td>
+          <td class="result">b₂</td>
         </tr>
       </table>
+    </div>
+
+    <div class="key-point" style="margin-top:1rem">
+      <span class="kp-icon">🎯</span>
+      <p>En Solver, siempre conectas la columna <strong>LI</strong> con el signo y el <strong>LD</strong>. Ejemplo: <code>$E$4 ≤ $G$4</code>. Las celdas de decisión son la fila de <strong>Valor</strong>.</p>
     </div>
   </div>
 
@@ -544,44 +560,39 @@ code{
   </div>
 
   <div class="card card-green">
-    <h3>Paso 2 — Armado en Excel</h3>
+    <h3>Paso 2 — Armado en Excel (framework estándar)</h3>
     <div class="excel-wrapper">
       <table class="excel-table">
         <tr>
-          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th>
         </tr>
         <tr>
           <td class="col-header">1</td>
-          <td class="row-header">Proyecto</td>
-          <td>App</td><td>Café</td><td>Food truck</td><td>Tienda</td><td>Coworking</td><td></td>
+          <td class="row-header">Variables</td>
+          <td>x₁ App</td><td>x₂ Café</td><td>x₃ Food</td><td>x₄ Tienda</td><td>x₅ Cowork</td>
+          <td style="font-weight:700">LI</td><td style="font-weight:700">Signo</td><td style="font-weight:700">LD</td>
         </tr>
         <tr>
           <td class="col-header">2</td>
-          <td class="row-header">Decisión</td>
+          <td class="row-header">Valor</td>
           <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
-          <td style="font-size:.7rem;color:var(--text3)">← Solver cambia</td>
+          <td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver cambia B2:F2</td>
         </tr>
         <tr>
           <td class="col-header">3</td>
-          <td class="row-header">Ganancia (M)</td>
-          <td>40</td><td>48</td><td>20</td><td>30</td><td>52</td><td></td>
+          <td class="row-header">F. Objetivo</td>
+          <td>40</td><td>48</td><td>20</td><td>30</td><td>52</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td>
+          <td class="result">MAX</td>
+          <td></td>
         </tr>
         <tr>
           <td class="col-header">4</td>
-          <td class="row-header">Inversión (M)</td>
-          <td>25</td><td>30</td><td>15</td><td>20</td><td>35</td><td></td>
-        </tr>
-        <tr>
-          <td class="col-header">5</td>
-          <td class="row-header">F. Objetivo</td>
-          <td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td>
-          <td class="result">← MAX</td>
-        </tr>
-        <tr>
-          <td class="col-header">6</td>
-          <td class="row-header">Total inversión</td>
-          <td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td>
-          <td class="result">≤ 80</td>
+          <td class="row-header">Presupuesto</td>
+          <td>25</td><td>30</td><td>15</td><td>20</td><td>35</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td>
+          <td class="result">≤</td>
+          <td class="result">80</td>
         </tr>
       </table>
     </div>
@@ -594,21 +605,21 @@ code{
         <div class="step-num">1</div>
         <div class="step-content">
           <strong>Establecer objetivo:</strong>
-          <p>Celda de F. Objetivo (fila 5) → <strong>Máximo</strong></p>
+          <p>Celda <code>G3</code> (LI de F. Objetivo) → <strong>Máximo</strong></p>
         </div>
       </div>
       <div class="solver-step">
         <div class="step-num">2</div>
         <div class="step-content">
           <strong>Cambiando las celdas:</strong>
-          <p>Rango de decisión: <code>B2:F2</code></p>
+          <p>Rango de decisión: <code>B2:F2</code> (fila de Valor)</p>
         </div>
       </div>
       <div class="solver-step">
         <div class="step-num">3</div>
         <div class="step-content">
           <strong>Restricción 1 — Presupuesto:</strong>
-          <p>Total inversión (fila 6) <strong>≤ 80</strong></p>
+          <p><code>G4 ≤ I4</code> (LI de la fila 4 ≤ LD de la fila 4)</p>
         </div>
       </div>
       <div class="solver-step">
@@ -700,66 +711,61 @@ code{
   </div>
 
   <div class="card card-green">
-    <h3>Armado en Excel</h3>
+    <h3>Armado en Excel (framework estándar)</h3>
     <div class="excel-wrapper">
       <table class="excel-table">
         <tr>
-          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th>
         </tr>
         <tr>
           <td class="col-header">1</td>
-          <td class="row-header">Local</td>
-          <td>Cuba</td><td>Circunvalar</td><td>Dosquebradas</td><td>Centro</td><td></td>
+          <td class="row-header">Variables</td>
+          <td>y₁ Cuba</td><td>y₂ Circunv.</td><td>y₃ Dosq.</td><td>y₄ Centro</td>
+          <td style="font-weight:700">LI</td><td style="font-weight:700">Signo</td><td style="font-weight:700">LD</td>
         </tr>
         <tr>
           <td class="col-header">2</td>
-          <td class="row-header">Decisión</td>
+          <td class="row-header">Valor</td>
           <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
-          <td style="font-size:.7rem;color:var(--text3)">← Solver</td>
+          <td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver cambia B2:E2</td>
         </tr>
         <tr>
           <td class="col-header">3</td>
-          <td class="row-header">Ganancia (M)</td>
-          <td>8</td><td>12</td><td>6</td><td>10</td><td></td>
+          <td class="row-header">F. Objetivo</td>
+          <td>8</td><td>12</td><td>6</td><td>10</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:E2, B3:E3)</td>
+          <td class="result">MAX</td>
+          <td></td>
         </tr>
         <tr>
           <td class="col-header">4</td>
-          <td class="row-header">Costo (M)</td>
-          <td>30</td><td>50</td><td>25</td><td>45</td><td></td>
+          <td class="row-header">Presupuesto</td>
+          <td>30</td><td>50</td><td>25</td><td>45</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:E2, B4:E4)</td>
+          <td class="result">≤</td>
+          <td class="result">100</td>
         </tr>
         <tr>
           <td class="col-header">5</td>
           <td class="row-header">Personal</td>
-          <td>5</td><td>7</td><td>4</td><td>6</td><td></td>
-        </tr>
-        <tr>
-          <td class="col-header">6</td>
-          <td class="row-header">F. Objetivo</td>
-          <td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B3:E3)</td>
-          <td class="result">← MAX</td>
-        </tr>
-        <tr>
-          <td class="col-header">7</td>
-          <td class="row-header">Total costo</td>
-          <td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B4:E4)</td>
-          <td class="result">≤ 100</td>
-        </tr>
-        <tr>
-          <td class="col-header">8</td>
-          <td class="row-header">Total personal</td>
-          <td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B5:E5)</td>
-          <td class="result">≤ 15</td>
+          <td>5</td><td>7</td><td>4</td><td>6</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:E2, B5:E5)</td>
+          <td class="result">≤</td>
+          <td class="result">15</td>
         </tr>
       </table>
     </div>
   </div>
 
   <div class="card card-purple">
-    <h3>Solver: Restricciones</h3>
+    <h3>Solver: Configuración</h3>
     <ul>
-      <li>Total costo (fila 7) <strong>≤ 100</strong></li>
-      <li>Total personal (fila 8) <strong>≤ 15</strong></li>
-      <li><code>B2:E2</code> → <strong>bin</strong> (binarias)</li>
+      <li><strong>Objetivo:</strong> <code>F3</code> → Máximo</li>
+      <li><strong>Cambiar celdas:</strong> <code>B2:E2</code></li>
+      <li><strong>Restricción 1 (Presupuesto):</strong> <code>F4 ≤ H4</code></li>
+      <li><strong>Restricción 2 (Personal):</strong> <code>F5 ≤ H5</code></li>
+      <li><strong>Binarias:</strong> <code>B2:E2</code> → <strong>bin</strong></li>
+      <li><strong>Método:</strong> Simplex LP</li>
     </ul>
   </div>
 
@@ -835,46 +841,99 @@ code{
   </div>
 
   <div class="card card-green">
-    <h3>Armado en Excel</h3>
-    <p>Este ejemplo es diferente: las variables de decisión forman una <strong>matriz</strong> (no una fila). Necesitamos una tabla de decisiones espejo de la tabla de tiempos.</p>
+    <h3>Armado en Excel (framework estándar)</h3>
+    <p>Aplanamos las 9 variables en una sola fila: x<sub>ij</sub> con i = repartidor, j = zona. Cada restricción tiene coeficientes 1 para las variables que incluye y 0 para las demás.</p>
 
     <div class="excel-wrapper">
       <table class="excel-table">
-        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th>
+        </tr>
         <tr>
           <td class="col-header">1</td>
-          <td class="row-header"></td><td style="font-weight:700">Centro</td><td style="font-weight:700">Cuba</td><td style="font-weight:700">Dosqueb.</td><td></td>
+          <td class="row-header">Variables</td>
+          <td>J-C</td><td>J-Cu</td><td>J-D</td><td>M-C</td><td>M-Cu</td><td>M-D</td><td>P-C</td><td>P-Cu</td><td>P-D</td>
+          <td style="font-weight:700">LI</td><td style="font-weight:700">Sig</td><td style="font-weight:700">LD</td>
         </tr>
-        <tr><td class="col-header">2</td><td class="row-header">TIEMPOS</td><td colspan="3" style="text-align:center;color:var(--text3)">Tabla de datos</td><td></td></tr>
-        <tr><td class="col-header">3</td><td class="row-header">Juan</td><td>25</td><td>35</td><td>45</td><td></td></tr>
-        <tr><td class="col-header">4</td><td class="row-header">María</td><td>30</td><td>20</td><td>40</td><td></td></tr>
-        <tr><td class="col-header">5</td><td class="row-header">Pedro</td><td>40</td><td>30</td><td>25</td><td></td></tr>
-        <tr><td class="col-header">6</td><td colspan="5" style="height:8px"></td></tr>
-        <tr><td class="col-header">7</td><td class="row-header">DECISIONES</td><td colspan="3" style="text-align:center;color:var(--text3)">Celdas que Solver cambia</td><td style="font-size:.7rem;color:var(--text3)">Suma fila</td></tr>
-        <tr><td class="col-header">8</td><td class="row-header">Juan</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B8:D8) = 1</td></tr>
-        <tr><td class="col-header">9</td><td class="row-header">María</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B9:D9) = 1</td></tr>
-        <tr><td class="col-header">10</td><td class="row-header">Pedro</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B10:D10) = 1</td></tr>
-        <tr><td class="col-header">11</td><td class="row-header">Suma col</td>
-          <td class="formula-cell">=SUMA(B8:B10)</td><td class="formula-cell">=SUMA(C8:C10)</td><td class="formula-cell">=SUMA(D8:D10)</td>
+        <tr>
+          <td class="col-header">2</td>
+          <td class="row-header">Valor</td>
+          <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
+          <td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver B2:J2</td>
+        </tr>
+        <tr>
+          <td class="col-header">3</td>
+          <td class="row-header">F. Objetivo</td>
+          <td>25</td><td>35</td><td>45</td><td>30</td><td>20</td><td>40</td><td>40</td><td>30</td><td>25</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:J2, B3:J3)</td>
+          <td class="result">MIN</td>
           <td></td>
         </tr>
-        <tr><td class="col-header">12</td><td class="row-header"></td><td class="result">= 1</td><td class="result">= 1</td><td class="result">= 1</td><td></td></tr>
-        <tr><td class="col-header">13</td><td colspan="5" style="height:8px"></td></tr>
-        <tr><td class="col-header">14</td><td class="row-header">F. Objetivo</td>
-          <td colspan="3" class="formula-cell">=SUMAPRODUCTO(B3:D5, B8:D10)</td>
-          <td class="result">← MIN</td>
+        <tr>
+          <td class="col-header">4</td>
+          <td class="row-header">Juan (fila)</td>
+          <td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:J2, B4:J4)</td>
+          <td class="result">=</td>
+          <td class="result">1</td>
+        </tr>
+        <tr>
+          <td class="col-header">5</td>
+          <td class="row-header">María (fila)</td>
+          <td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:J2, B5:J5)</td>
+          <td class="result">=</td>
+          <td class="result">1</td>
+        </tr>
+        <tr>
+          <td class="col-header">6</td>
+          <td class="row-header">Pedro (fila)</td>
+          <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:J2, B6:J6)</td>
+          <td class="result">=</td>
+          <td class="result">1</td>
+        </tr>
+        <tr>
+          <td class="col-header">7</td>
+          <td class="row-header">Centro (col)</td>
+          <td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:J2, B7:J7)</td>
+          <td class="result">=</td>
+          <td class="result">1</td>
+        </tr>
+        <tr>
+          <td class="col-header">8</td>
+          <td class="row-header">Cuba (col)</td>
+          <td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:J2, B8:J8)</td>
+          <td class="result">=</td>
+          <td class="result">1</td>
+        </tr>
+        <tr>
+          <td class="col-header">9</td>
+          <td class="row-header">Dosq. (col)</td>
+          <td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:J2, B9:J9)</td>
+          <td class="result">=</td>
+          <td class="result">1</td>
         </tr>
       </table>
+    </div>
+
+    <div class="key-point" style="margin-top:1rem">
+      <span class="kp-icon">📋</span>
+      <p><strong>Leyenda de variables:</strong> J-C = Juan al Centro, J-Cu = Juan a Cuba, J-D = Juan a Dosquebradas, M-C = María al Centro, etc. Las filas 4-6 son las restricciones de <strong>repartidores</strong> (cada uno va a una sola zona). Las filas 7-9 son las restricciones de <strong>zonas</strong> (cada zona recibe un solo repartidor).</p>
     </div>
   </div>
 
   <div class="card card-purple">
-    <h3>Solver: Restricciones</h3>
+    <h3>Solver: Configuración</h3>
     <ul>
-      <li><code>E8:E10</code> (sumas de filas) <strong>= 1</strong> (cada repartidor a exactamente 1 zona)</li>
-      <li><code>B11:D11</code> (sumas de columnas) <strong>= 1</strong> (cada zona con exactamente 1 repartidor)</li>
-      <li><code>B8:D10</code> → <strong>bin</strong> (binarias)</li>
-      <li>Objetivo: <strong>Mínimo</strong></li>
+      <li><strong>Objetivo:</strong> <code>K3</code> → Mínimo</li>
+      <li><strong>Cambiar celdas:</strong> <code>B2:J2</code></li>
+      <li><strong>Restricciones (filas 4-9):</strong> <code>K4 = M4</code>, <code>K5 = M5</code>, ..., <code>K9 = M9</code></li>
+      <li><strong>Binarias:</strong> <code>B2:J2</code> → <strong>bin</strong></li>
+      <li><strong>Método:</strong> Simplex LP</li>
     </ul>
   </div>
 
@@ -968,32 +1027,64 @@ code{
   </div>
 
   <div class="card card-green">
-    <h3>Armado en Excel</h3>
+    <h3>Armado en Excel (framework estándar)</h3>
+    <p>Truco: para las restricciones lógicas, escribimos los coeficientes correspondientes. Por ejemplo, "x₁ − x₄ ≤ 0" se escribe como coeficientes <strong>1, 0, 0, −1, 0, 0</strong>.</p>
     <div class="excel-wrapper">
       <table class="excel-table">
         <tr>
-          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th>
+          <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th>
         </tr>
-        <tr><td class="col-header">1</td><td class="row-header">Campaña</td>
-          <td>Redes</td><td>Radio</td><td>Vallas</td><td>Influenc.</td><td>Evento</td><td>Email</td><td></td></tr>
-        <tr><td class="col-header">2</td><td class="row-header">Decisión</td>
+        <tr>
+          <td class="col-header">1</td><td class="row-header">Variables</td>
+          <td>x₁ Redes</td><td>x₂ Radio</td><td>x₃ Vallas</td><td>x₄ Influ.</td><td>x₅ Evento</td><td>x₆ Email</td>
+          <td style="font-weight:700">LI</td><td style="font-weight:700">Sig</td><td style="font-weight:700">LD</td>
+        </tr>
+        <tr>
+          <td class="col-header">2</td><td class="row-header">Valor</td>
           <td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td>
-          <td style="font-size:.7rem;color:var(--text3)">← Solver</td></tr>
-        <tr><td class="col-header">3</td><td class="row-header">Impacto</td>
-          <td>25</td><td>30</td><td>35</td><td>28</td><td>45</td><td>15</td><td></td></tr>
-        <tr><td class="col-header">4</td><td class="row-header">Costo (M)</td>
-          <td>8</td><td>12</td><td>15</td><td>10</td><td>20</td><td>5</td><td></td></tr>
-        <tr><td class="col-header">5</td><td class="row-header">F. Objetivo</td>
-          <td colspan="6" class="formula-cell">=SUMAPRODUCTO(B2:G2, B3:G3)</td><td class="result">← MAX</td></tr>
-        <tr><td class="col-header">6</td><td class="row-header">Total costo</td>
-          <td colspan="6" class="formula-cell">=SUMAPRODUCTO(B2:G2, B4:G4)</td><td class="result">≤ 40</td></tr>
-        <tr><td class="col-header">7</td><td class="row-header">Si→Entonces</td>
-          <td colspan="6" class="formula-cell">=B2 − E2 (Redes − Influencers)</td><td class="result">≤ 0</td></tr>
-        <tr><td class="col-header">8</td><td class="row-header">Mínimo 2</td>
-          <td colspan="6" class="formula-cell">=SUMA(B2:G2)</td><td class="result">≥ 2</td></tr>
-        <tr><td class="col-header">9</td><td class="row-header">Exclusión</td>
-          <td colspan="6" class="formula-cell">=D2 + F2 (Vallas + Evento)</td><td class="result">≤ 1</td></tr>
+          <td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver B2:G2</td>
+        </tr>
+        <tr>
+          <td class="col-header">3</td><td class="row-header">F. Objetivo</td>
+          <td>25</td><td>30</td><td>35</td><td>28</td><td>45</td><td>15</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:G2, B3:G3)</td>
+          <td class="result">MAX</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="col-header">4</td><td class="row-header">Presupuesto</td>
+          <td>8</td><td>12</td><td>15</td><td>10</td><td>20</td><td>5</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:G2, B4:G4)</td>
+          <td class="result">≤</td>
+          <td class="result">40</td>
+        </tr>
+        <tr>
+          <td class="col-header">5</td><td class="row-header">Redes→Influ.</td>
+          <td>1</td><td>0</td><td>0</td><td>−1</td><td>0</td><td>0</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:G2, B5:G5)</td>
+          <td class="result">≤</td>
+          <td class="result">0</td>
+        </tr>
+        <tr>
+          <td class="col-header">6</td><td class="row-header">Mínimo 2</td>
+          <td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:G2, B6:G6)</td>
+          <td class="result">≥</td>
+          <td class="result">2</td>
+        </tr>
+        <tr>
+          <td class="col-header">7</td><td class="row-header">No Vallas+Ev.</td>
+          <td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td>
+          <td class="formula-cell">=SUMAPRODUCTO(B2:G2, B7:G7)</td>
+          <td class="result">≤</td>
+          <td class="result">1</td>
+        </tr>
       </table>
+    </div>
+
+    <div class="key-point" style="margin-top:1rem">
+      <span class="kp-icon">💡</span>
+      <p><strong>Así funcionan los coeficientes:</strong> En la fila 5, los coeficientes <code>1, 0, 0, −1, 0, 0</code> producen x₁ − x₄ al multiplicar con la fila Valor. Si se elige Redes (x₁=1) pero no Influencers (x₄=0), resulta 1 − 0 = 1, que <strong>viola</strong> la restricción ≤ 0. Para cumplirla, si x₁=1 entonces x₄ debe ser 1.</p>
     </div>
   </div>
 
@@ -1075,25 +1166,23 @@ code{
       <div class="formula" style="font-size:.85rem">x<sub>i</sub> ∈ {0, 1}</div>
     </div>
 
-    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel</h4>
+    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel (framework estándar)</h4>
     <div class="excel-wrapper" style="margin:.6rem 0">
       <table class="excel-table">
-        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
-        <tr><td class="col-header">1</td><td class="row-header">Electiva</td><td>Marketing</td><td>Finanzas</td><td>Logística</td><td>Emprend.</td><td>Com.Ext.</td><td></td></tr>
-        <tr><td class="col-header">2</td><td class="row-header">Decisión</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td style="font-size:.7rem;color:var(--text3)">← Solver</td></tr>
-        <tr><td class="col-header">3</td><td class="row-header">Puntuación</td><td>9</td><td>14</td><td>11</td><td>6</td><td>15</td><td></td></tr>
-        <tr><td class="col-header">4</td><td class="row-header">Horas</td><td>4</td><td>6</td><td>5</td><td>3</td><td>7</td><td></td></tr>
-        <tr><td class="col-header">5</td><td class="row-header">F. Objetivo</td><td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td><td class="result">← MAX</td></tr>
-        <tr><td class="col-header">6</td><td class="row-header">Total horas</td><td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td><td class="result">≤ 14</td></tr>
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th></tr>
+        <tr><td class="col-header">1</td><td class="row-header">Variables</td><td>x₁ Mkt</td><td>x₂ Fin</td><td>x₃ Log</td><td>x₄ Emp</td><td>x₅ CE</td><td style="font-weight:700">LI</td><td style="font-weight:700">Sig</td><td style="font-weight:700">LD</td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Valor</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver B2:F2</td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">F. Objetivo</td><td>9</td><td>14</td><td>11</td><td>6</td><td>15</td><td class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td><td class="result">MAX</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Horas</td><td>4</td><td>6</td><td>5</td><td>3</td><td>7</td><td class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td><td class="result">≤</td><td class="result">14</td></tr>
       </table>
     </div>
 
     <h4 style="margin-top:1rem;color:var(--purple);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">⚙️ Configuración de Solver</h4>
     <ul style="font-size:.88rem;margin:.5rem 0">
-      <li><strong>Objetivo:</strong> celda de F. Objetivo (fila 5) → <strong>Máximo</strong></li>
+      <li><strong>Objetivo:</strong> <code>G3</code> → <strong>Máximo</strong></li>
       <li><strong>Cambiar celdas:</strong> <code>B2:F2</code></li>
-      <li><strong>Restricción 1:</strong> Total horas (fila 6) <strong>≤ 14</strong></li>
-      <li><strong>Restricción 2:</strong> <code>B2:F2</code> → <strong>bin</strong></li>
+      <li><strong>Restricción 1 (Horas):</strong> <code>G4 ≤ I4</code></li>
+      <li><strong>Restricción 2 (Binarias):</strong> <code>B2:F2</code> → <strong>bin</strong></li>
       <li><strong>Método:</strong> Simplex LP</li>
     </ul>
 
@@ -1137,28 +1226,25 @@ code{
       <div class="formula" style="font-size:.85rem">y<sub>i</sub> ∈ {0, 1}</div>
     </div>
 
-    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel</h4>
+    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel (framework estándar)</h4>
     <div class="excel-wrapper" style="margin:.6rem 0">
       <table class="excel-table">
-        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
-        <tr><td class="col-header">1</td><td class="row-header">Local</td><td>UniCenter</td><td>Victoria</td><td>Arboleda</td><td>Olaya</td><td></td></tr>
-        <tr><td class="col-header">2</td><td class="row-header">Decisión</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td style="font-size:.7rem;color:var(--text3)">← Solver</td></tr>
-        <tr><td class="col-header">3</td><td class="row-header">Ganancia (M)</td><td>7</td><td>9</td><td>12</td><td>5</td><td></td></tr>
-        <tr><td class="col-header">4</td><td class="row-header">Alquiler (M)</td><td>3</td><td>4</td><td>5</td><td>2</td><td></td></tr>
-        <tr><td class="col-header">5</td><td class="row-header">Capacidad</td><td>200</td><td>250</td><td>300</td><td>150</td><td></td></tr>
-        <tr><td class="col-header">6</td><td class="row-header">F. Objetivo</td><td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B3:E3)</td><td class="result">← MAX</td></tr>
-        <tr><td class="col-header">7</td><td class="row-header">Total alquiler</td><td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B4:E4)</td><td class="result">≤ 10</td></tr>
-        <tr><td class="col-header">8</td><td class="row-header">Total capacidad</td><td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B5:E5)</td><td class="result">≥ 500</td></tr>
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th></tr>
+        <tr><td class="col-header">1</td><td class="row-header">Variables</td><td>y₁ UC</td><td>y₂ Vict.</td><td>y₃ Arb.</td><td>y₄ Olaya</td><td style="font-weight:700">LI</td><td style="font-weight:700">Sig</td><td style="font-weight:700">LD</td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Valor</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver B2:E2</td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">F. Objetivo</td><td>7</td><td>9</td><td>12</td><td>5</td><td class="formula-cell">=SUMAPRODUCTO(B2:E2, B3:E3)</td><td class="result">MAX</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Alquiler</td><td>3</td><td>4</td><td>5</td><td>2</td><td class="formula-cell">=SUMAPRODUCTO(B2:E2, B4:E4)</td><td class="result">≤</td><td class="result">10</td></tr>
+        <tr><td class="col-header">5</td><td class="row-header">Capacidad</td><td>200</td><td>250</td><td>300</td><td>150</td><td class="formula-cell">=SUMAPRODUCTO(B2:E2, B5:E5)</td><td class="result">≥</td><td class="result">500</td></tr>
       </table>
     </div>
 
     <h4 style="margin-top:1rem;color:var(--purple);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">⚙️ Configuración de Solver</h4>
     <ul style="font-size:.88rem;margin:.5rem 0">
-      <li><strong>Objetivo:</strong> F. Objetivo (fila 6) → <strong>Máximo</strong></li>
+      <li><strong>Objetivo:</strong> <code>F3</code> → <strong>Máximo</strong></li>
       <li><strong>Cambiar celdas:</strong> <code>B2:E2</code></li>
-      <li><strong>Restricción 1:</strong> Total alquiler (fila 7) <strong>≤ 10</strong></li>
-      <li><strong>Restricción 2:</strong> Total capacidad (fila 8) <strong>≥ 500</strong></li>
-      <li><strong>Restricción 3:</strong> <code>B2:E2</code> → <strong>bin</strong></li>
+      <li><strong>Restricción 1 (Alquiler):</strong> <code>F4 ≤ H4</code></li>
+      <li><strong>Restricción 2 (Capacidad):</strong> <code>F5 ≥ H5</code></li>
+      <li><strong>Restricción 3 (Binarias):</strong> <code>B2:E2</code> → <strong>bin</strong></li>
       <li><strong>Método:</strong> Simplex LP</li>
     </ul>
 
@@ -1202,33 +1288,29 @@ code{
       <div class="formula" style="font-size:.85rem">x<sub>ij</sub> ∈ {0, 1}</div>
     </div>
 
-    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel (matriz 3×3)</h4>
+    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel (framework estándar)</h4>
+    <p style="font-size:.88rem">Aplanamos las 9 variables (3 domiciliarios × 3 zonas) en una fila. Nomenclatura: A-N = Andrés a Norte, A-S = Andrés a Sur, etc.</p>
     <div class="excel-wrapper" style="margin:.6rem 0">
       <table class="excel-table">
-        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
-        <tr><td class="col-header">1</td><td class="row-header">TIEMPOS</td><td style="font-weight:700">Norte</td><td style="font-weight:700">Sur</td><td style="font-weight:700">Oriente</td><td></td></tr>
-        <tr><td class="col-header">2</td><td class="row-header">Andrés</td><td>20</td><td>30</td><td>25</td><td></td></tr>
-        <tr><td class="col-header">3</td><td class="row-header">Sofía</td><td>28</td><td>18</td><td>22</td><td></td></tr>
-        <tr><td class="col-header">4</td><td class="row-header">Luis</td><td>35</td><td>25</td><td>15</td><td></td></tr>
-        <tr><td class="col-header">5</td><td colspan="5" style="height:6px"></td></tr>
-        <tr><td class="col-header">6</td><td class="row-header">DECISIONES</td><td colspan="3" style="text-align:center;color:var(--text3)">Solver cambia</td><td style="font-size:.7rem;color:var(--text3)">Suma fila</td></tr>
-        <tr><td class="col-header">7</td><td class="row-header">Andrés</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B7:D7) = 1</td></tr>
-        <tr><td class="col-header">8</td><td class="row-header">Sofía</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B8:D8) = 1</td></tr>
-        <tr><td class="col-header">9</td><td class="row-header">Luis</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B9:D9) = 1</td></tr>
-        <tr><td class="col-header">10</td><td class="row-header">Suma col</td><td class="formula-cell">=SUMA(B7:B9)</td><td class="formula-cell">=SUMA(C7:C9)</td><td class="formula-cell">=SUMA(D7:D9)</td><td></td></tr>
-        <tr><td class="col-header">11</td><td class="row-header"></td><td class="result">= 1</td><td class="result">= 1</td><td class="result">= 1</td><td></td></tr>
-        <tr><td class="col-header">12</td><td colspan="5" style="height:6px"></td></tr>
-        <tr><td class="col-header">13</td><td class="row-header">F. Objetivo</td><td colspan="3" class="formula-cell">=SUMAPRODUCTO(B2:D4, B7:D9)</td><td class="result">← MIN</td></tr>
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th></tr>
+        <tr><td class="col-header">1</td><td class="row-header">Variables</td><td>A-N</td><td>A-S</td><td>A-O</td><td>S-N</td><td>S-S</td><td>S-O</td><td>L-N</td><td>L-S</td><td>L-O</td><td style="font-weight:700">LI</td><td style="font-weight:700">Sig</td><td style="font-weight:700">LD</td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Valor</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver B2:J2</td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">F. Objetivo</td><td>20</td><td>30</td><td>25</td><td>28</td><td>18</td><td>22</td><td>35</td><td>25</td><td>15</td><td class="formula-cell">=SUMAPRODUCTO(B2:J2, B3:J3)</td><td class="result">MIN</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Andrés (f)</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td class="formula-cell">=SUMAPRODUCTO(B2:J2, B4:J4)</td><td class="result">=</td><td class="result">1</td></tr>
+        <tr><td class="col-header">5</td><td class="row-header">Sofía (f)</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td class="formula-cell">=SUMAPRODUCTO(B2:J2, B5:J5)</td><td class="result">=</td><td class="result">1</td></tr>
+        <tr><td class="col-header">6</td><td class="row-header">Luis (f)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td><td class="formula-cell">=SUMAPRODUCTO(B2:J2, B6:J6)</td><td class="result">=</td><td class="result">1</td></tr>
+        <tr><td class="col-header">7</td><td class="row-header">Norte (c)</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td class="formula-cell">=SUMAPRODUCTO(B2:J2, B7:J7)</td><td class="result">=</td><td class="result">1</td></tr>
+        <tr><td class="col-header">8</td><td class="row-header">Sur (c)</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td class="formula-cell">=SUMAPRODUCTO(B2:J2, B8:J8)</td><td class="result">=</td><td class="result">1</td></tr>
+        <tr><td class="col-header">9</td><td class="row-header">Oriente (c)</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td class="formula-cell">=SUMAPRODUCTO(B2:J2, B9:J9)</td><td class="result">=</td><td class="result">1</td></tr>
       </table>
     </div>
 
     <h4 style="margin-top:1rem;color:var(--purple);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">⚙️ Configuración de Solver</h4>
     <ul style="font-size:.88rem;margin:.5rem 0">
-      <li><strong>Objetivo:</strong> F. Objetivo (fila 13) → <strong>Mínimo</strong></li>
-      <li><strong>Cambiar celdas:</strong> <code>B7:D9</code> (matriz de decisiones)</li>
-      <li><strong>Restricción 1:</strong> <code>E7:E9</code> (suma filas) <strong>= 1</strong></li>
-      <li><strong>Restricción 2:</strong> <code>B10:D10</code> (suma columnas) <strong>= 1</strong></li>
-      <li><strong>Restricción 3:</strong> <code>B7:D9</code> → <strong>bin</strong></li>
+      <li><strong>Objetivo:</strong> <code>K3</code> → <strong>Mínimo</strong></li>
+      <li><strong>Cambiar celdas:</strong> <code>B2:J2</code></li>
+      <li><strong>Restricciones:</strong> <code>K4 = M4</code>, <code>K5 = M5</code>, <code>K6 = M6</code> (filas), <code>K7 = M7</code>, <code>K8 = M8</code>, <code>K9 = M9</code> (columnas)</li>
+      <li><strong>Binarias:</strong> <code>B2:J2</code> → <strong>bin</strong></li>
       <li><strong>Método:</strong> Simplex LP</li>
     </ul>
 
@@ -1282,33 +1364,32 @@ code{
       <div class="formula" style="font-size:.85rem">x<sub>i</sub> ∈ {0, 1}</div>
     </div>
 
-    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel</h4>
+    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel (framework estándar)</h4>
+    <p style="font-size:.88rem">Las restricciones lógicas se escriben con coeficientes <strong>1</strong> y <strong>−1</strong>. Por ejemplo, "x₄ − x₂ ≤ 0" usa coeficientes <code>0, −1, 0, 1, 0</code>.</p>
     <div class="excel-wrapper" style="margin:.6rem 0">
       <table class="excel-table">
-        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
-        <tr><td class="col-header">1</td><td class="row-header">Programa</td><td>Excel</td><td>Liderazgo</td><td>Inglés</td><td>Scrum</td><td>Comunic.</td><td></td></tr>
-        <tr><td class="col-header">2</td><td class="row-header">Decisión</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td style="font-size:.7rem;color:var(--text3)">← Solver</td></tr>
-        <tr><td class="col-header">3</td><td class="row-header">Productiv.</td><td>8</td><td>12</td><td>15</td><td>10</td><td>7</td><td></td></tr>
-        <tr><td class="col-header">4</td><td class="row-header">Costo (M)</td><td>3</td><td>5</td><td>7</td><td>4</td><td>3</td><td></td></tr>
-        <tr><td class="col-header">5</td><td class="row-header">F. Objetivo</td><td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td><td class="result">← MAX</td></tr>
-        <tr><td class="col-header">6</td><td class="row-header">Total costo</td><td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td><td class="result">≤ 15</td></tr>
-        <tr><td class="col-header">7</td><td class="row-header">Scrum→Líder</td><td colspan="5" class="formula-cell">=E2 − C2 (Scrum − Liderazgo)</td><td class="result">≤ 0</td></tr>
-        <tr><td class="col-header">8</td><td class="row-header">Mínimo 2</td><td colspan="5" class="formula-cell">=SUMA(B2:F2)</td><td class="result">≥ 2</td></tr>
-        <tr><td class="col-header">9</td><td class="row-header">No Excel+Ingl</td><td colspan="5" class="formula-cell">=B2 + D2</td><td class="result">≤ 1</td></tr>
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th></tr>
+        <tr><td class="col-header">1</td><td class="row-header">Variables</td><td>x₁ Excel</td><td>x₂ Líder</td><td>x₃ Inglés</td><td>x₄ Scrum</td><td>x₅ Comun.</td><td style="font-weight:700">LI</td><td style="font-weight:700">Sig</td><td style="font-weight:700">LD</td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Valor</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td colspan="3" style="font-size:.7rem;color:var(--text3)">← Solver B2:F2</td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">F. Objetivo</td><td>8</td><td>12</td><td>15</td><td>10</td><td>7</td><td class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td><td class="result">MAX</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Presupuesto</td><td>3</td><td>5</td><td>7</td><td>4</td><td>3</td><td class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td><td class="result">≤</td><td class="result">15</td></tr>
+        <tr><td class="col-header">5</td><td class="row-header">Scrum→Líder</td><td>0</td><td>−1</td><td>0</td><td>1</td><td>0</td><td class="formula-cell">=SUMAPRODUCTO(B2:F2, B5:F5)</td><td class="result">≤</td><td class="result">0</td></tr>
+        <tr><td class="col-header">6</td><td class="row-header">Mínimo 2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td class="formula-cell">=SUMAPRODUCTO(B2:F2, B6:F6)</td><td class="result">≥</td><td class="result">2</td></tr>
+        <tr><td class="col-header">7</td><td class="row-header">No Excel+Ing</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td class="formula-cell">=SUMAPRODUCTO(B2:F2, B7:F7)</td><td class="result">≤</td><td class="result">1</td></tr>
       </table>
     </div>
 
     <h4 style="margin-top:1rem;color:var(--purple);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">⚙️ Configuración de Solver</h4>
     <ul style="font-size:.88rem;margin:.5rem 0">
-      <li><strong>Objetivo:</strong> F. Objetivo (fila 5) → <strong>Máximo</strong></li>
+      <li><strong>Objetivo:</strong> <code>G3</code> → <strong>Máximo</strong></li>
       <li><strong>Cambiar celdas:</strong> <code>B2:F2</code></li>
       <li><strong>Restricciones:</strong>
         <ul>
-          <li>Total costo (6) <strong>≤ 15</strong></li>
-          <li>Scrum→Líder (7) <strong>≤ 0</strong></li>
-          <li>Mínimo 2 (8) <strong>≥ 2</strong></li>
-          <li>No Excel+Inglés (9) <strong>≤ 1</strong></li>
-          <li><code>B2:F2</code> → <strong>bin</strong></li>
+          <li>Presupuesto: <code>G4 ≤ I4</code></li>
+          <li>Scrum→Líder: <code>G5 ≤ I5</code></li>
+          <li>Mínimo 2: <code>G6 ≥ I6</code></li>
+          <li>No Excel+Inglés: <code>G7 ≤ I7</code></li>
+          <li>Binarias: <code>B2:F2</code> → <strong>bin</strong></li>
         </ul>
       </li>
       <li><strong>Método:</strong> Simplex LP</li>
