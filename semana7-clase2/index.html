@@ -501,7 +501,7 @@ code{
     <a href="#ej2"><span class="toc-num">2</span> Apertura de Locales</a>
     <a href="#ej3"><span class="toc-num">3</span> Asignación de Tareas</a>
     <a href="#ej4"><span class="toc-num">4</span> Restricciones Lógicas</a>
-    <a href="#ejercicios"><span class="toc-num">+4</span> Ejercicios Propuestos</a>
+    <a href="#ejercicios"><span class="toc-num">+8</span> Ejercicios Propuestos</a>
   </div>
 </section>
 
@@ -1049,9 +1049,9 @@ code{
 <section class="chapter" id="ejercicios">
   <div class="chapter-num">Práctica</div>
   <h2>Ejercicios Propuestos</h2>
-  <p>Resuelve cada ejercicio en Excel con Solver. Luego verifica tu respuesta.</p>
+  <p>Los primeros 4 ejercicios incluyen el proceso completo (formulación + Excel + Solver). Los últimos 4 son de práctica adicional donde solo ves la respuesta para que tú armes el modelo.</p>
 
-  <!-- EJERCICIO 1 -->
+  <!-- ============ EJERCICIO 1 ============ -->
   <div class="exercise" id="ex1">
     <div class="exercise-badge">Ejercicio 1</div>
     <h3>Electivas universitarias</h3>
@@ -1068,10 +1068,34 @@ code{
       </table>
     </div>
 
-    <p style="margin-top:.5rem"><strong>Formulación:</strong><br>
-    Max Z = 9x₁ + 14x₂ + 11x₃ + 6x₄ + 15x₅<br>
-    s.t. 4x₁ + 6x₂ + 5x₃ + 3x₄ + 7x₅ ≤ 14<br>
-    x<sub>i</sub> ∈ {0, 1}</p>
+    <h4 style="margin-top:1rem;color:var(--blue);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📐 Formulación</h4>
+    <div class="concept-box" style="margin:.6rem 0;padding:1rem">
+      <div class="formula" style="font-size:.9rem">Max Z = 9x₁ + 14x₂ + 11x₃ + 6x₄ + 15x₅</div>
+      <div class="formula" style="font-size:.9rem">s.a. 4x₁ + 6x₂ + 5x₃ + 3x₄ + 7x₅ ≤ 14</div>
+      <div class="formula" style="font-size:.85rem">x<sub>i</sub> ∈ {0, 1}</div>
+    </div>
+
+    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel</h4>
+    <div class="excel-wrapper" style="margin:.6rem 0">
+      <table class="excel-table">
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+        <tr><td class="col-header">1</td><td class="row-header">Electiva</td><td>Marketing</td><td>Finanzas</td><td>Logística</td><td>Emprend.</td><td>Com.Ext.</td><td></td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Decisión</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td style="font-size:.7rem;color:var(--text3)">← Solver</td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">Puntuación</td><td>9</td><td>14</td><td>11</td><td>6</td><td>15</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Horas</td><td>4</td><td>6</td><td>5</td><td>3</td><td>7</td><td></td></tr>
+        <tr><td class="col-header">5</td><td class="row-header">F. Objetivo</td><td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td><td class="result">← MAX</td></tr>
+        <tr><td class="col-header">6</td><td class="row-header">Total horas</td><td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td><td class="result">≤ 14</td></tr>
+      </table>
+    </div>
+
+    <h4 style="margin-top:1rem;color:var(--purple);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">⚙️ Configuración de Solver</h4>
+    <ul style="font-size:.88rem;margin:.5rem 0">
+      <li><strong>Objetivo:</strong> celda de F. Objetivo (fila 5) → <strong>Máximo</strong></li>
+      <li><strong>Cambiar celdas:</strong> <code>B2:F2</code></li>
+      <li><strong>Restricción 1:</strong> Total horas (fila 6) <strong>≤ 14</strong></li>
+      <li><strong>Restricción 2:</strong> <code>B2:F2</code> → <strong>bin</strong></li>
+      <li><strong>Método:</strong> Simplex LP</li>
+    </ul>
 
     <button class="answer-toggle" onclick="toggleAnswer('ans1')">Ver respuesta</button>
     <div class="answer-content" id="ans1">
@@ -1089,7 +1113,7 @@ code{
     </div>
   </div>
 
-  <!-- EJERCICIO 2 -->
+  <!-- ============ EJERCICIO 2 ============ -->
   <div class="exercise" id="ex2">
     <div class="exercise-badge">Ejercicio 2</div>
     <h3>Cadena de pizzerías</h3>
@@ -1105,12 +1129,38 @@ code{
       </table>
     </div>
 
-    <p style="margin-top:.5rem"><strong>Formulación:</strong><br>
-    Max Z = 7y₁ + 9y₂ + 12y₃ + 5y₄<br>
-    s.t.<br>
-    3y₁ + 4y₂ + 5y₃ + 2y₄ ≤ 10 (presupuesto)<br>
-    200y₁ + 250y₂ + 300y₃ + 150y₄ ≥ 500 (capacidad mínima)<br>
-    y<sub>i</sub> ∈ {0, 1}</p>
+    <h4 style="margin-top:1rem;color:var(--blue);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📐 Formulación</h4>
+    <div class="concept-box" style="margin:.6rem 0;padding:1rem">
+      <div class="formula" style="font-size:.9rem">Max Z = 7y₁ + 9y₂ + 12y₃ + 5y₄</div>
+      <div class="formula" style="font-size:.85rem">3y₁ + 4y₂ + 5y₃ + 2y₄ ≤ 10 &nbsp; (presupuesto)</div>
+      <div class="formula" style="font-size:.85rem">200y₁ + 250y₂ + 300y₃ + 150y₄ ≥ 500 &nbsp; (capacidad)</div>
+      <div class="formula" style="font-size:.85rem">y<sub>i</sub> ∈ {0, 1}</div>
+    </div>
+
+    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel</h4>
+    <div class="excel-wrapper" style="margin:.6rem 0">
+      <table class="excel-table">
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
+        <tr><td class="col-header">1</td><td class="row-header">Local</td><td>UniCenter</td><td>Victoria</td><td>Arboleda</td><td>Olaya</td><td></td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Decisión</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td style="font-size:.7rem;color:var(--text3)">← Solver</td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">Ganancia (M)</td><td>7</td><td>9</td><td>12</td><td>5</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Alquiler (M)</td><td>3</td><td>4</td><td>5</td><td>2</td><td></td></tr>
+        <tr><td class="col-header">5</td><td class="row-header">Capacidad</td><td>200</td><td>250</td><td>300</td><td>150</td><td></td></tr>
+        <tr><td class="col-header">6</td><td class="row-header">F. Objetivo</td><td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B3:E3)</td><td class="result">← MAX</td></tr>
+        <tr><td class="col-header">7</td><td class="row-header">Total alquiler</td><td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B4:E4)</td><td class="result">≤ 10</td></tr>
+        <tr><td class="col-header">8</td><td class="row-header">Total capacidad</td><td colspan="4" class="formula-cell">=SUMAPRODUCTO(B2:E2, B5:E5)</td><td class="result">≥ 500</td></tr>
+      </table>
+    </div>
+
+    <h4 style="margin-top:1rem;color:var(--purple);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">⚙️ Configuración de Solver</h4>
+    <ul style="font-size:.88rem;margin:.5rem 0">
+      <li><strong>Objetivo:</strong> F. Objetivo (fila 6) → <strong>Máximo</strong></li>
+      <li><strong>Cambiar celdas:</strong> <code>B2:E2</code></li>
+      <li><strong>Restricción 1:</strong> Total alquiler (fila 7) <strong>≤ 10</strong></li>
+      <li><strong>Restricción 2:</strong> Total capacidad (fila 8) <strong>≥ 500</strong></li>
+      <li><strong>Restricción 3:</strong> <code>B2:E2</code> → <strong>bin</strong></li>
+      <li><strong>Método:</strong> Simplex LP</li>
+    </ul>
 
     <button class="answer-toggle" onclick="toggleAnswer('ans2')">Ver respuesta</button>
     <div class="answer-content" id="ans2">
@@ -1128,7 +1178,7 @@ code{
     </div>
   </div>
 
-  <!-- EJERCICIO 3 -->
+  <!-- ============ EJERCICIO 3 ============ -->
   <div class="exercise" id="ex3">
     <div class="exercise-badge">Ejercicio 3</div>
     <h3>Asignación de domiciliarios</h3>
@@ -1143,7 +1193,44 @@ code{
       </table>
     </div>
 
-    <p style="margin-top:.5rem"><strong>Restricciones:</strong> Cada domiciliario va a exactamente 1 zona. Cada zona recibe exactamente 1 domiciliario.</p>
+    <h4 style="margin-top:1rem;color:var(--blue);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📐 Formulación</h4>
+    <div class="concept-box" style="margin:.6rem 0;padding:1rem">
+      <p style="font-size:.88rem"><strong>Variables:</strong> x<sub>ij</sub> = 1 si el domiciliario i se asigna a la zona j.</p>
+      <div class="formula" style="font-size:.85rem">Min Z = Σ c<sub>ij</sub> · x<sub>ij</sub> (suma de tiempos)</div>
+      <div class="formula" style="font-size:.85rem">Cada fila suma 1 (cada domiciliario a 1 zona)</div>
+      <div class="formula" style="font-size:.85rem">Cada columna suma 1 (cada zona a 1 domiciliario)</div>
+      <div class="formula" style="font-size:.85rem">x<sub>ij</sub> ∈ {0, 1}</div>
+    </div>
+
+    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel (matriz 3×3)</h4>
+    <div class="excel-wrapper" style="margin:.6rem 0">
+      <table class="excel-table">
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
+        <tr><td class="col-header">1</td><td class="row-header">TIEMPOS</td><td style="font-weight:700">Norte</td><td style="font-weight:700">Sur</td><td style="font-weight:700">Oriente</td><td></td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Andrés</td><td>20</td><td>30</td><td>25</td><td></td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">Sofía</td><td>28</td><td>18</td><td>22</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Luis</td><td>35</td><td>25</td><td>15</td><td></td></tr>
+        <tr><td class="col-header">5</td><td colspan="5" style="height:6px"></td></tr>
+        <tr><td class="col-header">6</td><td class="row-header">DECISIONES</td><td colspan="3" style="text-align:center;color:var(--text3)">Solver cambia</td><td style="font-size:.7rem;color:var(--text3)">Suma fila</td></tr>
+        <tr><td class="col-header">7</td><td class="row-header">Andrés</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B7:D7) = 1</td></tr>
+        <tr><td class="col-header">8</td><td class="row-header">Sofía</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B8:D8) = 1</td></tr>
+        <tr><td class="col-header">9</td><td class="row-header">Luis</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="formula-cell">=SUMA(B9:D9) = 1</td></tr>
+        <tr><td class="col-header">10</td><td class="row-header">Suma col</td><td class="formula-cell">=SUMA(B7:B9)</td><td class="formula-cell">=SUMA(C7:C9)</td><td class="formula-cell">=SUMA(D7:D9)</td><td></td></tr>
+        <tr><td class="col-header">11</td><td class="row-header"></td><td class="result">= 1</td><td class="result">= 1</td><td class="result">= 1</td><td></td></tr>
+        <tr><td class="col-header">12</td><td colspan="5" style="height:6px"></td></tr>
+        <tr><td class="col-header">13</td><td class="row-header">F. Objetivo</td><td colspan="3" class="formula-cell">=SUMAPRODUCTO(B2:D4, B7:D9)</td><td class="result">← MIN</td></tr>
+      </table>
+    </div>
+
+    <h4 style="margin-top:1rem;color:var(--purple);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">⚙️ Configuración de Solver</h4>
+    <ul style="font-size:.88rem;margin:.5rem 0">
+      <li><strong>Objetivo:</strong> F. Objetivo (fila 13) → <strong>Mínimo</strong></li>
+      <li><strong>Cambiar celdas:</strong> <code>B7:D9</code> (matriz de decisiones)</li>
+      <li><strong>Restricción 1:</strong> <code>E7:E9</code> (suma filas) <strong>= 1</strong></li>
+      <li><strong>Restricción 2:</strong> <code>B10:D10</code> (suma columnas) <strong>= 1</strong></li>
+      <li><strong>Restricción 3:</strong> <code>B7:D9</code> → <strong>bin</strong></li>
+      <li><strong>Método:</strong> Simplex LP</li>
+    </ul>
 
     <button class="answer-toggle" onclick="toggleAnswer('ans3')">Ver respuesta</button>
     <div class="answer-content" id="ans3">
@@ -1161,7 +1248,7 @@ code{
     </div>
   </div>
 
-  <!-- EJERCICIO 4 -->
+  <!-- ============ EJERCICIO 4 ============ -->
   <div class="exercise" id="ex4">
     <div class="exercise-badge">Ejercicio 4</div>
     <h3>Capacitaciones con restricciones lógicas</h3>
@@ -1178,11 +1265,53 @@ code{
       </table>
     </div>
 
-    <p style="margin-top:.5rem"><strong>Restricciones lógicas:</strong></p>
+    <p style="margin-top:.8rem"><strong>Restricciones lógicas:</strong></p>
     <ul>
       <li>Si eligen Scrum (4), <strong>deben elegir</strong> Liderazgo (2): x₄ ≤ x₂</li>
       <li>Deben elegir <strong>al menos 2</strong> programas.</li>
       <li><strong>No</strong> pueden elegir Excel (1) e Inglés (3) juntos: x₁ + x₃ ≤ 1</li>
+    </ul>
+
+    <h4 style="margin-top:1rem;color:var(--blue);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📐 Formulación</h4>
+    <div class="concept-box" style="margin:.6rem 0;padding:1rem">
+      <div class="formula" style="font-size:.88rem">Max Z = 8x₁ + 12x₂ + 15x₃ + 10x₄ + 7x₅</div>
+      <div class="formula" style="font-size:.85rem">3x₁ + 5x₂ + 7x₃ + 4x₄ + 3x₅ ≤ 15 &nbsp; (presupuesto)</div>
+      <div class="formula" style="font-size:.85rem">x₄ − x₂ ≤ 0 &nbsp; (Scrum → Liderazgo)</div>
+      <div class="formula" style="font-size:.85rem">x₁ + x₂ + x₃ + x₄ + x₅ ≥ 2 &nbsp; (mínimo 2)</div>
+      <div class="formula" style="font-size:.85rem">x₁ + x₃ ≤ 1 &nbsp; (no Excel + Inglés)</div>
+      <div class="formula" style="font-size:.85rem">x<sub>i</sub> ∈ {0, 1}</div>
+    </div>
+
+    <h4 style="margin-top:1rem;color:var(--green);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">📊 Armado en Excel</h4>
+    <div class="excel-wrapper" style="margin:.6rem 0">
+      <table class="excel-table">
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+        <tr><td class="col-header">1</td><td class="row-header">Programa</td><td>Excel</td><td>Liderazgo</td><td>Inglés</td><td>Scrum</td><td>Comunic.</td><td></td></tr>
+        <tr><td class="col-header">2</td><td class="row-header">Decisión</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td class="decision">0</td><td style="font-size:.7rem;color:var(--text3)">← Solver</td></tr>
+        <tr><td class="col-header">3</td><td class="row-header">Productiv.</td><td>8</td><td>12</td><td>15</td><td>10</td><td>7</td><td></td></tr>
+        <tr><td class="col-header">4</td><td class="row-header">Costo (M)</td><td>3</td><td>5</td><td>7</td><td>4</td><td>3</td><td></td></tr>
+        <tr><td class="col-header">5</td><td class="row-header">F. Objetivo</td><td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B3:F3)</td><td class="result">← MAX</td></tr>
+        <tr><td class="col-header">6</td><td class="row-header">Total costo</td><td colspan="5" class="formula-cell">=SUMAPRODUCTO(B2:F2, B4:F4)</td><td class="result">≤ 15</td></tr>
+        <tr><td class="col-header">7</td><td class="row-header">Scrum→Líder</td><td colspan="5" class="formula-cell">=E2 − C2 (Scrum − Liderazgo)</td><td class="result">≤ 0</td></tr>
+        <tr><td class="col-header">8</td><td class="row-header">Mínimo 2</td><td colspan="5" class="formula-cell">=SUMA(B2:F2)</td><td class="result">≥ 2</td></tr>
+        <tr><td class="col-header">9</td><td class="row-header">No Excel+Ingl</td><td colspan="5" class="formula-cell">=B2 + D2</td><td class="result">≤ 1</td></tr>
+      </table>
+    </div>
+
+    <h4 style="margin-top:1rem;color:var(--purple);font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700">⚙️ Configuración de Solver</h4>
+    <ul style="font-size:.88rem;margin:.5rem 0">
+      <li><strong>Objetivo:</strong> F. Objetivo (fila 5) → <strong>Máximo</strong></li>
+      <li><strong>Cambiar celdas:</strong> <code>B2:F2</code></li>
+      <li><strong>Restricciones:</strong>
+        <ul>
+          <li>Total costo (6) <strong>≤ 15</strong></li>
+          <li>Scrum→Líder (7) <strong>≤ 0</strong></li>
+          <li>Mínimo 2 (8) <strong>≥ 2</strong></li>
+          <li>No Excel+Inglés (9) <strong>≤ 1</strong></li>
+          <li><code>B2:F2</code> → <strong>bin</strong></li>
+        </ul>
+      </li>
+      <li><strong>Método:</strong> Simplex LP</li>
     </ul>
 
     <button class="answer-toggle" onclick="toggleAnswer('ans4')">Ver respuesta</button>
@@ -1203,6 +1332,136 @@ code{
         <li>x₃+x₂+x₄: costo=16 > 15 ✗</li>
         <li>x₁+x₂+x₄+x₅: costo=15, Z=37 ← Óptimo</li>
       </ul>
+    </div>
+  </div>
+
+  <!-- DIVIDER PARA EJERCICIOS NUEVOS -->
+  <div class="divider" style="margin:3rem auto 2rem"></div>
+  <h2 style="text-align:center;font-size:1.8rem;margin-bottom:1rem;color:var(--pink)">🚀 Ejercicios Adicionales</h2>
+  <p style="text-align:center;margin-bottom:2rem">Estos 4 ejercicios son para que tú armes el modelo completo. Solo se muestra la respuesta para verificar.</p>
+
+  <!-- ============ EJERCICIO 5 (SOLO RESPUESTA) ============ -->
+  <div class="exercise" id="ex5">
+    <div class="exercise-badge">Ejercicio 5</div>
+    <h3>Equipamiento de gimnasio</h3>
+    <p style="margin-top:.5rem">Un gimnasio nuevo en Pereira quiere comprar equipos para <strong>maximizar los clientes atraídos</strong>. Tiene un <strong>presupuesto de $20 millones COP</strong>.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Equipo</th><th>Costo (M COP)</th><th>Clientes atraídos</th></tr>
+        <tr><td class="row-header">1. Máquinas de cardio</td><td>8</td><td>30</td></tr>
+        <tr><td class="row-header">2. Pesas libres</td><td>5</td><td>25</td></tr>
+        <tr><td class="row-header">3. Equipo funcional</td><td>6</td><td>28</td></tr>
+        <tr><td class="row-header">4. Bicicletas de spinning</td><td>10</td><td>40</td></tr>
+        <tr><td class="row-header">5. Área de yoga</td><td>4</td><td>20</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:.5rem;font-size:.88rem;color:var(--text3)"><em>Modela el problema con variables binarias x<sub>i</sub> ∈ {0,1}, arma la tabla en Excel y resuelve con Solver.</em></p>
+
+    <button class="answer-toggle" onclick="toggleAnswer('ans5')">Ver respuesta</button>
+    <div class="answer-content" id="ans5">
+      <p><strong>Respuesta:</strong> x₃ = 1, x₄ = 1, x₅ = 1 (Equipo funcional + Spinning + Área de yoga)</p>
+      <p><strong>Inversión total:</strong> 6 + 10 + 4 = <strong>$20M</strong> (usa todo el presupuesto)</p>
+      <p><strong>Clientes atraídos máximo: Z = 28 + 40 + 20 = 88 clientes</strong></p>
+    </div>
+  </div>
+
+  <!-- ============ EJERCICIO 6 (SOLO RESPUESTA) ============ -->
+  <div class="exercise" id="ex6">
+    <div class="exercise-badge">Ejercicio 6</div>
+    <h3>Expansión de cafeterías</h3>
+    <p style="margin-top:.5rem">Una cadena de cafeterías quiere expandirse en Pereira. Tiene <strong>$80 millones de inversión</strong>, pero por capacidad operativa puede abrir <strong>máximo 3 cafeterías</strong>. Quiere <strong>maximizar la ganancia mensual</strong>.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Cafetería</th><th>Inversión (M COP)</th><th>Ganancia mensual (M)</th></tr>
+        <tr><td class="row-header">1. Parque Olaya</td><td>25</td><td>5</td></tr>
+        <tr><td class="row-header">2. Circunvalar</td><td>35</td><td>9</td></tr>
+        <tr><td class="row-header">3. Universidad</td><td>20</td><td>5</td></tr>
+        <tr><td class="row-header">4. Plaza Bolívar</td><td>25</td><td>8</td></tr>
+        <tr><td class="row-header">5. Pinares</td><td>40</td><td>11</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:.5rem;font-size:.88rem;color:var(--text3)"><em>Ojo: la restricción de máximo 3 cafeterías se traduce como y₁+y₂+y₃+y₄+y₅ ≤ 3.</em></p>
+
+    <button class="answer-toggle" onclick="toggleAnswer('ans6')">Ver respuesta</button>
+    <div class="answer-content" id="ans6">
+      <p><strong>Respuesta:</strong> y₂ = 1, y₃ = 1, y₄ = 1 (Circunvalar + Universidad + Plaza Bolívar)</p>
+      <p><strong>Inversión total:</strong> 35 + 20 + 25 = <strong>$80M</strong> (usa todo el presupuesto)</p>
+      <p><strong>Total cafeterías:</strong> 3 (cumple con el máximo)</p>
+      <p><strong>Ganancia mensual máxima: Z = 9 + 5 + 8 = $22M/mes</strong></p>
+    </div>
+  </div>
+
+  <!-- ============ EJERCICIO 7 (SOLO RESPUESTA) ============ -->
+  <div class="exercise" id="ex7">
+    <div class="exercise-badge">Ejercicio 7</div>
+    <h3>Asignación de consultores a proyectos</h3>
+    <p style="margin-top:.5rem">Una consultora tiene <strong>4 consultores</strong> y <strong>4 proyectos</strong> nuevos. Cada consultor cobra un costo distinto por proyecto (en millones COP). Asigna exactamente un consultor a cada proyecto para <strong>minimizar el costo total</strong>.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th></th><th>Proyecto A</th><th>Proyecto B</th><th>Proyecto C</th><th>Proyecto D</th></tr>
+        <tr><td class="row-header">Carlos</td><td>10</td><td>15</td><td>18</td><td>12</td></tr>
+        <tr><td class="row-header">Ana</td><td>14</td><td>9</td><td>16</td><td>13</td></tr>
+        <tr><td class="row-header">Luis</td><td>11</td><td>16</td><td>12</td><td>15</td></tr>
+        <tr><td class="row-header">María</td><td>13</td><td>14</td><td>15</td><td>11</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:.5rem;font-size:.88rem;color:var(--text3)"><em>Como el Ejemplo 3: matriz de decisiones 4×4, sumas de filas = 1, sumas de columnas = 1, variables binarias.</em></p>
+
+    <button class="answer-toggle" onclick="toggleAnswer('ans7')">Ver respuesta</button>
+    <div class="answer-content" id="ans7">
+      <p><strong>Respuesta:</strong></p>
+      <ul>
+        <li>Carlos → Proyecto A (10)</li>
+        <li>Ana → Proyecto B (9)</li>
+        <li>Luis → Proyecto C (12)</li>
+        <li>María → Proyecto D (11)</li>
+      </ul>
+      <p><strong>Costo mínimo total: Z = 10 + 9 + 12 + 11 = $42M</strong></p>
+    </div>
+  </div>
+
+  <!-- ============ EJERCICIO 8 (SOLO RESPUESTA) ============ -->
+  <div class="exercise" id="ex8">
+    <div class="exercise-badge">Ejercicio 8</div>
+    <h3>Flota de vehículos para domicilios</h3>
+    <p style="margin-top:.5rem">Una empresa de domicilios quiere comprar vehículos para <strong>maximizar las entregas diarias</strong>. Tiene un <strong>presupuesto de $120 millones COP</strong>.</p>
+
+    <div class="excel-wrapper" style="margin-top:1rem">
+      <table class="excel-table">
+        <tr><th>Vehículo</th><th>Costo (M COP)</th><th>Entregas/día</th></tr>
+        <tr><td class="row-header">1. Moto 125cc</td><td>12</td><td>40</td></tr>
+        <tr><td class="row-header">2. Moto 200cc</td><td>18</td><td>55</td></tr>
+        <tr><td class="row-header">3. Carro pequeño</td><td>35</td><td>90</td></tr>
+        <tr><td class="row-header">4. Furgoneta</td><td>50</td><td>130</td></tr>
+        <tr><td class="row-header">5. Camión pequeño</td><td>60</td><td>150</td></tr>
+        <tr><td class="row-header">6. Bicicleta eléctrica</td><td>8</td><td>25</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:.8rem"><strong>Restricciones lógicas:</strong></p>
+    <ul>
+      <li>Si compran el <strong>camión</strong> (5), necesitan al menos una moto (1 o 2) para entregas cortas: x₅ ≤ x₁ + x₂</li>
+      <li>Máximo <strong>4 vehículos</strong> en total (capacidad del parqueadero).</li>
+      <li><strong>No</strong> pueden tener carro (3) y furgoneta (4) juntos: x₃ + x₄ ≤ 1</li>
+    </ul>
+
+    <button class="answer-toggle" onclick="toggleAnswer('ans8')">Ver respuesta</button>
+    <div class="answer-content" id="ans8">
+      <p><strong>Respuesta:</strong> x₁ = 1, x₃ = 1, x₅ = 1, x₆ = 1 (Moto 125cc + Carro pequeño + Camión + Bicicleta eléctrica)</p>
+      <p><strong>Costo total:</strong> 12 + 35 + 60 + 8 = <strong>$115M</strong> ≤ 120 ✓</p>
+      <p style="margin-top:.5rem;font-size:.85rem"><strong>Verificación de restricciones lógicas:</strong></p>
+      <ul style="font-size:.85rem">
+        <li>x₅ ≤ x₁ + x₂: 1 ≤ 1 + 0 = 1 ✓ (camión tiene moto)</li>
+        <li>Total vehículos: 1+0+1+0+1+1 = 4 ≤ 4 ✓</li>
+        <li>x₃ + x₄ ≤ 1: 1 + 0 = 1 ≤ 1 ✓ (no carro+furgoneta)</li>
+      </ul>
+      <p style="margin-top:.5rem"><strong>Entregas/día máximas: Z = 40 + 90 + 150 + 25 = 305 entregas/día</strong></p>
     </div>
   </div>
 </section>
