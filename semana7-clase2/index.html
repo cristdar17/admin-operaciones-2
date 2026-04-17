@@ -1419,9 +1419,9 @@ code{
   <!-- DIVIDER PARA EJERCICIOS NUEVOS -->
   <div class="divider" style="margin:3rem auto 2rem"></div>
   <h2 style="text-align:center;font-size:1.8rem;margin-bottom:1rem;color:var(--pink)">🚀 Ejercicios Adicionales</h2>
-  <p style="text-align:center;margin-bottom:2rem">Estos 4 ejercicios son para que tú armes el modelo completo. Solo se muestra la respuesta para verificar.</p>
+  <p style="text-align:center;margin-bottom:2rem">Estos 4 ejercicios son para que tú armes el modelo completo en Excel. Solo se muestra la respuesta para verificar.</p>
 
-  <!-- ============ EJERCICIO 5 (SOLO RESPUESTA) ============ -->
+  <!-- ============ EJERCICIO 5 ============ -->
   <div class="exercise" id="ex5">
     <div class="exercise-badge">Ejercicio 5</div>
     <h3>Equipamiento de gimnasio</h3>
@@ -1438,17 +1438,30 @@ code{
       </table>
     </div>
 
-    <p style="margin-top:.5rem;font-size:.88rem;color:var(--text3)"><em>Modela el problema con variables binarias x<sub>i</sub> ∈ {0,1}, arma la tabla en Excel y resuelve con Solver.</em></p>
+    <div class="card card-teal" style="margin-top:1rem;padding:1rem 1.2rem">
+      <p style="font-size:.9rem;margin:0"><strong>Tipo:</strong> Selección (knapsack) &nbsp;|&nbsp; <strong>Objetivo:</strong> Maximizar &nbsp;|&nbsp; <strong>Variables:</strong> 5 &nbsp;|&nbsp; <strong>Restricciones:</strong> 1</p>
+      <p style="font-size:.85rem;color:var(--text2);margin-top:.4rem">① Límite de presupuesto</p>
+    </div>
 
     <button class="answer-toggle" onclick="toggleAnswer('ans5')">Ver respuesta</button>
     <div class="answer-content" id="ans5">
-      <p><strong>Respuesta:</strong> x₃ = 1, x₄ = 1, x₅ = 1 (Equipo funcional + Spinning + Área de yoga)</p>
-      <p><strong>Inversión total:</strong> 6 + 10 + 4 = <strong>$20M</strong> (usa todo el presupuesto)</p>
-      <p><strong>Clientes atraídos máximo: Z = 28 + 40 + 20 = 88 clientes</strong></p>
+      <div class="excel-wrapper" style="margin-bottom:.8rem">
+        <table class="excel-table">
+          <tr><th>Variable</th><th>x₁ Cardio</th><th>x₂ Pesas</th><th>x₃ Funcional</th><th>x₄ Spinning</th><th>x₅ Yoga</th></tr>
+          <tr><td class="row-header">Decisión</td><td class="decision">0</td><td class="decision">0</td><td class="decision">1</td><td class="decision">1</td><td class="decision">1</td></tr>
+        </table>
+      </div>
+      <div class="comparison">
+        <div class="comp-card"><h4>Clientes atraídos</h4><div class="val val-green">88</div></div>
+        <div class="comp-card"><h4>Inversión total</h4><div class="val val-amber">$20M</div></div>
+      </div>
+      <p style="margin-top:.8rem"><strong>Se compra:</strong> Equipo funcional ($6M) + Spinning ($10M) + Yoga ($4M)</p>
+      <p>Costo: 6 + 10 + 4 = <strong>$20M</strong> ≤ 20 ✓</p>
+      <p>Clientes: 28 + 40 + 20 = <strong>88</strong></p>
     </div>
   </div>
 
-  <!-- ============ EJERCICIO 6 (SOLO RESPUESTA) ============ -->
+  <!-- ============ EJERCICIO 6 ============ -->
   <div class="exercise" id="ex6">
     <div class="exercise-badge">Ejercicio 6</div>
     <h3>Expansión de cafeterías</h3>
@@ -1465,22 +1478,35 @@ code{
       </table>
     </div>
 
-    <p style="margin-top:.5rem;font-size:.88rem;color:var(--text3)"><em>Ojo: la restricción de máximo 3 cafeterías se traduce como y₁+y₂+y₃+y₄+y₅ ≤ 3.</em></p>
+    <div class="card card-teal" style="margin-top:1rem;padding:1rem 1.2rem">
+      <p style="font-size:.9rem;margin:0"><strong>Tipo:</strong> Apertura de locales &nbsp;|&nbsp; <strong>Objetivo:</strong> Maximizar &nbsp;|&nbsp; <strong>Variables:</strong> 5 &nbsp;|&nbsp; <strong>Restricciones:</strong> 2</p>
+      <p style="font-size:.85rem;color:var(--text2);margin-top:.4rem">① Límite de presupuesto &nbsp;&nbsp; ② Tope máximo de locales</p>
+    </div>
 
     <button class="answer-toggle" onclick="toggleAnswer('ans6')">Ver respuesta</button>
     <div class="answer-content" id="ans6">
-      <p><strong>Respuesta:</strong> y₂ = 1, y₃ = 1, y₄ = 1 (Circunvalar + Universidad + Plaza Bolívar)</p>
-      <p><strong>Inversión total:</strong> 35 + 20 + 25 = <strong>$80M</strong> (usa todo el presupuesto)</p>
-      <p><strong>Total cafeterías:</strong> 3 (cumple con el máximo)</p>
-      <p><strong>Ganancia mensual máxima: Z = 9 + 5 + 8 = $22M/mes</strong></p>
+      <div class="excel-wrapper" style="margin-bottom:.8rem">
+        <table class="excel-table">
+          <tr><th>Variable</th><th>y₁ Olaya</th><th>y₂ Circunv.</th><th>y₃ Univ.</th><th>y₄ Bolívar</th><th>y₅ Pinares</th></tr>
+          <tr><td class="row-header">Decisión</td><td class="decision">0</td><td class="decision">1</td><td class="decision">1</td><td class="decision">1</td><td class="decision">0</td></tr>
+        </table>
+      </div>
+      <div class="comparison">
+        <div class="comp-card"><h4>Ganancia mensual</h4><div class="val val-green">$22M</div></div>
+        <div class="comp-card"><h4>Inversión total</h4><div class="val val-amber">$80M</div></div>
+      </div>
+      <p style="margin-top:.8rem"><strong>Se abren:</strong> Circunvalar ($35M) + Universidad ($20M) + Plaza Bolívar ($25M)</p>
+      <p>Inversión: 35 + 20 + 25 = <strong>$80M</strong> ≤ 80 ✓</p>
+      <p>Cafeterías abiertas: <strong>3</strong> ≤ 3 ✓</p>
+      <p>Ganancia: 9 + 5 + 8 = <strong>$22M/mes</strong></p>
     </div>
   </div>
 
-  <!-- ============ EJERCICIO 7 (SOLO RESPUESTA) ============ -->
+  <!-- ============ EJERCICIO 7 ============ -->
   <div class="exercise" id="ex7">
     <div class="exercise-badge">Ejercicio 7</div>
     <h3>Asignación de consultores a proyectos</h3>
-    <p style="margin-top:.5rem">Una consultora tiene <strong>4 consultores</strong> y <strong>4 proyectos</strong> nuevos. Cada consultor cobra un costo distinto por proyecto (en millones COP). Asigna exactamente un consultor a cada proyecto para <strong>minimizar el costo total</strong>.</p>
+    <p style="margin-top:.5rem">Una consultora tiene <strong>4 consultores</strong> y <strong>4 proyectos</strong> nuevos. Cada consultor cobra un costo distinto por proyecto (en millones COP). Asignar exactamente un consultor a cada proyecto para <strong>minimizar el costo total</strong>.</p>
 
     <div class="excel-wrapper" style="margin-top:1rem">
       <table class="excel-table">
@@ -1492,22 +1518,38 @@ code{
       </table>
     </div>
 
-    <p style="margin-top:.5rem;font-size:.88rem;color:var(--text3)"><em>Como el Ejemplo 3: matriz de decisiones 4×4, sumas de filas = 1, sumas de columnas = 1, variables binarias.</em></p>
+    <div class="card card-teal" style="margin-top:1rem;padding:1rem 1.2rem">
+      <p style="font-size:.9rem;margin:0"><strong>Tipo:</strong> Asignación 4×4 &nbsp;|&nbsp; <strong>Objetivo:</strong> Minimizar &nbsp;|&nbsp; <strong>Variables:</strong> 16 &nbsp;|&nbsp; <strong>Restricciones:</strong> 8</p>
+      <p style="font-size:.85rem;color:var(--text2);margin-top:.4rem">①②③④ Cada consultor a exactamente 1 proyecto (4 filas) &nbsp;&nbsp; ⑤⑥⑦⑧ Cada proyecto a exactamente 1 consultor (4 columnas)</p>
+    </div>
 
     <button class="answer-toggle" onclick="toggleAnswer('ans7')">Ver respuesta</button>
     <div class="answer-content" id="ans7">
-      <p><strong>Respuesta:</strong></p>
+      <div class="excel-wrapper" style="margin-bottom:.8rem">
+        <table class="excel-table">
+          <tr><th>Asignación</th><th>Proy. A</th><th>Proy. B</th><th>Proy. C</th><th>Proy. D</th></tr>
+          <tr><td class="row-header">Carlos</td><td class="decision">1</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td class="row-header">Ana</td><td>0</td><td class="decision">1</td><td>0</td><td>0</td></tr>
+          <tr><td class="row-header">Luis</td><td>0</td><td>0</td><td class="decision">1</td><td>0</td></tr>
+          <tr><td class="row-header">María</td><td>0</td><td>0</td><td>0</td><td class="decision">1</td></tr>
+        </table>
+      </div>
+      <div class="comparison">
+        <div class="comp-card"><h4>Costo mínimo</h4><div class="val val-green">$42M</div></div>
+        <div class="comp-card"><h4>Asignación</h4><div class="val val-amber" style="font-size:.85rem">C→A, A→B, L→C, M→D</div></div>
+      </div>
+      <p style="margin-top:.8rem"><strong>Asignación óptima:</strong></p>
       <ul>
-        <li>Carlos → Proyecto A (10)</li>
-        <li>Ana → Proyecto B (9)</li>
-        <li>Luis → Proyecto C (12)</li>
-        <li>María → Proyecto D (11)</li>
+        <li>Carlos → Proyecto A (<strong>$10M</strong>)</li>
+        <li>Ana → Proyecto B (<strong>$9M</strong>)</li>
+        <li>Luis → Proyecto C (<strong>$12M</strong>)</li>
+        <li>María → Proyecto D (<strong>$11M</strong>)</li>
       </ul>
-      <p><strong>Costo mínimo total: Z = 10 + 9 + 12 + 11 = $42M</strong></p>
+      <p>Costo total: 10 + 9 + 12 + 11 = <strong>$42M</strong></p>
     </div>
   </div>
 
-  <!-- ============ EJERCICIO 8 (SOLO RESPUESTA) ============ -->
+  <!-- ============ EJERCICIO 8 ============ -->
   <div class="exercise" id="ex8">
     <div class="exercise-badge">Ejercicio 8</div>
     <h3>Flota de vehículos para domicilios</h3>
@@ -1525,24 +1567,32 @@ code{
       </table>
     </div>
 
-    <p style="margin-top:.8rem"><strong>Restricciones lógicas:</strong></p>
-    <ul>
-      <li>Si compran el <strong>camión</strong> (5), necesitan al menos una moto (1 o 2) para entregas cortas: x₅ ≤ x₁ + x₂</li>
-      <li>Máximo <strong>4 vehículos</strong> en total (capacidad del parqueadero).</li>
-      <li><strong>No</strong> pueden tener carro (3) y furgoneta (4) juntos: x₃ + x₄ ≤ 1</li>
-    </ul>
+    <div class="card card-teal" style="margin-top:1rem;padding:1rem 1.2rem">
+      <p style="font-size:.9rem;margin:0"><strong>Tipo:</strong> Selección con restricciones lógicas &nbsp;|&nbsp; <strong>Objetivo:</strong> Maximizar &nbsp;|&nbsp; <strong>Variables:</strong> 6 &nbsp;|&nbsp; <strong>Restricciones:</strong> 4</p>
+      <p style="font-size:.85rem;color:var(--text2);margin-top:.4rem">① Límite de presupuesto &nbsp;&nbsp; ② Dependencia condicional (camión requiere moto) &nbsp;&nbsp; ③ Tope máximo de vehículos &nbsp;&nbsp; ④ Exclusión mutua (carro vs furgoneta)</p>
+    </div>
 
     <button class="answer-toggle" onclick="toggleAnswer('ans8')">Ver respuesta</button>
     <div class="answer-content" id="ans8">
-      <p><strong>Respuesta:</strong> x₁ = 1, x₃ = 1, x₅ = 1, x₆ = 1 (Moto 125cc + Carro pequeño + Camión + Bicicleta eléctrica)</p>
-      <p><strong>Costo total:</strong> 12 + 35 + 60 + 8 = <strong>$115M</strong> ≤ 120 ✓</p>
-      <p style="margin-top:.5rem;font-size:.85rem"><strong>Verificación de restricciones lógicas:</strong></p>
-      <ul style="font-size:.85rem">
-        <li>x₅ ≤ x₁ + x₂: 1 ≤ 1 + 0 = 1 ✓ (camión tiene moto)</li>
-        <li>Total vehículos: 1+0+1+0+1+1 = 4 ≤ 4 ✓</li>
-        <li>x₃ + x₄ ≤ 1: 1 + 0 = 1 ≤ 1 ✓ (no carro+furgoneta)</li>
+      <div class="excel-wrapper" style="margin-bottom:.8rem">
+        <table class="excel-table">
+          <tr><th>Variable</th><th>x₁ Moto125</th><th>x₂ Moto200</th><th>x₃ Carro</th><th>x₄ Furgon.</th><th>x₅ Camión</th><th>x₆ Bici</th></tr>
+          <tr><td class="row-header">Decisión</td><td class="decision">1</td><td class="decision">0</td><td class="decision">1</td><td class="decision">0</td><td class="decision">1</td><td class="decision">1</td></tr>
+        </table>
+      </div>
+      <div class="comparison">
+        <div class="comp-card"><h4>Entregas/día</h4><div class="val val-green">305</div></div>
+        <div class="comp-card"><h4>Costo total</h4><div class="val val-amber">$115M</div></div>
+      </div>
+      <p style="margin-top:.8rem"><strong>Se compra:</strong> Moto 125cc ($12M) + Carro pequeño ($35M) + Camión ($60M) + Bicicleta eléctrica ($8M)</p>
+      <p style="margin-top:.5rem"><strong>Verificación de restricciones:</strong></p>
+      <ul>
+        <li><strong>Presupuesto:</strong> 12+35+60+8 = $115M ≤ 120 ✓</li>
+        <li><strong>Camión→Moto:</strong> tiene Moto 125cc ✓</li>
+        <li><strong>Máx. vehículos:</strong> 4 ≤ 4 ✓</li>
+        <li><strong>No carro+furgoneta:</strong> solo carro, sin furgoneta ✓</li>
       </ul>
-      <p style="margin-top:.5rem"><strong>Entregas/día máximas: Z = 40 + 90 + 150 + 25 = 305 entregas/día</strong></p>
+      <p>Entregas: 40 + 90 + 150 + 25 = <strong>305 entregas/día</strong></p>
     </div>
   </div>
 </section>
